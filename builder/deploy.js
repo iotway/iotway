@@ -1,4 +1,4 @@
-const commands = ['list', 'versions', 'edit', 'upgrade', 'parameter'];
+const commands = ['list', 'versions', 'edit', 'upgrade', 'parameter', 'describe'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
     yargs.command('deploy', 'Deployment settings', 
@@ -35,6 +35,7 @@ module.exports = function (yargs, handler){
                 type: 'string'
             }
         }, handler.edit)
+        .command ('describe <deploy_id>', 'Show information on the deployment.', {}, handler.get)
         .command ('parameter', 'adds or removes a parameter', 
         (yarg) => {
             yarg.command ('add', 'adds a new parameter', {

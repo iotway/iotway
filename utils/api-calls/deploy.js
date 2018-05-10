@@ -59,6 +59,13 @@ module.exports = function (http){
                 return true;
             }
             return false;
+        },
+
+        get: async function (deployId){
+            let response = await http.get ('/app/deploy/'+deployId);
+            if (response.data && response.data.err === 0){
+                return response.data.deploy;
+            }
         }
     };
 }

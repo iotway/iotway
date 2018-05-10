@@ -103,3 +103,11 @@ exports.deleteParam = async function (argv){
     else
         console.log ('Could not remove parameter from application.');
 };
+
+exports.get = async function (argv){
+    let response = await deployApi.get (argv.deploy_id);
+    if (response)
+        console.log (JSON.stringify (response, null, 3));
+    else
+        console.log ('No deployment to display.');
+}
