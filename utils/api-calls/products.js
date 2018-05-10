@@ -64,6 +64,22 @@ module.exports = function (http)
                 return response.data.provisioningFile;
             }
             return null;
-        }
+        },
+
+        addScript: async function (params){
+            let response = await http.post ('/product/script/add/'+params.productId, params);
+            if (response.data && response.data.err === 0){
+                return true;
+            }
+            return false;
+        },
+
+        delScript: async function (params){
+            let response = await http.post ('/product/script/del/'+params.productId, params);
+            if (response.data && response.data.err === 0){
+                return true;
+            }
+            return false;
+        },
     };
 };

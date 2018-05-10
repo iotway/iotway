@@ -43,6 +43,22 @@ module.exports = function (http){
                 return true;
             }
             return false;
-        }   
+        },
+        
+        addParam: async function (params){
+            let response = await http.post ('/app/deploy/param/add/'+params.deployId, params);
+            if (response.data && response.data.err === 0){
+                return true;
+            }
+            return false;
+        },
+
+        delParam: async function (params){
+            let response = await http.post ('/app/deploy/param/del/'+params.deployId, params);
+            if (response.data && response.data.err === 0){
+                return true;
+            }
+            return false;
+        }
     };
 }

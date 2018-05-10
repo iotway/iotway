@@ -83,7 +83,7 @@ exports.deleteParam = async function (argv){
         name: argv.name
     };
 
-    let response = await appApi.edit (params);
+    let response = await appApi.delParam (params);
     if (response)
         console.log ('Parameter removed from application.');
     else

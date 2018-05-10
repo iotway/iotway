@@ -80,11 +80,10 @@ exports.addParam = async function (argv){
     let params = {
         deployId: argv.id,
         appId: argv.appId,
-        parameters: {}
+        name: argv.name,
+        value: argv.values
     };
-    params.parameters[argv.name] = argv.values;
-
-    let response = await deployApi.edit (params);
+    let response = await deployApi.addParam (params);
     if (response)
         console.log ('Parameter added to application.');
     else
@@ -95,11 +94,10 @@ exports.deleteParam = async function (argv){
     let params = {
         deployId: argv.id,
         appId: argv.appId,
-        parameters: {}
+        name: argv.name
     };
-    params.parameters[argv.name] = undefined;
 
-    let response = await deployApi.edit (params);
+    let response = await deployApi.delParam (params);
     if (response)
         console.log ('Parameter removed from application.');
     else

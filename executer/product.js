@@ -128,14 +128,13 @@ exports.getJson = async function (argv){
 };
 
 exports.addScript = async function (argv){
-    let scripts = {};
-    scripts[argv.name] = argv.command;
     let params = {
         productId: argv.productId,
-        scripts: scripts
+        name: argv.name,
+        value: argv.command
     }
 
-    let response = await productApi.edit (params);
+    let response = await productApi.addScript (params);
     if (response)
         console.log ('Script added successfully.');
     else
@@ -143,14 +142,12 @@ exports.addScript = async function (argv){
 };
 
 exports.deleteScript = async function (argv){
-    let scripts = {};
-    scripts[argv.name] = '';
     let params = {
         productId: argv.productId,
-        scripts: scripts
+        name: argv.name
     }
 
-    let response = await productApi.edit (params);
+    let response = await productApi.delScript (params);
     if (response)
         console.log ('Script removed successfully.');
     else

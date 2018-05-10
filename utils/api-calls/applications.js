@@ -85,6 +85,6 @@ module.exports = function (http)
                 return true;
             }
             return false;
-        },
+        }
     };
 }

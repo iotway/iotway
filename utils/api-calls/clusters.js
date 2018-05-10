@@ -48,6 +48,22 @@ module.exports = function (http)
                 return response.data.provisioningFile;
             }
             return null;
+        },
+
+        addScript: async function (params){
+            let response = await http.post ('/cluster/script/add/'+params.clusterId, params);
+            if (response.data && response.data.err === 0){
+                return true;
+            }
+            return false;
+        },
+
+        delScript: async function (params){
+            let response = await http.post ('/cluster/script/del/'+params.clusterId, params);
+            if (response.data && response.data.err === 0){
+                return true;
+            }
+            return false;
         }
     };
 }
