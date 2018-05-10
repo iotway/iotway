@@ -13,7 +13,12 @@ module.exports = function (yargs, handler){
                 alias: 'p',
                 type: 'string',
                 demandOption: false
-            }       
+            },
+            host: {
+                alias: 'h',
+                type: 'string',
+                demandOption: false
+            }    
         }, handler.login)
         .command ('logout', 'logout', {}, handler.logout)
         .check ((argv)=>{

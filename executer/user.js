@@ -7,11 +7,15 @@ const usersApi = require ('../utils/api').users;
 module.exports.login = async function (argv){
     let username = argv.username;
     let password = argv.password;
+    let host = argv.host;
     if (username === undefined){
         username = readlineSync.question ('username: ');
     }
     if (password === undefined){
         password = readlineSync.question ('password: ',{hideEchoBack:true});
+    }
+    if (host === undefined){
+        host = readlineSync.question ('host: ');
     }
     let token = await usersApi.login ({
         username: username,
@@ -19,7 +23,7 @@ module.exports.login = async function (argv){
     });
 
     if (token){
-        profileService.saveTokenToCurrentProfile (token);
+        profileService.saveDataToCurrentProfile (username, token, host);
     }
     else{
         console.error ('Log in failed');

@@ -3,6 +3,13 @@ const settings = require ('../utils/settings');
 const path = require ('path');
 const error = require ('../utils/error');
 
+exports.exists = function (name){
+    let profiles = fs.readdirSync (settings.profilesDir);
+    if (profiles.indexOf(name) != -1)
+        return true;
+    return false;
+};
+
 exports.getCurrentProfile = function (){
     let profileName = exports.getCurrentProfileName();
     try{
@@ -34,6 +41,17 @@ exports.saveTokenToCurrentProfile = function (token){
     profileData.token = token;
     fs.writeFileSync (settings.profilesDir+profileName, JSON.stringify(profileData));
 };
+
+exports.saveDataToCurrentProfile = function (username, token, endpoint){
+    let profileName = exports.getCurrentProfileName();
+    let data = {
+        username: username,
+        token: token,
+        api: endpoint
+    };
+
+    fs.writeFileSync (settings.profilesDir+profileName, JSON.stringify(data));
+}
 
 exports.getCurrentProfileName = function (){
     let profileName;

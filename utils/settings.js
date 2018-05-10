@@ -17,6 +17,5 @@ module.exports = {
     baseDir: baseDir,
     profilesDir: profilesDir,
     profileFile: profileFile,
-    defaultProfileName: 'default.json',
-    api: 'http://localhost:3000/api/v1'
+    defaultProfileName: 'default.json'
 };

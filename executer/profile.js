@@ -12,8 +12,9 @@ exports.select = function (argv){
         profileName = settings.defaultProfileName;
     }
     //Check if profile name is legal.
-    if (profileName.indexOf ('/') === -1){
+    if (profileService.exists (profileName)){
         try{
+            profileService.get
             fs.writeFileSync (settings.profileFile, profileName);
         }
         catch(err){
@@ -22,7 +23,7 @@ exports.select = function (argv){
         }
     }
     else{
-        console.error ('Invalid profile name');
+        console.error ('Profile does not exist.');
         return errors.INVALID_DATA;
     }
 };
@@ -51,21 +52,24 @@ exports.delete = function (argv){
 
 exports.list = function (argv){
     let table = new Table({
-        head: ['Profiles', 'Selected'],
+        head: ['Profile', 'Username', 'Server', 'Selected'],
     });
     let selectedProfile = profileService.getCurrentProfileName();
     let files = fs.readdirSync (settings.profilesDir);
     if (files.length === 0 && selectedProfile){
         let profile = selectedProfile.substr (0, selectedProfile.length-5);
-        table.push ([profile, '    *']);
+        table.push ([profile, '    *', '', '']);
     }
     else{
         for (file of files){
+            let currentProfile = JSON.parse(fs.readFileSync (settings.profilesDir + file));
             let profile = file.substr (0, file.length-5);
+            let username = (currentProfile.username)? currentProfile.username: '';
+            let api = (currentProfile.api)? currentProfile.api: '';
             if (file === selectedProfile)
-                table.push ([profile, '    *']);
+                table.push ([profile, username, api, '    *']);
             else
-                table.push ([profile, '']);
+                table.push ([profile, username, api, '']);
         }
     }
     console.log (table.toString());

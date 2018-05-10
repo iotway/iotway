@@ -1,10 +1,12 @@
 module.exports = function (endpoint){
+    endpoint = endpoint + '/api/v1';
     const httpService = require ('./http')(endpoint);
     const users = require ('./users')(httpService.http, httpService.setToken);
     const clusters = require ('./clusters')(httpService.http);
     const products = require ('./products')(httpService.http);
     const apps = require ('./applications')(httpService.http);
     const deploy = require ('./deploy')(httpService.http);
+    
     return {
         users: users,
         clusters: clusters,
@@ -12,4 +14,4 @@ module.exports = function (endpoint){
         apps: apps,
         deploy: deploy
     };
-}
+};
