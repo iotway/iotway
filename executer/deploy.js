@@ -4,6 +4,8 @@ const Table = require ('cli-table');
 exports.list = async function (argv){
     if (argv.app){
         let deployments = await deployApi.list (argv.app);
+        if (argv.f === 'json')
+            console.log (JSON.stringify (deployments, null, 3));
         if (deployments && deployments.length > 0){
             let table = new Table({
                 head: ['Id', 'Target', 'Type', 'Version', 'Privileged', 'Network']
@@ -19,7 +21,9 @@ exports.list = async function (argv){
     }
     else if (argv.prod){
         let deployments = await deployApi.deploymentsProduct (argv.prod);
-        if (deployments && deployments.length > 0){
+        if (argv.f === 'json')
+            console.log (JSON.stringify (deployments, null, 3));
+        else if (deployments && deployments.length > 0){
             let table = new Table({
                 head: ['Id', 'Target', 'Type', 'Version', 'Privileged', 'Network']
             });

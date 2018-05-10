@@ -12,13 +12,17 @@ exports.new = async function (argv){
     let response = await appApi.new (params);
     if (response)
         console.log ('Application created successfully.');
+
     else
         console.log ('Could not create application.');
 };
 
 exports.list = async function (argv){
     let apps = await appApi.list ();
-    if (apps && apps.length > 0){
+    if (argv.f === 'json'){
+        console.log (JSON.stringify(apps, null, 3));
+    }
+    else if (apps && apps.length > 0){
         let table = new Table({
             head: ['Name', 'Id', 'Author', 'Platform', 'Privileged']
         });

@@ -66,11 +66,22 @@ exports.list = function (argv){
             let profile = file.substr (0, file.length-5);
             let username = (currentProfile.username)? currentProfile.username: '';
             let api = (currentProfile.api)? currentProfile.api: '';
-            if (file === selectedProfile)
-                table.push ([profile, username, api, '    *']);
-            else
-                table.push ([profile, username, api, '']);
+            if (argv.f === 'json'){
+                if (file === selectedProfile){
+                    currentProfile.selected = true;
+                    console.log (JSON.stringify (currentProfile, null, 3));
+                }
+                else
+                    console.log (JSON.stringify (currentProfile, null, 3));
+            }
+            else {
+                if (file === selectedProfile)
+                    table.push ([profile, username, api, '    *']);
+                else
+                    table.push ([profile, username, api, '']);
+            }
         }
     }
-    console.log (table.toString());
+    if (argv.f != 'json')
+        console.log (table.toString());
 }

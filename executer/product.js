@@ -31,7 +31,9 @@ exports.provision = async function (argv){
 
 exports.list = async function (argv){
     let products = await productApi.list (argv.cluster_id);
-    if (products && products.length > 0){
+    if (argv.f === 'json')
+        console.log (JSON.stringify (products, null, 3));
+    else if (products && products.length > 0){
         let table = new Table({
             head: ['Name', 'Id', 'Type', 'Status', 'Registered']
         });

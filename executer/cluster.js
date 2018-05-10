@@ -24,9 +24,11 @@ exports.new = async function (argv){
         console.error ('Could not create cluster. ');
 };
 
-exports.list = async function (){
+exports.list = async function (argv){
     let clusters = await clusterApi.list ();
-    if (clusters && clusters.length > 0){
+    if (argv.f === 'json')
+        console.log (JSON.stringify (clusters, null, 3));
+    else if (clusters && clusters.length > 0){
         let table = new Table({
             head: ['Name', 'Id', 'Open', 'Filter']
         });
@@ -52,6 +54,8 @@ exports.get = async function (argv){
 
 exports.getScripts = async function (argv){
     let cluster = await clusterApi.get (argv.cluster_id);
+    if (argv.f === 'json')
+        console.log (JSON.stringify (cluster, null, 3));
     if (cluster){
         let table = new Table({
             head: ['Name', 'Script']

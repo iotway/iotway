@@ -15,6 +15,12 @@ yargs = require ('./builder/app')(yargs, require ('./executer/app'));
 yargs = require ('./builder/deploy')(yargs, require ('./executer/deploy'));
 
 yargs.help()
+.option ('f', {
+  alias: 'format',
+  default: 'human',
+  choices: ['human', 'json'],
+  global: true
+})
 .check ((argv)=>{
   if (_.indexOf (commands, argv._[0]) != -1)
       return true;
