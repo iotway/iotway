@@ -1,0 +1,22 @@
+{
+  "name": "wylio",
+  "version": "1.0.1",
+  "license": "GPL-3.0",
+  "repository": "https://github.com/Wyliodrin/wylio.git",
+  "author": "Wyliodrin",
+  "main": "wylio.js",
+  "bin": {
+    "wylio": "wylio.js"
+  },
+  "scripts": {
+    "start": "node wylio.js"
+  },
+  "dependencies": {
+    "axios": "^0.17.1",
+    "cli-table": "^0.3.1",
+    "dotenv": "^4.0.0",
+    "lodash": "^4.17.10",
+    "readline-sync": "^1.4.7",
+    "yargs": "^11.0.0"
+  }
+}
