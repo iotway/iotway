@@ -58,7 +58,7 @@ exports.list = function (argv){
     let files = fs.readdirSync (settings.profilesDir);
     if (files.length === 0 && selectedProfile){
         let profile = selectedProfile.substr (0, selectedProfile.length-5);
-        table.push ([profile, '    *', '', '']);
+        table.push ([profile, '', '', '*']);
     }
     else{
         for (file of files){
@@ -76,7 +76,7 @@ exports.list = function (argv){
             }
             else {
                 if (file === selectedProfile)
-                    table.push ([profile, username, api, '    *']);
+                    table.push ([profile, username, api, '*']);
                 else
                     table.push ([profile, username, api, '']);
             }

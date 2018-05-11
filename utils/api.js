@@ -25,5 +25,9 @@ else
         clusters: noApi,
         products: noApi,
         apps: noApi,
-        deploy: noApi
+        deploy: noApi,
+        init: function (host){
+            api = require ('./api-calls/calls')(host);
+            return api;
+        }
     };

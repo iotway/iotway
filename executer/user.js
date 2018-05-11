@@ -2,7 +2,8 @@ const readlineSync = require('readline-sync');
 const profileService = require ('../service/profile');
 const fs = require ('fs');
 const error = require ('../utils/error');
-const usersApi = require ('../utils/api').users;
+let usersApi = require ('../utils/api').users;
+let api = require ('../utils/api');
 
 module.exports.login = async function (argv){
     let username = argv.username;
@@ -17,6 +18,9 @@ module.exports.login = async function (argv){
     if (host === undefined){
         host = readlineSync.question ('host: ');
     }
+
+    api = api.init (host);
+    usersApi = api.users;
     let token = await usersApi.login ({
         username: username,
         password: password
