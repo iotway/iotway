@@ -1,9 +1,9 @@
 const commands = ['provision', 'list', 'describe', 'delete', 'schedule', 'unschedule', 'edit', 'provisioning-file', 'script'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
-    yargs.command('product', 'Product settings', 
+    yargs.command(['product','p'], 'Product settings', 
      (yargs) => {
-        yargs.command ('provision',  'provision the device', {
+        yargs.command (['provision', 'p'],  'provision the device', {
             type: {
                 alias: 't',
                 type: 'string',
@@ -70,12 +70,12 @@ module.exports = function (yargs, handler){
                 type: 'number'
             }
         }, handler.provision)
-        .command ('list <cluster_id>', 'list all product in cluster', {}, handler.list)
-        .command ('describe <product_id>', 'show product information', {}, handler.get)
-        .command ('delete <product_id>', 'deletes the product', {}, handler.delete)
+        .command (['list <cluster_id>', 'l'], 'list all product in cluster', {}, handler.list)
+        .command (['describe <product_id>', 'd'], 'show product information', {}, handler.get)
+        .command (['delete <product_id>', 'del'], 'deletes the product', {}, handler.delete)
         .command ('schedule <product_id> <action>', 'schedule an action for the product', {}, handler.schedule)
         .command ('unschedule <product_id> <action>', 'unschedule an action for the product', {}, handler.schedule)
-        .command ('edit <product_id>', 'edit product', {
+        .command (['edit <product_id>', 'e'], 'edit product', {
             name: {
                 alias: 'n',
                 type: 'string',

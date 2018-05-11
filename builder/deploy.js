@@ -1,9 +1,9 @@
 const commands = ['list', 'versions', 'edit', 'upgrade', 'parameter', 'describe'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
-    yargs.command('deploy', 'Deployment settings', 
+    yargs.command(['deploy', 'd'], 'Deployment settings', 
      (yargs) => {
-        yargs.command ('list', 'Get deployments for application or product' , {
+        yargs.command (['list', 'l'], 'Get deployments for application or product' , {
             application: {
                 alias: 'app',
                 desc: 'The Id of the application to get deployments for.',
@@ -15,7 +15,7 @@ module.exports = function (yargs, handler){
                 type: 'string'
             }
         }, handler.list)
-        .command ('edit <deploy_id>', 'Edit deployment', {
+        .command (['edit <deploy_id>', 'e'], 'Edit deployment', {
             'app-id':{
                 alias: 'app',
                 desc: 'The id of the application deployed',
@@ -35,8 +35,8 @@ module.exports = function (yargs, handler){
                 type: 'string'
             }
         }, handler.edit)
-        .command ('describe <deploy_id>', 'Show information on the deployment.', {}, handler.get)
-        .command ('parameter', 'adds or removes a parameter', 
+        .command (['describe <deploy_id>', 'd'], 'Show information on the deployment.', {}, handler.get)
+        .command (['parameter', 'param'], 'adds or removes a parameter', 
         (yarg) => {
             yarg.command ('add', 'adds a new parameter', {
                 id: {

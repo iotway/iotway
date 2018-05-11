@@ -1,9 +1,9 @@
 const commands = ['new', 'list', 'describe', 'scripts', 'delete', 'update', 'script', 'edit', 'provisioning-file'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
-    yargs.command('cluster', 'Cluster settings', 
+    yargs.command(['cluster', 'c'], 'Cluster settings', 
      (yargs) => {
-        yargs.command ('new',  'create new cluster', {
+        yargs.command (['new', 'n'],  'create new cluster', {
             name: {
                 alias: 'n',
                 desc: 'Cluster name',
@@ -54,11 +54,11 @@ module.exports = function (yargs, handler){
                 type: 'array'
             }
         }, handler.new)
-        .command ('list', 'list all user\'s clusters', {}, handler.list)
-        .command ('describe <cluster_id>', 'show cluster information', {}, handler.get)
-        .command ('scripts <cluster_id>', 'show cluster scripts', {}, handler.getScripts)
-        .command ('delete <cluster_id>', 'deletes the cluster', {}, handler.delete)
-        .command ('edit <cluster_id>', 'edit the cluster', {
+        .command (['list', 'l'], 'list all user\'s clusters', {}, handler.list)
+        .command (['describe <cluster_id>', 'd'], 'show cluster information', {}, handler.get)
+        .command (['scripts <cluster_id>', 's'], 'show cluster scripts', {}, handler.getScripts)
+        .command (['delete <cluster_id>', 'del'], 'deletes the cluster', {}, handler.delete)
+        .command (['edit <cluster_id>', 'e'], 'edit the cluster', {
             name: {
                 alias: 'n',
                 desc: 'Cluster name',

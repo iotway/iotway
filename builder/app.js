@@ -1,9 +1,9 @@
 const commands = ['new', 'list', 'edit', 'remove', 'describe', 'parameter', 'versions', 'deploy', 'undeploy'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
-    yargs.command('app', 'Application settings', 
+    yargs.command(['app', 'a'], 'Application settings',
      (yargs) => {
-        yargs.command ('new',  'creates a new application', {
+        yargs.command (['new','n'],  'creates a new application', {
             name: {
                 alias: 'n',
                 type: 'string',
@@ -34,10 +34,10 @@ module.exports = function (yargs, handler){
                 type: 'boolean'
             }
         }, handler.new)
-        .command ('list', 'List all applications.', {}, handler.list)
-        .command ('remove <app_id>', 'Remove application.', {}, handler.delete)
-        .command ('describe <app_id>', 'Describe application.', {}, handler.get)
-        yargs.command ('edit <app_id>',  'edit an application', {
+        .command (['list', 'l'], 'List all applications.', {}, handler.list)
+        .command (['remove <app_id>', 'r'], 'Remove application.', {}, handler.delete)
+        .command (['describe <app_id>', 'd'], 'Describe application.', {}, handler.get)
+        yargs.command (['edit <app_id>','e'],  'edit an application', {
             name: {
                 alias: 'n',
                 type: 'string',
@@ -53,7 +53,7 @@ module.exports = function (yargs, handler){
                 type: 'string'
             }
         }, handler.edit)
-        .command ('parameter', 'adds or removes a parameter', 
+        .command (['parameter', 'p'], 'adds or removes a parameter', 
         (yarg) => {
             yarg.command ('add', 'adds a new parameter', {
                 name: {
@@ -99,7 +99,7 @@ module.exports = function (yargs, handler){
             .demandCommand ();
         })
         .command ('versions <app_id>', 'List application versions.', {}, handler.versions)
-        .command ('deploy', 'Deploy application on a cluster', {
+        .command (['deploy', 'depl'], 'Deploy application on a cluster', {
             'app-id': {
                 alias: 'app',
                 desc: 'The id of the application to deploy.',
@@ -153,7 +153,7 @@ module.exports = function (yargs, handler){
                 demandOption: false
             }
         }, handler.deploy)
-        .command ('undeploy', 'Undeploy an application from a cluster', {
+        .command (['undeploy', 'undepl'], 'Undeploy an application from a cluster', {
             id: {
                 desc: 'Id of the deployment to be undeployed',
                 type: 'string',
