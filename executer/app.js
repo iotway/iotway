@@ -13,8 +13,10 @@ exports.new = async function (argv){
     if (response)
         console.log ('Application created successfully.');
 
-    else
-        console.log ('Could not create application.');
+    else{
+        console.error ('Could not create application.');
+        process.exit (-1);
+    }
 };
 
 exports.list = async function (argv){
@@ -33,7 +35,7 @@ exports.list = async function (argv){
         console.log (table.toString());
     }
     else
-        console.log ('No applications to display.');
+        console.error ('No applications to display.');
 };
 
 exports.edit = async function (argv){
@@ -47,24 +49,30 @@ exports.edit = async function (argv){
     let response = await appApi.edit (params);
     if (response)
         console.log ('Application updated successfully.');
-    else
-        console.log ('Could not update application.');
+    else{
+        console.error ('Could not update application.');
+        process.exit (-1);
+    }
 };
 
 exports.delete = async function (argv){
     let response = await appApi.delete (argv.app_id);
     if (response)
         console.log ('Application removed.');
-    else
-        console.log ('Could not remove application.');
+    else{
+        console.error ('Could not remove application.');
+        process.exit (-1);
+    }
 };
 
 exports.get = async function (argv){
     let app = await appApi.get (argv.app_id);
     if (app)
         console.log (JSON.stringify(app, null, 3));
-    else
+    else{
         console.log ('Could not get application.');
+        process.exit (-1);
+    }
 };
 
 exports.addParam = async function (argv){
@@ -77,8 +85,10 @@ exports.addParam = async function (argv){
     let response = await appApi.addParam (params);
     if (response)
         console.log ('Parameter added to application.');
-    else
-        console.log ('Could not add parameter to application.');
+    else{
+        console.error ('Could not add parameter to application.');
+        process.exit (-1);
+    }
 };
 
 exports.deleteParam = async function (argv){
@@ -90,16 +100,20 @@ exports.deleteParam = async function (argv){
     let response = await appApi.delParam (params);
     if (response)
         console.log ('Parameter removed from application.');
-    else
-        console.log ('Could not remove parameter from application.');
+    else{
+        console.error ('Could not remove parameter from application.');
+        process.exit (-1);
+    }
 };
 
 exports.versions = async function (argv){
     let versions = await appApi.versions (argv.app_id);
     if (versions)
         console.log (versions);
-    else
-        console.log ('Could not get versions.');
+    else{
+        console.error ('Could not get versions.');
+        process.exit (-1);
+    }
 };
 
 exports.deploy = async function (argv){
@@ -119,8 +133,10 @@ exports.deploy = async function (argv){
     let response = await appApi.deploy (params);
     if (response)
         console.log ('Application deployed successfully.');
-    else
-        console.log ('Could not deploy application.');
+    else{
+        console.error ('Could not deploy application.');
+        process.exit (-1);
+    }
 };
 
 exports.undeploy = async function (argv){
@@ -134,6 +150,8 @@ exports.undeploy = async function (argv){
     let response = await appApi.undeploy (params);
     if (response)
         console.log ('Application undeployed successfully.');
-    else
-        console.log ('Could not undeploy application.');
+    else{
+        console.error ('Could not undeploy application.');
+        process.exit (-1);
+    }
 };

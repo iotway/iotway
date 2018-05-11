@@ -20,8 +20,10 @@ exports.new = async function (argv){
     }
     if (await clusterApi.new (params))
         console.log ('Cluster created successfully.');
-    else
+    else{
         console.error ('Could not create cluster. ');
+        process.exit (-1);
+    }
 };
 
 exports.list = async function (argv){
@@ -77,8 +79,10 @@ exports.delete = async function (argv){
     if (response){
       console.log ('Cluster deleted successfully.');
     }
-    else
-        console.log ('Could not delete cluster');
+    else{
+        console.error ('Could not delete cluster');
+        process.exit (-1);
+    }
 };
 
 exports.edit = async function (argv){
@@ -108,7 +112,8 @@ exports.edit = async function (argv){
         console.log ('Cluster updated.');
     }
     else{
-        console.log ('Could not update cluster.');
+        console.error ('Could not update cluster.');
+        process.exit (-1);
     }
 };
 
@@ -122,8 +127,10 @@ exports.addScript = async function (argv){
     let response = await clusterApi.addScript (params);
     if (response)
         console.log ('Script added successfully.');
-    else
-        console.log ('Could not add script to cluster.');
+    else{
+        console.error ('Could not add script to cluster.');
+        process.exit (-1);
+    }
 };
 
 exports.deleteScript = async function (argv){
@@ -135,14 +142,17 @@ exports.deleteScript = async function (argv){
     let response = await clusterApi.delScript (params);
     if (response)
         console.log ('Script removed successfully.');
-    else
-        console.log ('Could not remove script from cluster.');
+    else{
+        console.error ('Could not remove script from cluster.');
+        process.exit (-1);
+    }
 };
 
 exports.getJson = async function (argv){
     let file = await clusterApi.getWyliodrinJSON (argv.clusterId);
     if (file)
         console.log (JSON.stringify (file, null, 3));
-    else
-        console.log ('Could not get file.');
+    else{
+        console.error ('Could not get file.');
+    }
 };

@@ -17,8 +17,9 @@ module.exports = function (endpoint){
     instance.interceptors.response.use((response) => {
         return response;
     }, function (error) {
-        console.log (error.response.data.err);
-        if (error.response.status === 401)
+        if (error.response && error.response.data)
+            console.error (error.response.data.err);
+        if (error.response && error.response.status === 401)
             console.error ('Please authenticate.');
         return error;
     });

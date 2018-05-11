@@ -19,12 +19,12 @@ exports.select = function (argv){
         }
         catch(err){
             console.error ('Could not select profile.');
-            return errors.EDIT_PROFILE;
+            process.exit (-1);
         }
     }
     else{
         console.error ('Profile does not exist.');
-        return errors.INVALID_DATA;
+        process.exit (-1);
     }
 };
 
@@ -47,6 +47,7 @@ exports.delete = function (argv){
     }
     catch (err){
         console.error ('No profile to delete.');
+        process.exit (-1);
     }
 };
 
@@ -56,6 +57,7 @@ exports.list = function (argv){
     });
     let selectedProfile = profileService.getCurrentProfileName();
     let files = fs.readdirSync (settings.profilesDir);
+    let profilesJson = [];
     if (files.length === 0 && selectedProfile){
         let profile = selectedProfile.substr (0, selectedProfile.length-5);
         table.push ([profile, '', '', '*']);
@@ -67,12 +69,12 @@ exports.list = function (argv){
             let username = (currentProfile.username)? currentProfile.username: '';
             let api = (currentProfile.api)? currentProfile.api: '';
             if (argv.f === 'json'){
+                currentProfile.name = profile;
                 if (file === selectedProfile){
                     currentProfile.selected = true;
-                    console.log (JSON.stringify (currentProfile, null, 3));
+                    
                 }
-                else
-                    console.log (JSON.stringify (currentProfile, null, 3));
+                profilesJson.push (currentProfile);
             }
             else {
                 if (file === selectedProfile)
@@ -84,4 +86,6 @@ exports.list = function (argv){
     }
     if (argv.f != 'json')
         console.log (table.toString());
+    else
+        console.log (JSON.stringify (profilesJson, null, 3));
 }

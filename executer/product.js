@@ -25,8 +25,10 @@ exports.provision = async function (argv){
     let response = await productApi.provision (params);
     if (response)
         console.log ('Product successfully provisioned.');
-    else
-        console.log ('Could not provision product');
+    else{
+        console.error ('Could not provision product');
+        process.exit (-1);
+    }
 };
 
 exports.list = async function (argv){
@@ -60,8 +62,10 @@ exports.delete = async function (argv){
     if (response){
       console.log ('Product deleted successfully.');
     }
-    else
+    else{
         console.log ('Could not delete product.');
+        process.exit (-1);
+    }
 };
 
 exports.schedule = async function (argv){
@@ -71,8 +75,10 @@ exports.schedule = async function (argv){
     if (response){
       console.log ('Action scheduled successfully.');
     }
-    else
-        console.log ('Could not schedule action for product.');
+    else{
+        console.error ('Could not schedule action for product.');
+        process.exit (-1);
+    }
 };
 
 exports.unschedule = async function (argv){
@@ -82,8 +88,10 @@ exports.unschedule = async function (argv){
     if (response){
       console.log ('Action unschedule successfully.');
     }
-    else
+    else{
         console.log ('Could not unschedule action for product.');
+        process.exit (-1);
+    }
 };
 
 exports.edit = async function (argv){
@@ -117,7 +125,8 @@ exports.edit = async function (argv){
         console.log ('Product successfully updated.');
     }
     else{
-        console.log ('Could not update product.');
+        console.error ('Could not update product.');
+        process.exit (-1);
     }
 };
 
@@ -125,8 +134,10 @@ exports.getJson = async function (argv){
     let file = await productApi.getWyliodrinJSON (argv.productId);
     if (file)
         console.log (JSON.stringify (file, null, 3));
-    else
-        console.log ('Could not get file.');
+    else{
+        console.error ('Could not get file.');
+        process.exit (-1);
+    }
 };
 
 exports.addScript = async function (argv){
@@ -139,8 +150,10 @@ exports.addScript = async function (argv){
     let response = await productApi.addScript (params);
     if (response)
         console.log ('Script added successfully.');
-    else
+    else{
         console.log ('Could not add script to product.');
+        process.exit (-1);
+    }
 };
 
 exports.deleteScript = async function (argv){
@@ -152,6 +165,8 @@ exports.deleteScript = async function (argv){
     let response = await productApi.delScript (params);
     if (response)
         console.log ('Script removed successfully.');
-    else
+    else{
         console.log ('Could not remove script from product.');
+        process.exit (-1);
+    }
 };

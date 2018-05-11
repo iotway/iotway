@@ -17,8 +17,13 @@ let noApi = {
     }
 };
 
-if (api)
+if (api){
+    api.init = function (host){
+        api = require ('./api-calls/calls')(host);
+        return api;
+    }
     module.exports = api;
+}
 else
     module.exports = {
         users: noApi,

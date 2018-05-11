@@ -37,8 +37,9 @@ exports.list = async function (argv){
             console.log ('No deployments to display.');
     }
     else{
-        console.log ('Must specify an option.');
-        console.log ('Run help to check for options');
+        console.error ('Must specify an option.');
+        console.error ('Run help to check for options');
+        process.exit (-1);
     }
 };
 
@@ -62,8 +63,10 @@ exports.edit = async function (argv){
 
     if (result)
         console.log ('Deployment updated successfully.');
-    else
-        console.log ('Could not update deployment.');
+    else{
+        console.error ('Could not update deployment.');
+        process.exit (-1);
+    }
 };
 
 exports.upgrade = async function (argv){
@@ -76,8 +79,10 @@ exports.upgrade = async function (argv){
 
     if (result)
         console.log ('Deployment upgraded successfully.');
-    else
-        console.log ('Could not upgrade deployment.');
+    else{
+        console.error ('Could not upgrade deployment.');
+        process.exit (-1);
+    }
 };
 
 exports.addParam = async function (argv){
@@ -90,8 +95,10 @@ exports.addParam = async function (argv){
     let response = await deployApi.addParam (params);
     if (response)
         console.log ('Parameter added to application.');
-    else
-        console.log ('Could not add parameter to application.');
+    else{
+        console.error ('Could not add parameter to application.');
+        process.exit (-1);
+    }
 };
 
 exports.deleteParam = async function (argv){
@@ -104,8 +111,10 @@ exports.deleteParam = async function (argv){
     let response = await deployApi.delParam (params);
     if (response)
         console.log ('Parameter removed from application.');
-    else
-        console.log ('Could not remove parameter from application.');
+    else{
+        console.error ('Could not remove parameter from application.');
+        process.exit (-1);
+    }
 };
 
 exports.get = async function (argv){
