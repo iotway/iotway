@@ -2,7 +2,9 @@ const readlineSync = require('readline-sync');
 const profileService = require ('../service/profile');
 const fs = require ('fs');
 const error = require ('../utils/error');
+const child_process = require ('child_process');
 let usersApi = require ('../utils/api').users;
+let settingsApi = require ('../utils/api').settings;
 let api = require ('../utils/api');
 
 module.exports.login = async function (argv){
@@ -21,6 +23,7 @@ module.exports.login = async function (argv){
 
     api = api.init (host);
     usersApi = api.users;
+    settingsApi = api.settings;
     let token = await usersApi.login ({
         username: username,
         password: password
@@ -28,6 +31,18 @@ module.exports.login = async function (argv){
 
     if (token){
         profileService.saveDataToCurrentProfile (username, token, host);
+        let settings = await settingsApi.get ();
+        if (settings){
+            settings = JSON.parse (settings);
+            try{
+                child_process.execSync ('docker login ' + settings.REPOSITORY + ' -u ' + username + ' -p ' + password);
+            }
+            catch (err){
+                console.error (err);
+                console.error ('Could not run docker login command. Make sure docker is installed.');
+                process.exit (-1);
+            }
+        }
     }
     else{
         console.error ('Log in failed');

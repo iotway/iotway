@@ -6,12 +6,14 @@ module.exports = function (endpoint){
     const products = require ('./products')(httpService.http);
     const apps = require ('./applications')(httpService.http);
     const deploy = require ('./deploy')(httpService.http);
+    const settings = require ('./settings')(httpService.http);
     
     return {
         users: users,
         clusters: clusters,
         products: products,
         apps: apps,
-        deploy: deploy
+        deploy: deploy,
+        settings: settings
     };
 };

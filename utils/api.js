@@ -31,6 +31,7 @@ else
         products: noApi,
         apps: noApi,
         deploy: noApi,
+        settings: noApi,
         init: function (host){
             api = require ('./api-calls/calls')(host);
             return api;

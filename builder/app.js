@@ -1,4 +1,4 @@
-const commands = ['new', 'list', 'edit', 'remove', 'describe', 'parameter', 'versions', 'deploy', 'undeploy'];
+const commands = ['new', 'list', 'edit', 'remove', 'describe', 'parameter', 'versions', 'deploy', 'undeploy', 'init', 'build', 'push'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
     yargs.command(['app', 'a'], 'Application settings',
@@ -37,22 +37,25 @@ module.exports = function (yargs, handler){
         .command (['list', 'l'], 'List all applications.', {}, handler.list)
         .command (['remove <app_id>', 'r'], 'Remove application.', {}, handler.delete)
         .command (['describe <app_id>', 'd'], 'Describe application.', {}, handler.get)
-        yargs.command (['edit <app_id>','e'],  'edit an application', {
-            name: {
-                alias: 'n',
+        .command ('init', 'init application for building docker image', {
+            'app-id': {
+                alias: 'a',
                 type: 'string',
-                desc: 'The name of the application.',
+                desc: 'The id of the application.'
             },
-            privileged: {
-                alias: 'prv',
-                desc: 'Specifies if the application should run in a priviliged container. If set to true, it will allow the application to access all the resources of the product',
-                type: 'boolean'
-            },
-            network: {
-                choices: ['default', 'host'],
-                type: 'string'
+            dir: {
+                alias: 'd',
+                type: 'string',
+                desc: 'The path to the directory where the application will be built.'
             }
-        }, handler.edit)
+        }, handler.init)
+        .command ('build', 'build docker image for application', {
+            'app-version': {
+                alias: 'v',
+                desc: 'The number of this image version',
+                type: 'number'
+            }
+        }, handler.build)
         .command (['parameter', 'p'], 'adds or removes a parameter', 
         (yarg) => {
             yarg.command ('add', 'adds a new parameter', {
