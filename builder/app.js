@@ -203,6 +203,7 @@ module.exports = function (yargs, handler){
             throw new Error ('Invalid command.');
         })
        .help ()
+       .completion ('new')
        .demandCommand ();
      });
     return yargs;

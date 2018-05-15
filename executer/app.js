@@ -7,6 +7,7 @@ const fs = require ('fs');
 const path = require ('path');
 
 exports.new = async function (argv){
+    console.log (argv);
     let params = {
         appId: argv.id,
         author: argv.author,

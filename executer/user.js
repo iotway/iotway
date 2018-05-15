@@ -40,6 +40,7 @@ module.exports.login = async function (argv){
             catch (err){
                 console.error (err.message);
                 console.error ('Could not run docker login command. Make sure docker is installed.');
+                console.error ('Publishing applications do not work.');
                 process.exit (-1);
             }
         }
