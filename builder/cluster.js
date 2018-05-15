@@ -1,9 +1,9 @@
 const commands = ['new', 'list', 'describe', 'scripts', 'delete', 'update', 'script', 'edit', 'provisioning-file'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
-    yargs.command(['cluster', 'c'], 'Cluster settings', 
+    yargs.command(['cluster', 'c'], 'Cluster settings.', 
      (yargs) => {
-        yargs.command (['new', 'n'],  'create new cluster', {
+        yargs.command (['new', 'n'],  'Create new cluster.', {
             name: {
                 alias: 'n',
                 desc: 'Cluster name',
@@ -54,14 +54,14 @@ module.exports = function (yargs, handler){
                 type: 'array'
             }
         }, handler.new)
-        .command (['list', 'l'], 'list all user\'s clusters', {}, handler.list)
-        .command (['describe <cluster_id>', 'd'], 'show cluster information', {}, handler.get)
-        .command (['scripts <cluster_id>', 's'], 'show cluster scripts', {}, handler.getScripts)
-        .command (['delete <cluster_id>', 'del'], 'deletes the cluster', {}, handler.delete)
-        .command (['edit <cluster_id>', 'e'], 'edit the cluster', {
+        .command (['list', 'l'], 'List all user\'s clusters.', {}, handler.list)
+        .command (['describe <cluster_id>', 'd'], 'Show cluster information.', {}, handler.get)
+        .command (['scripts <cluster_id>', 's'], 'Show cluster scripts.', {}, handler.getScripts)
+        .command (['delete <cluster_id>', 'del'], 'Deletes the cluster.', {}, handler.delete)
+        .command (['edit <cluster_id>', 'e'], 'Edit the cluster.', {
             name: {
                 alias: 'n',
-                desc: 'Cluster name',
+                desc: 'Cluster name.',
                 type: 'string'
             },
             deployer: {
@@ -102,9 +102,9 @@ module.exports = function (yargs, handler){
                 type: 'number'
            }
         }, handler.edit)
-        .command ('script', 'adds or removes a script',
+        .command ('script', 'Adds or removes a script.',
         (yargs) =>  {
-            yargs.command ('add', 'adds a new script',{
+            yargs.command ('add', 'Adds a new script.',{
                 name: {
                     alias: 'n',
                     desc: 'Script name',
@@ -112,19 +112,19 @@ module.exports = function (yargs, handler){
                     demandOption: true
                 },
                 command: {
-                    alias: 'c',
+                    alias: 'cmd',
                     desc: 'Command chain',
                     type: 'string',
                     demandOption: true
                 },
-                'cluster-id': {
-                    alias: 'cluster',
+                id: {
+                    alias: 'c',
                     desc: 'The clusterId',
                     type: 'string',
                     demandOption: true
                 }
             }, handler.addScript)
-            .command ('remove', 'removes the script from the cluster', {
+            .command ('remove', 'Removes the script from the cluster.', {
                 name: {
                     alias: 'n',
                     desc: 'Script name',
@@ -132,8 +132,8 @@ module.exports = function (yargs, handler){
                     demandOption: true
                 },
     
-                'cluster-id': {
-                    alias: 'cluster',
+                id: {
+                    alias: 'c',
                     desc: 'The clusterId',
                     type: 'string',
                     demandOption: true
@@ -147,7 +147,7 @@ module.exports = function (yargs, handler){
             .help ()
             .demandCommand ();
         })
-        .command ('provisioning-file <cluster-id>', 'get cluster\'s provisioning file' , {}, handler.getJson)
+        .command ('provisioning-file <cluster-id>', 'Get cluster\'s provisioning file.' , {}, handler.getJson)
         .check ((argv)=>{
             if (_.indexOf (commands, argv._[1]) != -1)
                 return true;

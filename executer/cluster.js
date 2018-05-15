@@ -119,7 +119,7 @@ exports.edit = async function (argv){
 
 exports.addScript = async function (argv){
     let params = {
-        clusterId: argv.clusterId,
+        clusterId: argv.id,
         name: argv.name,
         value: argv.command
     }
@@ -135,7 +135,7 @@ exports.addScript = async function (argv){
 
 exports.deleteScript = async function (argv){
     let params = {
-        clusterId: argv.clusterId,
+        clusterId: argv.id,
         name: argv.name
     }
 

@@ -1,9 +1,9 @@
 const commands = ['new', 'list', 'edit', 'remove', 'describe', 'parameter', 'versions', 'deploy', 'undeploy', 'init', 'build', 'push'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
-    yargs.command(['app', 'a'], 'Application settings',
+    yargs.command(['app', 'a'], 'Application settings.',
      (yargs) => {
-        yargs.command (['new','n'],  'creates a new application', {
+        yargs.command (['new','n'],  'Creates a new application.', {
             name: {
                 alias: 'n',
                 type: 'string',
@@ -37,8 +37,8 @@ module.exports = function (yargs, handler){
         .command (['list', 'l'], 'List all applications.', {}, handler.list)
         .command (['remove <app_id>', 'r'], 'Remove application.', {}, handler.delete)
         .command (['describe <app_id>', 'd'], 'Describe application.', {}, handler.get)
-        .command ('init', 'init application for building docker image', {
-            'app-id': {
+        .command ('init', 'Init application for building docker image.', {
+            id: {
                 alias: 'a',
                 type: 'string',
                 desc: 'The id of the application.'
@@ -49,31 +49,31 @@ module.exports = function (yargs, handler){
                 desc: 'The path to the directory where the application will be built.'
             }
         }, handler.init)
-        .command ('build', 'build docker image for application', {
+        .command ('build', 'Build docker image for application', {
             'app-version': {
                 alias: 'v',
-                desc: 'The number of this image version',
+                desc: 'The number of this image version.',
                 type: 'number'
             }
         }, handler.build)
-        .command (['parameter', 'p'], 'adds or removes a parameter', 
+        .command (['parameter', 'p'], 'Adds or removes a parameter.', 
         (yarg) => {
-            yarg.command ('add', 'adds a new parameter', {
+            yarg.command ('add', 'Adds a new parameter.', {
                 name: {
                     alias: 'n',
-                    desc: 'Parameter name',
+                    desc: 'Parameter name.',
                     type: 'string',
                     demandOption: true
                 },
                 values: {
                     alias: 'v',
-                    desc: 'Parameter values',
+                    desc: 'Parameter values.',
                     type: 'array',
                     demandOption: true
                 },
-                'app-id': {
+                id: {
                     alias: 'app',
-                    desc: 'The application id',
+                    desc: 'The application id.',
                     type: 'string',
                     demandOption: true
                 }
@@ -81,14 +81,14 @@ module.exports = function (yargs, handler){
             .command ('remove', 'removes the parameter from the product', {
                 name: {
                     alias: 'n',
-                    desc: 'Parameter name',
+                    desc: 'Parameter name.',
                     type: 'string',
                     demandOption: true
                 },
     
-                'app-id': {
+                id: {
                     alias: 'app',
-                    desc: 'The application id',
+                    desc: 'The application id.',
                     type: 'string',
                     demandOption: true
                 }
@@ -102,8 +102,8 @@ module.exports = function (yargs, handler){
             .demandCommand ();
         })
         .command ('versions <app_id>', 'List application versions.', {}, handler.versions)
-        .command (['deploy', 'depl'], 'Deploy application on a cluster', {
-            'app-id': {
+        .command (['deploy', 'depl'], 'Deploy application on a cluster.', {
+            id: {
                 alias: 'app',
                 desc: 'The id of the application to deploy.',
                 demandOption: true,
@@ -129,7 +129,7 @@ module.exports = function (yargs, handler){
             },
             rollback: {
                 alias: 'r',
-                desc: 'How many versions behind to rollback',
+                desc: 'How many versions behind to rollback.',
                 default: 0,
                 type: 'number'
             },

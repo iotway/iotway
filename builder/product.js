@@ -1,9 +1,9 @@
 const commands = ['provision', 'list', 'describe', 'delete', 'schedule', 'unschedule', 'edit', 'provisioning-file', 'script'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
-    yargs.command(['product','p'], 'Product settings', 
+    yargs.command(['product','p'], 'Product settings.', 
      (yargs) => {
-        yargs.command (['provision', 'p'],  'provision the device', {
+        yargs.command (['provision', 'p'],  'Provision the device.', {
             type: {
                 alias: 't',
                 type: 'string',
@@ -12,7 +12,7 @@ module.exports = function (yargs, handler){
             },
             'cluster-id': {
                 alias: 'cluster',
-                desc: 'The id of the cluster that the product is part of',
+                desc: 'The id of the cluster that the product is part of.',
                 demandOption: true,
                 type: 'string'
             },
@@ -53,29 +53,29 @@ module.exports = function (yargs, handler){
             },
             'latitunde': {
                 desc: 'lat',
-                desc: 'The latitude of the product\'s location',
+                desc: 'The latitude of the product\'s location.',
                 demandOption: false,
                 type: 'number'
             },
             'longitude': {
                 desc: 'lot',
-                desc: 'The longitude of the product\'s location',
+                desc: 'The longitude of the product\'s location.',
                 demandOption: false,
                 type: 'number'
             },
             'altitude': {
                 desc: 'alt',
-                desc: 'The altitude of the product\'s location',
+                desc: 'The altitude of the product\'s location.',
                 demandOption: false,
                 type: 'number'
             }
         }, handler.provision)
-        .command (['list <cluster_id>', 'l'], 'list all product in cluster', {}, handler.list)
-        .command (['describe <product_id>', 'd'], 'show product information', {}, handler.get)
-        .command (['delete <product_id>', 'del'], 'deletes the product', {}, handler.delete)
-        .command ('schedule <product_id> <action>', 'schedule an action for the product', {}, handler.schedule)
-        .command ('unschedule <product_id> <action>', 'unschedule an action for the product', {}, handler.schedule)
-        .command (['edit <product_id>', 'e'], 'edit product', {
+        .command (['list <cluster_id>', 'l'], 'List all product in cluster.', {}, handler.list)
+        .command (['describe <product_id>', 'd'], 'Show product information.', {}, handler.get)
+        .command (['delete <product_id>', 'del'], 'Deletes the product.', {}, handler.delete)
+        .command ('schedule <product_id> <action>', 'Schedule an action for the product.', {}, handler.schedule)
+        .command ('unschedule <product_id> <action>', 'Unschedule an action for the product.', {}, handler.schedule)
+        .command (['edit <product_id>', 'e'], 'Edit product.', {
             name: {
                 alias: 'n',
                 type: 'string',
@@ -129,7 +129,7 @@ module.exports = function (yargs, handler){
                 type: 'number'
            }
         }, handler.edit)
-        .command ('script', 'adds or removes a script', 
+        .command ('script', 'Adds or removes a script.', 
         (yarg) => {
             yarg.command ('add', 'adds a new script', {
                 name: {
@@ -151,7 +151,7 @@ module.exports = function (yargs, handler){
                     demandOption: true
                 }
             }, handler.addScript)
-            .command ('remove', 'removes the script from the product', {
+            .command ('remove', 'Removes the script from the product.', {
                 name: {
                     alias: 'n',
                     desc: 'Script name',
@@ -174,7 +174,7 @@ module.exports = function (yargs, handler){
             .help ()
             .demandCommand ();
         })
-        .command ('provisioning-file <product-id>', 'get product\'s provisioning file' , {}, handler.getJson)
+        .command ('provisioning-file <product-id>', 'Get product\'s provisioning file.' , {}, handler.getJson)
         .check ((argv)=>{
             if (_.indexOf (commands, argv._[1]) != -1)
                 return true;

@@ -83,7 +83,7 @@ exports.get = async function (argv){
 
 exports.addParam = async function (argv){
     let params = {
-        appId: argv.appId,
+        appId: argv.id,
         name: argv.name,
         value: argv.values
     };
@@ -99,7 +99,7 @@ exports.addParam = async function (argv){
 
 exports.deleteParam = async function (argv){
     let params = {
-        appId: argv.appId,
+        appId: argv.id,
         name: argv.name
     };
 
@@ -124,7 +124,7 @@ exports.versions = async function (argv){
 
 exports.deploy = async function (argv){
     let params = {
-        appId: argv.appId,
+        appId: argv.id,
         clusterId: argv.clusterId,
         version: argv.version,
         rollback: (argv.rollback === 0)? null: argv.rollback,
@@ -163,7 +163,7 @@ exports.undeploy = async function (argv){
 };
 
 exports.init = async function (argv){
-    let appId = argv.app;
+    let appId = argv.id;
     let dir = argv.dir;
     let cwd = process.cwd();
     if (appId === undefined)

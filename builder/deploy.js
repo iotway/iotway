@@ -1,9 +1,9 @@
 const commands = ['list', 'versions', 'edit', 'upgrade', 'parameter', 'describe'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
-    yargs.command(['deploy', 'd'], 'Deployment settings', 
+    yargs.command(['deploy', 'd'], 'Deployment settings.', 
      (yargs) => {
-        yargs.command (['list', 'l'], 'Get deployments for application or product' , {
+        yargs.command (['list', 'l'], 'Get deployments for application or product.' , {
             application: {
                 alias: 'app',
                 desc: 'The Id of the application to get deployments for.',
@@ -15,10 +15,10 @@ module.exports = function (yargs, handler){
                 type: 'string'
             }
         }, handler.list)
-        .command (['edit <deploy_id>', 'e'], 'Edit deployment', {
+        .command (['edit <deploy_id>', 'e'], 'Edit deployment.', {
             'app-id':{
                 alias: 'app',
-                desc: 'The id of the application deployed',
+                desc: 'The id of the application deployed.',
                 demandOption: true,
                 type: 'string'
             },
@@ -36,7 +36,7 @@ module.exports = function (yargs, handler){
             }
         }, handler.edit)
         .command (['describe <deploy_id>', 'd'], 'Show information on the deployment.', {}, handler.get)
-        .command (['parameter', 'param'], 'adds or removes a parameter', 
+        .command (['parameter', 'param'], 'Adds or removes a parameter.', 
         (yarg) => {
             yarg.command ('add', 'adds a new parameter', {
                 id: {
@@ -63,7 +63,7 @@ module.exports = function (yargs, handler){
                     demandOption: true
                 }
             }, handler.addParam)
-            .command ('remove', 'removes a parameter', {
+            .command ('remove', 'Removes a parameter.', {
                 id: {
                     desc: 'Deployment id',
                     type: 'string',
@@ -92,7 +92,7 @@ module.exports = function (yargs, handler){
             .demandCommand ();
         })
         .command ('upgrade <deploy_id> <app_id>', 'Upgrade deployment for application.', {}, handler.upgrade)
-        .command ('versions <platform>', 'Get the deployer versions for arm or x86 platform', {}, handler.versions)
+        .command ('versions <platform>', 'Get the deployer versions for arm or x86 platform.', {}, handler.versions)
         .check ((argv)=>{
             if (_.indexOf (commands, argv._[1]) != -1)
                 return true;
