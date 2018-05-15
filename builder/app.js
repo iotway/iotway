@@ -35,6 +35,22 @@ module.exports = function (yargs, handler){
             }
         }, handler.new)
         .command (['list', 'l'], 'List all applications.', {}, handler.list)
+        .command ('edit <app_id>',  'edit an application', {
+                    name: {
+                        alias: 'n',
+                        type: 'string',
+                        desc: 'The name of the application.',
+                    },
+                    privileged: {
+                        alias: 'prv',
+                        desc: 'Specifies if the application should run in a priviliged container. If set to true, it will allow the application to access all the resources of the product',
+                        type: 'boolean'
+                    },
+                    network: {
+                        choices: ['default', 'host'],
+                        type: 'string'
+                    }
+        }, handler.edit)
         .command (['remove <app_id>', 'r'], 'Remove application.', {}, handler.delete)
         .command (['describe <app_id>', 'd'], 'Describe application.', {}, handler.get)
         .command ('init', 'Init application for building docker image.', {
