@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const commands = ['user', 'profile', 'cluster', 'product', 'app', 'deploy'];
 const _ = require ('lodash');
 require('dotenv').config();
