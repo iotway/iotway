@@ -32,18 +32,6 @@ module.exports.login = async function (argv){
 
     if (token){
         profileService.saveDataToCurrentProfile (username, token, host);
-        let settings = await settingsApi.get ();
-        if (settings){
-            try{
-                child_process.execSync ('docker login ' + settings.REPOSITORY + ' -u ' + username + ' -p ' + password);
-            }
-            catch (err){
-                console.error (err.message);
-                console.error ('Could not run docker login command. Make sure docker is installed.');
-                console.error ('Publishing applications do not work.');
-                process.exit (-1);
-            }
-        }
     }
     else{
         console.error ('Log in failed');

@@ -6,6 +6,7 @@ const readlineSync = require('readline-sync');
 const fs = require ('fs');
 const path = require ('path');
 const tableBuilder = require ('../utils/table');
+const profileService = require ('../service/profile');
 
 exports.new = async function (argv){
     let params = {
@@ -299,9 +300,12 @@ exports.build = async function (argv){
                 let settings = await settingsApi.get ();
                 if (settings){
                     settings = JSON.parse (settings);
+                    let profile = profileService.getCurrentProfile().profile;
                     try{
+                        child_process.execSync ('docker login ' + settings.REPOSITORY + ' -u ' + profile.username + ' -p ' + profile.token);
                         child_process.execSync ('docker build -t '+settings.REPOSITORY+'/'+appId+':'+version, {cwd: settings.dir});
                         child_process.execSync ('docker push '+settings.REPOSITORY+'/'+appId+':'+version, {cwd: settings.dir});
+                        child_process.execSync ('docker logout '+settings.REPOSITORY);
                         console.log ('Docker image built and pushed successfully.');
                     }
                     catch (err){

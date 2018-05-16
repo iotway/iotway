@@ -58,7 +58,7 @@ exports.getDefaultApp = function (){
 };
 
 exports.getDefaultCluster = function (){
-    return ['name', 'platform', 'clusterId', 'errorNumber'];
+    return ['name', 'platform', 'clusterId'];
 };
 
 exports.getDefaultDeploy = function (){
