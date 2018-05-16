@@ -22,74 +22,110 @@ exports.provision = async function (argv){
             alt: argv.altitude
         }
     }
-    let response = await productApi.provision (params);
-    if (response)
-        console.log ('Product successfully provisioned.');
+    if (productApi){
+        let response = await productApi.provision (params);
+        if (response)
+            console.log ('Product successfully provisioned.');
+        else{
+            console.error ('Could not provision product');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not provision product');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
 
 exports.list = async function (argv){
-    let products = await productApi.list (argv.cluster_id);
-    if (argv.f === 'json')
-        console.log (JSON.stringify (products, null, 3));
-    else if (products && products.length > 0){
-        let table = new Table({
-            head: ['Name', 'Id', 'Type', 'Status', 'Registered']
-        });
-        for (product of products){
-           table.push ([product.name, product.productId, product.type, product.status, product.registerType]);
+    if (productApi){
+        let products = await productApi.list (argv.cluster_id);
+        if (argv.f === 'json')
+            console.log (JSON.stringify (products, null, 3));
+        else if (products && products.length > 0){
+            let table = new Table({
+                head: ['Name', 'Id', 'Type', 'Status', 'Registered']
+            });
+            for (product of products){
+            table.push ([product.name, product.productId, product.type, product.status, product.registerType]);
+            }
+            console.log (table.toString());
         }
-        console.log (table.toString());
+        else
+            console.log ('No products to display.');
     }
-    else
-        console.log ('No products to display.');
+    else{
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
+    }
 };
 
 exports.get = async function (argv){
-    let product = await productApi.get (argv.product_id);
-    if (product){
-      console.log (JSON.stringify (product, null, 3));
+    if (productApi){
+        let product = await productApi.get (argv.product_id);
+        if (product){
+        console.log (JSON.stringify (product, null, 3));
+        }
+        else
+            console.log ('Product not found.');
     }
-    else
-        console.log ('Product not found.');
+    else{
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
+    }
 };
 
 exports.delete = async function (argv){
-    let response = await productApi.delete (argv.product_id);
-    if (response){
-      console.log ('Product deleted successfully.');
+    if (productApi){
+        let response = await productApi.delete (argv.product_id);
+        if (response){
+        console.log ('Product deleted successfully.');
+        }
+        else{
+            console.log ('Could not delete product.');
+            process.exit (-1);
+        }
     }
     else{
-        console.log ('Could not delete product.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
 
 exports.schedule = async function (argv){
-    let response = await productApi.schedule({
-        productId: argv.product_id,
-        action: argv.action});
-    if (response){
-      console.log ('Action scheduled successfully.');
+    if (productApi){
+        let response = await productApi.schedule({
+            productId: argv.product_id,
+            action: argv.action});
+        if (response){
+        console.log ('Action scheduled successfully.');
+        }
+        else{
+            console.error ('Could not schedule action for product.');
+            process.exit (-1);
+        }
     }
     else{
-        console.error ('Could not schedule action for product.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
 
 exports.unschedule = async function (argv){
-    let response = await productApi.unschedule({
-        productId: argv.product_id,
-        action: argv.action});
-    if (response){
-      console.log ('Action unschedule successfully.');
+    if (productApi){
+        let response = await productApi.unschedule({
+            productId: argv.product_id,
+            action: argv.action});
+        if (response){
+        console.log ('Action unschedule successfully.');
+        }
+        else{
+            console.log ('Could not unschedule action for product.');
+            process.exit (-1);
+        }
     }
     else{
-        console.log ('Could not unschedule action for product.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -120,22 +156,34 @@ exports.edit = async function (argv){
         }
     }
    // console.log (params);
-    let response = await productApi.edit (params);
-    if (response){
-        console.log ('Product successfully updated.');
+    if (productApi){
+        let response = await productApi.edit (params);
+        if (response){
+            console.log ('Product successfully updated.');
+        }
+        else{
+            console.error ('Could not update product.');
+            process.exit (-1);
+        }
     }
     else{
-        console.error ('Could not update product.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
 
 exports.getJson = async function (argv){
-    let file = await productApi.getWyliodrinJSON (argv.productId);
-    if (file)
-        console.log (JSON.stringify (file, null, 3));
+    if (productApi){
+        let file = await productApi.getWyliodrinJSON (argv.productId);
+        if (file)
+            console.log (JSON.stringify (file, null, 3));
+        else{
+            console.error ('Could not get file.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not get file.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -146,12 +194,17 @@ exports.addScript = async function (argv){
         name: argv.name,
         value: argv.command
     }
-
-    let response = await productApi.addScript (params);
-    if (response)
-        console.log ('Script added successfully.');
+    if (productApi){
+        let response = await productApi.addScript (params);
+        if (response)
+            console.log ('Script added successfully.');
+        else{
+            console.log ('Could not add script to product.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.log ('Could not add script to product.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -161,12 +214,17 @@ exports.deleteScript = async function (argv){
         productId: argv.productId,
         name: argv.name
     }
-
-    let response = await productApi.delScript (params);
-    if (response)
-        console.log ('Script removed successfully.');
+    if (productApi){
+        let response = await productApi.delScript (params);
+        if (response)
+            console.log ('Script removed successfully.');
+        else{
+            console.log ('Could not remove script from product.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.log ('Could not remove script from product.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };

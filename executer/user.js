@@ -52,12 +52,18 @@ module.exports.login = async function (argv){
 };
 
 module.exports.logout = async function (argv){
-    let result = await usersApi.logout();
-    if (result){
-        profileService.deleteTokenForCurrentProfile();
+    if (usersApi){
+        let result = await usersApi.logout();
+        if (result){
+            profileService.deleteTokenForCurrentProfile();
+        }
+        else{
+            console.error ('No token. Log in or select profile.');
+            process.exit (-1);
+        }
     }
     else{
-        console.error ('No token. Log in or select profile.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 }

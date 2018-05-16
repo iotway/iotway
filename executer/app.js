@@ -7,7 +7,6 @@ const fs = require ('fs');
 const path = require ('path');
 
 exports.new = async function (argv){
-    console.log (argv);
     let params = {
         appId: argv.id,
         author: argv.author,
@@ -15,34 +14,45 @@ exports.new = async function (argv){
         privileged: argv.privileged,
         name: argv.name
     }
-    let response = await appApi.new (params);
-    if (response)
-        console.log ('Application created successfully.');
+    if (appApi){
+        let response = await appApi.new (params);
+        if (response)
+            console.log ('Application created successfully.');
 
+        else{
+            console.error ('Could not create application.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not create application.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
 
 exports.list = async function (argv){
-    
-    let apps = await appApi.list ();
-    if (argv.f === 'json'){
-        console.log (JSON.stringify(apps, null, 3));
-    }
-    else if (apps && apps.length > 0){
-        let table = new Table({
-            head: ['Name', 'Id', 'Author', 'Platform', 'Privileged']
-        });
-        for (app of apps){
-            let priv = (app.privileged)? 'yes': 'no';
-            table.push ([app.name, app.appId, app.author, app.platform, priv]);
+    if (appApi){
+        let apps = await appApi.list ();
+        if (argv.f === 'json'){
+            console.log (JSON.stringify(apps, null, 3));
         }
-        console.log (table.toString());
+        else if (apps && apps.length > 0){
+            let table = new Table({
+                head: ['Name', 'Id', 'Author', 'Platform', 'Privileged']
+            });
+            for (app of apps){
+                let priv = (app.privileged)? 'yes': 'no';
+                table.push ([app.name, app.appId, app.author, app.platform, priv]);
+            }
+            console.log (table.toString());
+        }
+        else
+            console.error ('No applications to display.');
     }
-    else
-        console.error ('No applications to display.');
+    else{
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
+    }
 };
 
 exports.edit = async function (argv){
@@ -52,32 +62,49 @@ exports.edit = async function (argv){
         privileged: argv.privileged,
         network: argv.network
     }
-
-    let response = await appApi.edit (params);
-    if (response)
-        console.log ('Application updated successfully.');
+    if (appApi){
+        let response = await appApi.edit (params);
+        if (response)
+            console.log ('Application updated successfully.');
+        else{
+            console.error ('Could not update application.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not update application.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
 
 exports.delete = async function (argv){
-    let response = await appApi.delete (argv.app_id);
-    if (response)
-        console.log ('Application removed.');
+    if (appApi){
+        let response = await appApi.delete (argv.app_id);
+        if (response)
+            console.log ('Application removed.');
+        else{
+            console.error ('Could not remove application.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not remove application.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
 
 exports.get = async function (argv){
-    let app = await appApi.get (argv.app_id);
-    if (app)
-        console.log (JSON.stringify(app, null, 3));
+    if (appApi){
+        let app = await appApi.get (argv.app_id);
+        if (app)
+            console.log (JSON.stringify(app, null, 3));
+        else{
+            console.log ('Could not get application.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.log ('Could not get application.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -88,12 +115,17 @@ exports.addParam = async function (argv){
         name: argv.name,
         value: argv.values
     };
-
-    let response = await appApi.addParam (params);
-    if (response)
-        console.log ('Parameter added to application.');
+    if (appApi){
+        let response = await appApi.addParam (params);
+        if (response)
+            console.log ('Parameter added to application.');
+        else{
+            console.error ('Could not add parameter to application.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not add parameter to application.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -103,22 +135,33 @@ exports.deleteParam = async function (argv){
         appId: argv.id,
         name: argv.name
     };
-
-    let response = await appApi.delParam (params);
-    if (response)
-        console.log ('Parameter removed from application.');
+    if (appApi){
+        let response = await appApi.delParam (params);
+        if (response)
+            console.log ('Parameter removed from application.');
+        else{
+            console.error ('Could not remove parameter from application.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not remove parameter from application.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
 
 exports.versions = async function (argv){
-    let versions = await appApi.versions (argv.app_id);
-    if (versions)
-        console.log (versions);
+    if (appApi){
+        let versions = await appApi.versions (argv.app_id);
+        if (versions)
+            console.log (versions);
+        else{
+            console.error ('Could not get versions.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not get versions.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -136,12 +179,17 @@ exports.deploy = async function (argv){
     if (argv.parameterName && argv.parameterValues){
         params.parameters[argv.parameterName] = argv.parameterValues;
     }
-
-    let response = await appApi.deploy (params);
-    if (response)
-        console.log ('Application deployed successfully.');
+    if (appApi){
+        let response = await appApi.deploy (params);
+        if (response)
+            console.log ('Application deployed successfully.');
+        else{
+            console.error ('Could not deploy application.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not deploy application.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -153,12 +201,17 @@ exports.undeploy = async function (argv){
         clusterId: argv.clusterId,
         type: argv.type
     };
-
-    let response = await appApi.undeploy (params);
-    if (response)
-        console.log ('Application undeployed successfully.');
+    if (appApi){
+        let response = await appApi.undeploy (params);
+        if (response)
+            console.log ('Application undeployed successfully.');
+        else{
+            console.error ('Could not undeploy application.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not undeploy application.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -171,21 +224,27 @@ exports.init = async function (argv){
         appId = readlineSync.question ('application id: ');
     if (dir === undefined)
         dir = readlineSync.question ('build directory: ');
-    let app = await appApi.get (appId);
-    if (app){
-        if (fs.existsSync (path.join (cwd, dir))){
-            fs.writeFileSync (path.join (cwd, dir, 'wylio.json'), JSON.stringify({
-                appId: appId,
-                dir: path.join (cwd, dir)
-            }));
+    if (appApi){
+        let app = await appApi.get (appId);
+        if (app){
+            if (fs.existsSync (path.join (cwd, dir))){
+                fs.writeFileSync (path.join (cwd, dir, 'wylio.json'), JSON.stringify({
+                    appId: appId,
+                    dir: path.join (cwd, dir)
+                }));
+            }
+            else{
+                console.error ('Invalid path.');
+                process.exit (-1);
+            }
         }
         else{
-            console.error ('Invalid path.');
+            console.error ('Application does not exist.');
             process.exit (-1);
         }
     }
     else{
-        console.error ('Application does not exist.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -215,31 +274,37 @@ exports.build = async function (argv){
         if (data){
             data = JSON.parse (data);
             let appId = data.appId;
-            let versions = await appApi.versions (appId);
-            if (versions && versions.length === 0 && version === undefined)
-                version = 1;
-            else if (versions && versions.length > 0){
-                let max = Math.max (...versions);
-                if (version && version <= max)
-                    version = readlineSync.question ('insert new version greater than '+max+' : ');
-                else if (version === undefined)
-                    version = max + 1;
-            }
-            let settings = await settingsApi.get ();
-            if (settings){
-                settings = JSON.parse (settings);
-                try{
-                    child_process.execSync ('docker build -t '+settings.REPOSITORY+'/'+appId+':'+version, {cwd: settings.dir});
-                    child_process.execSync ('docker push '+settings.REPOSITORY+'/'+appId+':'+version, {cwd: settings.dir});
-                    console.log ('Docker image built and pushed successfully.');
+            if (appApi){
+                let versions = await appApi.versions (appId);
+                if (versions && versions.length === 0 && version === undefined)
+                    version = 1;
+                else if (versions && versions.length > 0){
+                    let max = Math.max (...versions);
+                    if (version && version <= max)
+                        version = readlineSync.question ('insert new version greater than '+max+' : ');
+                    else if (version === undefined)
+                        version = max + 1;
                 }
-                catch (err){
-                    console.error ('Could not run docker build command. Make sure docker is installed.');
+                let settings = await settingsApi.get ();
+                if (settings){
+                    settings = JSON.parse (settings);
+                    try{
+                        child_process.execSync ('docker build -t '+settings.REPOSITORY+'/'+appId+':'+version, {cwd: settings.dir});
+                        child_process.execSync ('docker push '+settings.REPOSITORY+'/'+appId+':'+version, {cwd: settings.dir});
+                        console.log ('Docker image built and pushed successfully.');
+                    }
+                    catch (err){
+                        console.error ('Could not run docker build command. Make sure docker is installed.');
+                        process.exit (-1);
+                    }
+                }
+                else{
+                    console.error ('Could not get account settings.');
                     process.exit (-1);
                 }
             }
             else{
-                console.error ('Could not get account settings.');
+                console.error ('No credentials. Please login or select a profile.');
                 process.exit (-1);
             }
         }

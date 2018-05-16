@@ -18,69 +18,99 @@ exports.new = async function (argv){
     if (argv.openRegister && argv.filterRegister && argv.registerProducts){
         params.filterRegisterProducts = argv.registerProducts;
     }
-    if (await clusterApi.new (params))
-        console.log ('Cluster created successfully.');
+    if (clusterApi){
+        if (await clusterApi.new (params))
+            console.log ('Cluster created successfully.');
+        else{
+            console.error ('Could not create cluster. ');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not create cluster. ');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
 
 exports.list = async function (argv){
-    let clusters = await clusterApi.list ();
-    if (argv.f === 'json')
-        console.log (JSON.stringify (clusters, null, 3));
-    else if (clusters && clusters.length > 0){
-        let table = new Table({
-            head: ['Name', 'Id', 'Open', 'Filter']
-        });
-        for (cluster of clusters){
-           let openRegister = cluster.openRegister? 'yes':'no';
-           let filterRegister = cluster.filterRegister? 'yes':'no';
-           table.push ([cluster.name, cluster.clusterId, openRegister, filterRegister]);
+    if (clusterApi){
+        let clusters = await clusterApi.list ();
+        if (argv.f === 'json')
+            console.log (JSON.stringify (clusters, null, 3));
+        else if (clusters && clusters.length > 0){
+            let table = new Table({
+                head: ['Name', 'Id', 'Open', 'Filter']
+            });
+            for (cluster of clusters){
+            let openRegister = cluster.openRegister? 'yes':'no';
+            let filterRegister = cluster.filterRegister? 'yes':'no';
+            table.push ([cluster.name, cluster.clusterId, openRegister, filterRegister]);
+            }
+            console.log (table.toString());
         }
-        console.log (table.toString());
+        else
+            console.log ('No clusters to display.');
     }
-    else
-        console.log ('No clusters to display.');
+    else{
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
+    }
 };
 
 exports.get = async function (argv){
-    let cluster = await clusterApi.get (argv.cluster_id);
-    if (cluster){
-      console.log (JSON.stringify (cluster, null, 3));
+    if (clusterApi){
+        let cluster = await clusterApi.get (argv.cluster_id);
+        if (cluster){
+        console.log (JSON.stringify (cluster, null, 3));
+        }
+        else
+            console.log ('Cluster not found.');
     }
-    else
-        console.log ('Cluster not found.');
+    else{
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
+    }
 };
 
 exports.getScripts = async function (argv){
-    let cluster = await clusterApi.get (argv.cluster_id);
-    if (argv.f === 'json')
-        console.log (JSON.stringify (cluster, null, 3));
-    if (cluster){
-        let table = new Table({
-            head: ['Name', 'Script']
-        });
-        if (cluster.scripts){
-            for (script in cluster.scripts){
-                if (cluster.scripts[script].length > 0)
-                    table.push ([script, cluster.scripts[script]]);
+    if (clusterApi){
+        let cluster = await clusterApi.get (argv.cluster_id);
+        if (argv.f === 'json')
+            console.log (JSON.stringify (cluster, null, 3));
+        if (cluster){
+            let table = new Table({
+                head: ['Name', 'Script']
+            });
+            if (cluster.scripts){
+                for (script in cluster.scripts){
+                    if (cluster.scripts[script].length > 0)
+                        table.push ([script, cluster.scripts[script]]);
+                }
             }
+            console.log (table.toString());
         }
-        console.log (table.toString());
+        else
+            console.log ('Cluster not found.');
     }
-    else
-        console.log ('Cluster not found.');
+    else{
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
+    }
 };
 
 exports.delete = async function (argv){
-    let response = await clusterApi.delete (argv.cluster_id);
-    if (response){
-      console.log ('Cluster deleted successfully.');
+    if (clusterApi){
+        let response = await clusterApi.delete (argv.cluster_id);
+        if (response){
+        console.log ('Cluster deleted successfully.');
+        }
+        else{
+            console.error ('Could not delete cluster');
+            process.exit (-1);
+        }
     }
     else{
-        console.error ('Could not delete cluster');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -105,14 +135,19 @@ exports.edit = async function (argv){
             interval: argv.updateInterval
         };
     }
+    if (clusterApi){
+        let response = await clusterApi.edit (params);
 
-    let response = await clusterApi.edit (params);
-
-    if (response){
-        console.log ('Cluster updated.');
+        if (response){
+            console.log ('Cluster updated.');
+        }
+        else{
+            console.error ('Could not update cluster.');
+            process.exit (-1);
+        }
     }
     else{
-        console.error ('Could not update cluster.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -123,12 +158,17 @@ exports.addScript = async function (argv){
         name: argv.name,
         value: argv.command
     }
-
-    let response = await clusterApi.addScript (params);
-    if (response)
-        console.log ('Script added successfully.');
+    if (clusterApi){
+        let response = await clusterApi.addScript (params);
+        if (response)
+            console.log ('Script added successfully.');
+        else{
+            console.error ('Could not add script to cluster.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not add script to cluster.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
@@ -138,21 +178,32 @@ exports.deleteScript = async function (argv){
         clusterId: argv.id,
         name: argv.name
     }
-
-    let response = await clusterApi.delScript (params);
-    if (response)
-        console.log ('Script removed successfully.');
+    if (clusterApi){
+        let response = await clusterApi.delScript (params);
+        if (response)
+            console.log ('Script removed successfully.');
+        else{
+            console.error ('Could not remove script from cluster.');
+            process.exit (-1);
+        }
+    }
     else{
-        console.error ('Could not remove script from cluster.');
+        console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
 };
 
 exports.getJson = async function (argv){
-    let file = await clusterApi.getWyliodrinJSON (argv.clusterId);
-    if (file)
-        console.log (JSON.stringify (file, null, 3));
+    if (clusterApi){
+        let file = await clusterApi.getWyliodrinJSON (argv.clusterId);
+        if (file)
+            console.log (JSON.stringify (file, null, 3));
+        else{
+            console.error ('Could not get file.');
+        }
+    }
     else{
-        console.error ('Could not get file.');
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
     }
 };
