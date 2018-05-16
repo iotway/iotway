@@ -1,4 +1,4 @@
-const commands = ['provision', 'list', 'describe', 'delete', 'schedule', 'unschedule', 'edit', 'provisioning-file', 'script', 'logs'];
+const commands = ['provision', 'list', 'describe', 'delete', 'schedule', 'unschedule', 'edit', 'provisioning-file', 'script', 'logs', 'applications'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
     yargs.command(['product','p'], 'Product settings.', 
@@ -146,6 +146,7 @@ module.exports = function (yargs, handler){
                 type: 'number'
            }
         }, handler.edit)
+        .command ('applications <product_id>', 'Get product applications.', {}, handler.applications)
         .command ('script', 'Adds or removes a script.', 
         (yarg) => {
             yarg.command ('add', 'adds a new script', {
@@ -191,7 +192,7 @@ module.exports = function (yargs, handler){
             .help ()
             .demandCommand ();
         })
-        .command ('provisioning-file <product-id>', 'Get product\'s provisioning file.' , {}, handler.getJson)
+        .command (['provisioning-file <product-id>', 'pf'], 'Get product\'s provisioning file.' , {}, handler.getJson)
         .check ((argv)=>{
             if (_.indexOf (commands, argv._[1]) != -1)
                 return true;

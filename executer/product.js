@@ -1,4 +1,5 @@
 const productApi = require ('../utils/api').products;
+const deployApi = require ('../utils/api').deploy;
 const Table = require ('cli-table');
 const moment = require ('moment');
 const tableBuilder = require ('../utils/table');
@@ -292,4 +293,51 @@ exports.logs = async function (argv){
         console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
-}
+};
+
+exports.applications = async function (argv){
+    if (productApi && deployApi){
+        let product = await productApi.get (argv.product_id);
+        let depl = await deployApi.deploymentsProduct (argv.product_id);
+        let apps = {};
+        if (product){
+            let existingApps = [];
+            if (product.statistics && product.statistics.instant && product.statistics.instant.apps)
+                existingApps = product.statistics.instant.apps;
+            for (app of existingApps){
+                apps[app.appId] = {
+                    existingVersion: app.version
+                };
+                if (depl[app.appId])
+                    apps[app.appId].availableVersion = depl[app.appId].version;
+            }
+            if (depl){
+                for (let d in depl){
+                    if (!apps[d])
+                        apps[d] = {
+                            availableVersion: depl[d].version
+                        }
+                }
+            }
+            let table = new Table({
+                head: ['App Id', 'Device Version', 'Available Version']
+            }); 
+            
+            for (let a in apps){
+                let vals = [a, 
+                            (apps[a].existingVersion)? apps[a].existingVersion: 'N/A',
+                            (apps[a].availableVersion)? apps[a].availableVersion: 'N/A'];
+                table.push (vals);
+            }
+            console.log (table.toString());
+        }
+        else{
+            console.error ('No product found.');
+            exit (-1);
+        }
+    }
+    else{
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
+    }
+};

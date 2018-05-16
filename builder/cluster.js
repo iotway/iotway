@@ -154,7 +154,7 @@ module.exports = function (yargs, handler){
             .help ()
             .demandCommand ();
         })
-        .command ('provisioning-file <cluster-id>', 'Get cluster\'s provisioning file.' , {}, handler.getJson)
+        .command (['provisioning-file <cluster-id>','pf'], 'Get cluster\'s provisioning file.' , {}, handler.getJson)
         .check ((argv)=>{
             if (_.indexOf (commands, argv._[1]) != -1)
                 return true;
