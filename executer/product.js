@@ -253,3 +253,43 @@ exports.deleteScript = async function (argv){
         process.exit (-1);
     }
 };
+
+exports.logs = async function (argv){
+    if (productApi){
+        let product = await productApi.get (argv.product_id);
+        if (argv.o === 'json' && product){
+            if (argv.type === 'info')
+                console.log (JSON.stringify(product.productLogs, null, 3));
+            else if (argv.type === 'error'){
+                console.log (JSON.stringify(product.productErrors, null, 3));
+            }
+            else if (argv.type === 'possible')
+                console.log (JSON.stringify(product.possibleErrors, null, 3));
+        }
+        else if (argv.o === 'json')
+            console.log ([]);
+        else{
+            if (product){
+                let logs = [];
+                if (argv.type === 'info'){
+                    logs = product.productLogs;
+                }
+                else if (argv.type === 'error'){
+                    logs = product.productErrors;
+                }
+                else if (argv.type === 'possible')
+                    logs = product.possibleErrors;
+                for (log of logs)
+                    console.log (log.date + ': ' + log.about + ': ' + log.message);
+            }
+            else{
+                console.error ('No product to display.');
+                process.exit (-1);
+            }
+        }
+    }
+    else{
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
+    }
+}

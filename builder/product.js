@@ -1,4 +1,4 @@
-const commands = ['provision', 'list', 'describe', 'delete', 'schedule', 'unschedule', 'edit', 'provisioning-file', 'script'];
+const commands = ['provision', 'list', 'describe', 'delete', 'schedule', 'unschedule', 'edit', 'provisioning-file', 'script', 'logs'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
     yargs.command(['product','p'], 'Product settings.', 
@@ -80,6 +80,14 @@ module.exports = function (yargs, handler){
                         'allow', 'upFrame', 'productId', 'cpu']
             }
         }, handler.list)
+        .command ('logs <product_id>', 'Show product logs.', {
+            type: {
+                alias: 't',
+                choices: ['info', 'error', 'possible'],
+                type: 'string',
+                default: 'info'
+            }
+        }, handler.logs)
         .command (['describe <product_id>', 'd'], 'Show product information.', {}, handler.get)
         .command (['delete <product_id>', 'del'], 'Deletes the product.', {}, handler.delete)
         .command ('schedule <product_id> <action>', 'Schedule an action for the product.', {}, handler.schedule)
