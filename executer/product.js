@@ -61,7 +61,7 @@ exports.list = async function (argv){
                 for (f of format){
                     if (f === 'cpu'){
                         if (product.statistics && product.statistics.instant && product.statistics.instant.cpu)
-                            values.push (product.statistics.instant.cpu);
+                            values.push (product.statistics.instant.cpu.toFixed(2));
                         else
                             values.push ('');
                     }
