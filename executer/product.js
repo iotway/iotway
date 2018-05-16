@@ -43,7 +43,6 @@ exports.provision = async function (argv){
 exports.list = async function (argv){
     if (productApi){
         let products = await productApi.list (argv.cluster_id);
-        console.log (products);
         if (argv.o === 'json')
             console.log (JSON.stringify (products, null, 3));
         else if (products && products.length > 0){
@@ -319,17 +318,22 @@ exports.applications = async function (argv){
                         }
                 }
             }
-            let table = new Table({
-                head: ['App Id', 'Device Version', 'Available Version']
-            }); 
-            
-            for (let a in apps){
-                let vals = [a, 
-                            (apps[a].existingVersion)? apps[a].existingVersion: 'N/A',
-                            (apps[a].availableVersion)? apps[a].availableVersion: 'N/A'];
-                table.push (vals);
+            if (argv.o === 'json'){
+                console.log (apps);
             }
-            console.log (table.toString());
+            else{
+                let table = new Table({
+                    head: ['App Id', 'Device Version', 'Available Version']
+                }); 
+                
+                for (let a in apps){
+                    let vals = [a, 
+                                (apps[a].existingVersion)? apps[a].existingVersion: 'N/A',
+                                (apps[a].availableVersion)? apps[a].availableVersion: 'N/A'];
+                    table.push (vals);
+                }
+                console.log (table.toString());
+            }
         }
         else{
             console.error ('No product found.');
