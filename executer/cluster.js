@@ -1,5 +1,6 @@
 const clusterApi = require ('../utils/api').clusters;
 const Table = require ('cli-table');
+const tableBuilder = require ('../utils/table');
 exports.new = async function (argv){
     let params = {
         authKey: true,
@@ -35,16 +36,25 @@ exports.new = async function (argv){
 exports.list = async function (argv){
     if (clusterApi){
         let clusters = await clusterApi.list ();
-        if (argv.f === 'json')
+        if (argv.o === 'json')
             console.log (JSON.stringify (clusters, null, 3));
         else if (clusters && clusters.length > 0){
+            let format = argv.f;
+            if (format === undefined)
+                format = tableBuilder.getDefaultCluster ();
+            else if (format.indexOf ('wide') != -1){
+                format = tableBuilder.getWideCluster ();
+            }
+            let header = tableBuilder.header (format, 'cluster');
             let table = new Table({
-                head: ['Name', 'Id', 'Open', 'Filter']
-            });
+                head: header
+            });            
             for (cluster of clusters){
-            let openRegister = cluster.openRegister? 'yes':'no';
-            let filterRegister = cluster.filterRegister? 'yes':'no';
-            table.push ([cluster.name, cluster.clusterId, openRegister, filterRegister]);
+                let values = [];
+                for (f of format){
+                    values.push (cluster[f]);
+                }
+                table.push (values);
             }
             console.log (table.toString());
         }
@@ -75,7 +85,7 @@ exports.get = async function (argv){
 exports.getScripts = async function (argv){
     if (clusterApi){
         let cluster = await clusterApi.get (argv.cluster_id);
-        if (argv.f === 'json')
+        if (argv.o === 'json')
             console.log (JSON.stringify (cluster, null, 3));
         if (cluster){
             let table = new Table({

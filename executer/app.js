@@ -5,6 +5,7 @@ const settingsApi = require ('../utils/api').settings;
 const readlineSync = require('readline-sync');
 const fs = require ('fs');
 const path = require ('path');
+const tableBuilder = require ('../utils/table');
 
 exports.new = async function (argv){
     let params = {
@@ -33,16 +34,26 @@ exports.new = async function (argv){
 exports.list = async function (argv){
     if (appApi){
         let apps = await appApi.list ();
-        if (argv.f === 'json'){
+        if (argv.o === 'json'){
             console.log (JSON.stringify(apps, null, 3));
         }
         else if (apps && apps.length > 0){
+            let format = argv.f;
+            if (format === undefined)
+                format = tableBuilder.getDefaultApp ();
+            else if (format.indexOf ('wide') != -1){
+                format = tableBuilder.getWideApp ();
+            }
+            let header = tableBuilder.header (format, 'app');
             let table = new Table({
-                head: ['Name', 'Id', 'Author', 'Platform', 'Privileged']
+                head: header
             });
             for (app of apps){
-                let priv = (app.privileged)? 'yes': 'no';
-                table.push ([app.name, app.appId, app.author, app.platform, priv]);
+                let values = [];
+                for (f of format){
+                    values.push (app[f]);
+                }
+                table.push (values);
             }
             console.log (table.toString());
         }

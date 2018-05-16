@@ -34,7 +34,13 @@ module.exports = function (yargs, handler){
                 type: 'boolean'
             }
         }, handler.new)
-        .command (['list', 'l'], 'List all applications.', {}, handler.list)
+        .command (['list', 'l'], 'List all applications.', {
+            format: {
+                alias: 'f',
+                type: 'array',
+                desc: 'Specify outputm format. Wide (contains all fields), or specify each field.',
+                choices: ['wide', 'name', 'appId', 'author', 'ownerId', 'platform', 'privileged']
+            }}, handler.list)
         .command ('edit <app_id>',  'edit an application', {
                     name: {
                         alias: 'n',
@@ -203,7 +209,6 @@ module.exports = function (yargs, handler){
             throw new Error ('Invalid command.');
         })
        .help ()
-       .completion ('new')
        .demandCommand ();
      });
     return yargs;

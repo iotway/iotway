@@ -16,6 +16,7 @@
     "cli-table": "^0.3.1",
     "dotenv": "^4.0.0",
     "lodash": "^4.17.10",
+    "moment": "^2.22.1",
     "readline-sync": "^1.4.7",
     "yargs": "^11.0.0"
   }

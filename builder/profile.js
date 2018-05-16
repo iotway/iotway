@@ -11,7 +11,14 @@ module.exports = function (yargs, handler){
             // }
         }, handler.save)
         .command ('delete <profile_name>', 'Delete profile.', {}, handler.delete)
-        .command ('list', 'List all profiles.', {}, handler.list)
+        .command ('list', 'List all profiles.', {
+            format: {
+                alias: 'f',
+                type: 'array',
+                desc: 'Specify output format. Wide (contains all fields), or specify each field.',
+                choices: ['wide']
+            }
+        }, handler.list)
         .check ((argv)=>{
             if (_.indexOf (commands, argv._[1]) != -1)
                 return true;

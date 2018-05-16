@@ -70,7 +70,16 @@ module.exports = function (yargs, handler){
                 type: 'number'
             }
         }, handler.provision)
-        .command (['list <cluster_id>', 'l'], 'List all product in cluster.', {}, handler.list)
+        .command (['list <cluster_id>', 'l'], 'List all product in cluster.', {
+            format: {
+                alias: 'f',
+                type: 'array',
+                desc: 'Specify output format. Wide (contains all fields), or specify each field.',
+                choices: ['wide', 'clusterId', 'ownerId', 'serial', 'type', 'shell', 'latestTokenRefresh', 'name', 'token',
+                        'registerDate', 'registerType', 'platform', 'latestStatus', 'logNumber', 'errorNumber', 'status',
+                        'allow', 'upFrame', 'productId', 'cpu']
+            }
+        }, handler.list)
         .command (['describe <product_id>', 'd'], 'Show product information.', {}, handler.get)
         .command (['delete <product_id>', 'del'], 'Deletes the product.', {}, handler.delete)
         .command ('schedule <product_id> <action>', 'Schedule an action for the product.', {}, handler.schedule)

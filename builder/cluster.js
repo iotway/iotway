@@ -54,7 +54,14 @@ module.exports = function (yargs, handler){
                 type: 'array'
             }
         }, handler.new)
-        .command (['list', 'l'], 'List all user\'s clusters.', {}, handler.list)
+        .command (['list', 'l'], 'List all user\'s clusters.', {
+                format: {
+                    alias: 'f',
+                    type: 'array',
+                    desc: 'Specify output format. Wide (contains all fields), or specify each field.',
+                    choices: ['wide', 'name', 'openRegister', 'ownerId', 'errorNumber', 'platform', 'clusterId', 'filterRegister']
+                }
+        }, handler.list)
         .command (['describe <cluster_id>', 'd'], 'Show cluster information.', {}, handler.get)
         .command (['scripts <cluster_id>', 's'], 'Show cluster scripts.', {}, handler.getScripts)
         .command (['delete <cluster_id>', 'del'], 'Deletes the cluster.', {}, handler.delete)

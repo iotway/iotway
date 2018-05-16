@@ -68,7 +68,7 @@ exports.list = function (argv){
             let profile = file.substr (0, file.length-5);
             let username = (currentProfile.username)? currentProfile.username: '';
             let api = (currentProfile.api)? currentProfile.api: '';
-            if (argv.f === 'json'){
+            if (argv.o === 'json'){
                 currentProfile.name = profile;
                 if (file === selectedProfile){
                     currentProfile.selected = true;
@@ -84,7 +84,7 @@ exports.list = function (argv){
             }
         }
     }
-    if (argv.f != 'json')
+    if (argv.o != 'json')
         console.log (table.toString());
     else
         console.log (JSON.stringify (profilesJson, null, 3));

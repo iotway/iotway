@@ -1,47 +1,54 @@
 const deployApi = require ('../utils/api').deploy;
 const Table = require ('cli-table');
+const tableBuilder = require ('../utils/table');
 
 exports.list = async function (argv){
     if (deployApi){
+        let deployments = [];
         if (argv.app){
-            let deployments = await deployApi.list (argv.app);
-            if (argv.f === 'json')
-                console.log (JSON.stringify (deployments, null, 3));
-            if (deployments && deployments.length > 0){
-                let table = new Table({
-                    head: ['Id', 'Target', 'Type', 'Version', 'Privileged', 'Network']
-                });
-                for (depl of deployments){
-                    let p = (depl.privileged)? 'yes': 'no';
-                table.push ([depl.deployId, depl.target, depl.type, depl.version, p, depl.network]);
-                }
-                console.log (table.toString());
-            }
-            else
-                console.log ('No deployments to display.');
+            deployments = await deployApi.list (argv.app);
         }
         else if (argv.prod){
-            let deployments = await deployApi.deploymentsProduct (argv.prod);
-            if (argv.f === 'json')
-                console.log (JSON.stringify (deployments, null, 3));
-            else if (deployments && deployments.length > 0){
-                let table = new Table({
-                    head: ['Id', 'Target', 'Type', 'Version', 'Privileged', 'Network']
-                });
-                for (depl of deployments){
-                    let p = (depl.privileged)? 'yes': 'no';
-                table.push ([depl.deployId, depl.target, depl.type, depl.version, p, depl.network]);
-                }
-                console.log (table.toString());
-            }
-            else
-                console.log ('No deployments to display.');
+            deployments = await deployApi.deploymentsProduct (argv.prod);
         }
         else{
             console.error ('Must specify an option.');
             console.error ('Run help to check for options');
             process.exit (-1);
         }
+
+        if (argv.o === 'json')
+                console.log (JSON.stringify (deployments, null, 3));
+        else if (deployments && deployments.length > 0){
+            let format = argv.f;
+            if (format === undefined)
+                format = tableBuilder.getDefaultDeploy ();
+            else if (format.indexOf ('wide') != -1){
+                format = tableBuilder.getWideDeploy ();
+            }
+            let header = tableBuilder.header (format, 'deploy');
+            let table = new Table({
+                head: header
+            });  
+            let targetIndex = format.indexOf ('targetId');
+            if (targetIndex != -1){
+                format.push ('id');
+                format.splice (targetIndex, 1);
+            }          
+            for (depl of deployments){
+                let values = [];
+                for (f of format){
+                    if (f === 'rollback' &&  (depl[f] === null || depl[f] === undefined)) 
+                        values.push ('');
+                    else
+                        values.push (depl[f]);
+                }
+                table.push (values);
+            }
+            console.log (table.toString());
+        }
+        else
+            console.log ('No deployments to display.');
     }
     else{
         console.error ('No credentials. Please login or select a profile.');

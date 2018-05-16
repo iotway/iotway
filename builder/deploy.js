@@ -13,6 +13,12 @@ module.exports = function (yargs, handler){
                 alias: 'prod',
                 desc: 'The Id of the product to get deployments for.',
                 type: 'string'
+            },
+            format: {
+                alias: 'f',
+                type: 'array',
+                desc: 'Specify output format. Wide (contains all fields), or specify each field.',
+                choices: ['wide', 'appId', 'target', 'type', 'version', 'rollback', 'privileged', 'network', 'deployId', 'targetId']
             }
         }, handler.list)
         .command (['edit <deploy_id>', 'e'], 'Edit deployment.', {

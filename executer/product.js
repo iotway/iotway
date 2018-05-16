@@ -1,5 +1,7 @@
 const productApi = require ('../utils/api').products;
 const Table = require ('cli-table');
+const moment = require ('moment');
+const tableBuilder = require ('../utils/table');
 exports.provision = async function (argv){
     params = {
         clusterId: argv.clusterId,
@@ -40,14 +42,37 @@ exports.provision = async function (argv){
 exports.list = async function (argv){
     if (productApi){
         let products = await productApi.list (argv.cluster_id);
-        if (argv.f === 'json')
+        console.log (products);
+        if (argv.o === 'json')
             console.log (JSON.stringify (products, null, 3));
         else if (products && products.length > 0){
+            let format = argv.f;
+            if (format === undefined)
+                format = tableBuilder.getDefaultProduct ();
+            else if (format.indexOf ('wide') != -1){
+                format = tableBuilder.getWideProduct ();
+            }
+            let header = tableBuilder.header (format, 'product');
             let table = new Table({
-                head: ['Name', 'Id', 'Type', 'Status', 'Registered']
-            });
+                head: header
+            });  
             for (product of products){
-            table.push ([product.name, product.productId, product.type, product.status, product.registerType]);
+                let values = [];
+                for (f of format){
+                    if (f === 'cpu'){
+                        if (product.statistics && product.statistics.instant && product.statistics.instant.cpu)
+                            values.push (product.statistics.instant.cpu);
+                        else
+                            values.push ('');
+                    }
+                    else if (f === 'latestStatus'){
+                        values.push (moment (product[f]).fromNow());
+                    }
+                    else{
+                        values.push (product[f]);
+                    }     
+                }
+                table.push (values);
             }
             console.log (table.toString());
         }

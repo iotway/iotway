@@ -19,4 +19,10 @@ yargs.help()
   throw new Error ('Invalid command.');
 })
 .demandCommand()
+.option ('output', {
+  alias: 'o',
+  default: 'human',
+  global: true,
+  choices: ['human', 'json']
+})
 .argv
