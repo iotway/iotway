@@ -50,7 +50,8 @@ const productHeader = {
     allow: 'Enabled',
     upFrame: 'UpFrame',
     productId: 'Product Id',
-    cpu: 'Load %'
+    cpu: 'Load %',
+    actions: 'Actions'
 };
 
 exports.getDefaultApp = function (){
@@ -66,7 +67,7 @@ exports.getDefaultDeploy = function (){
 };
 
 exports.getDefaultProduct = function (){
-    return ['name', 'productId', 'type', 'status', 'cpu', 'latestStatus'];
+    return ['name', 'productId', 'type', 'status', 'actions', 'cpu', 'latestStatus'];
 };
 
 exports.getWideApp = function (){

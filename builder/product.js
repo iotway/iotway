@@ -77,7 +77,7 @@ module.exports = function (yargs, handler){
                 desc: 'Specify output format. Wide (contains all fields), or specify each field.',
                 choices: ['wide', 'clusterId', 'ownerId', 'serial', 'type', 'shell', 'latestTokenRefresh', 'name', 'token',
                         'registerDate', 'registerType', 'platform', 'latestStatus', 'logNumber', 'errorNumber', 'status',
-                        'allow', 'upFrame', 'productId', 'cpu']
+                        'allow', 'upFrame', 'productId', 'cpu', 'actions']
             }
         }, handler.list)
         .command ('logs <product_id>', 'Show product logs.', {

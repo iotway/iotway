@@ -68,6 +68,23 @@ exports.list = async function (argv){
                     else if (f === 'latestStatus'){
                         values.push (moment (product[f]).fromNow());
                     }
+                    else if (f === 'actions'){
+                        let actions = product.actions;
+                        let value = '';
+                        if (actions){
+                            if (actions.distribute)
+                                value = value + 'd';
+                            else
+                                value = value + '-';
+                            if (actions.restart)
+                                value = value + 'r';
+                            else
+                                value = value + '-';
+                        }
+                        else
+                            value = '--';
+                        values.push (value);
+                    }
                     else{
                         values.push (product[f]);
                     }     
