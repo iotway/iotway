@@ -51,7 +51,7 @@ const productHeader = {
     upFrame: 'UpFrame',
     productId: 'Product Id',
     cpu: 'Load %',
-    actions: 'Actions'
+    actions: 'Scheduled'
 };
 
 exports.getDefaultApp = function (){

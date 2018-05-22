@@ -17,5 +17,6 @@ module.exports = {
     baseDir: baseDir,
     profilesDir: profilesDir,
     profileFile: profileFile,
-    defaultProfileName: 'default.json'
+    defaultProfileName: 'default.json',
+    socketPath: '/socket/ui'
 };
