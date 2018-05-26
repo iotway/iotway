@@ -16,12 +16,17 @@ exports.shell = async function (argv){
                     r: process.stdout.rows
                 }
             });
+            console.log ('Press any key to start the shell.');
+            console.log ('Press Ctrl+q to exit the shell.')
             process.stdin.setRawMode (true);
             process.stdin.setEncoding( 'utf8' );
             readline.emitKeypressEvents(process.stdin);
             process.stdin.on('keypress', (str, key) => {
-                if (key.ctrl && key.name === 'q')
+                if (key.ctrl && key.name === 'q'){
+                    console.log ('');
+                    console.log ('Disconnected');
                     process.exit (0);
+                }
                 else{
                     socketService.send ('packet', productId, {
                         t: 's',
@@ -31,6 +36,16 @@ exports.shell = async function (argv){
                         }
                     });
                 }
+            });
+            process.stdout.on('resize', function() {
+                socketService.send ('packet', productId, {
+                    t: 's',
+                    d: {
+                        a: 'r',
+                        c: process.stdout.columns,
+                        r: process.stdout.rows
+                    }
+                });
             });
         }, (data)=>{
             if (data.t === 's'){
