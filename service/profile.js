@@ -17,7 +17,14 @@ exports.getCurrentProfile = function (){
         return {profile:profile, name:profileName};
     }
     catch (err){
-        return {profile:{}, name:profileName};
+        let token = (process.env.WYLIODRIN_TOKEN)? process.env.WYLIODRIN_TOKEN: undefined;
+        let api = (process.env.WYLIODRIN_SERVER)? process.env.WYLIODRIN_SERVER: undefined;
+        let username = (process.env.WYLIODRIN_USER)? process.env.WYLIODRIN_USER: undefined;
+        return {profile:{
+            token: token,
+            api: api,
+            username: username
+        }, name:profileName};
     }
 };
 

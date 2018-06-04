@@ -299,7 +299,6 @@ exports.build = async function (argv){
                 }
                 let settings = await settingsApi.get ();
                 if (settings){
-                    settings = JSON.parse (settings);
                     let profile = profileService.getCurrentProfile().profile;
                     try{
                         child_process.execSync ('docker login ' + settings.REPOSITORY + ' -u ' + profile.username + ' -p ' + profile.token);
