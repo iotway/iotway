@@ -19,6 +19,13 @@ module.exports = function (http, setToken)
             return null;
         },
 
+        get: async function (){
+            let response = await http.get ('/user');
+            if (response.data && response.data.err === 0)
+                return response.data.user;
+            return null;
+        },
+
         setToken: function (token){
             setToken (token);
         }

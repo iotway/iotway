@@ -54,6 +54,21 @@ const productHeader = {
     actions: 'Scheduled'
 };
 
+const projectHeader = {
+    projectId: 'Project Id',
+    name: 'Name',
+    appId: 'Application Id',
+    short_name: 'Short Name',
+    platform: 'Platform',
+    ownerId: 'Owner Id',
+    ui: 'UI',
+
+};
+
+exports.getDefaultProject = function (){
+    return ['projectId', 'name', 'platform', 'ui'];
+};
+
 exports.getDefaultApp = function (){
     return ['author', 'appId', 'name', 'platform', 'privileged'];
 };
@@ -68,6 +83,14 @@ exports.getDefaultDeploy = function (){
 
 exports.getDefaultProduct = function (){
     return ['name', 'productId', 'type', 'status', 'actions', 'cpu', 'latestStatus'];
+};
+
+exports.getWideProject = function (){
+    let returnVlues = [];
+    for (let h in projectHeader){
+        returnVlues.push (h);
+    }
+    return returnVlues;
 };
 
 exports.getWideApp = function (){
@@ -113,9 +136,15 @@ exports.header = function (argv, type){
     else if (type === 'product'){
         header = productHeader;
     }
-    let returnHeader = [];
-    for (let a of argv){
-        returnHeader.push (header[a]);
-    }   
-    return returnHeader;
+    else if (type === 'project'){
+        header = projectHeader;
+    }
+    if (header){
+        let returnHeader = [];
+        for (let a of argv){
+            returnHeader.push (header[a]);
+        }   
+        return returnHeader;
+    }
+    return [];
 }

@@ -1,9 +1,14 @@
 const _ = require ('lodash');
-const commands = ['init', 'run'];
+const commands = ['init', 'run', 'list'];
 module.exports = function (yargs, handler){
     yargs.command(['project', 'proj'], 'Project settings.',
      (yargs) => {
-        yargs.command ('init',  'Creates a new project template.', {
+        yargs.command ('list', 'List all current user\'s projects.', {}, handler.list)
+        .command ('init',  'Creates a new project template.', {
+            id: {
+                type: 'string',
+                desc: 'The id of the project.'
+            },
             name: {
                 alias: 'n',
                 type: 'string',

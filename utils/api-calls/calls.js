@@ -7,13 +7,14 @@ module.exports = function (endpoint){
     const apps = require ('./applications')(httpService.http);
     const deploy = require ('./deploy')(httpService.http);
     const settings = require ('./settings')(httpService.http);
-    
+    const projects = require ('./projects')(httpService.http);
     return {
         users: users,
         clusters: clusters,
         products: products,
         apps: apps,
         deploy: deploy,
-        settings: settings
+        settings: settings,
+        projects: projects
     };
 };

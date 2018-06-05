@@ -1,0 +1,10 @@
+{
+    "name": "{{{project.name}}}",
+    "email": "{{{user.email}}}",
+    "author": "{{{user.name}}}",
+    "main": "main.js",
+    "scripts": {
+        "start": "node main.js"
+    }
+}
+      
