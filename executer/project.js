@@ -19,41 +19,52 @@ const projectLanguages = {
     python: 'python'
 }
 exports.init = async function (argv){
-    let project;
-    if (userApi){
-        let user = await userApi.get ();
-        if (user){
-            if (process.env.WYLIODRIN_PROJECT_ID){
-                console.log ('Using environment configurations');
-                let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
-                project = {
-                    name: onlineProject.name,
-                    appId: onlineProject.appId,
-                    language: projectLanguages[onlineProject.language],
-                    id: onlineProject.projectId,
-                    platform: onlineProject.platform,
-                    ui: onlineProject.ui
-                };
-            }
-            else{
-                project = {
-                    name: argv.name,
-                    appId: argv.appId,
-                    language: projectLanguages[argv.language],
-                    id: argv.id,
-                    platform: argv.platform,
-                    ui: argv.ui
-                };
-            }
-            if (project.name && project.appId && project.language){
-                let app = await appApi.get (project.appId);
-                if (!app){
-                    console.log ('Please provide a valid application id.');
-                    process.exit (-1);
+    let contents = fs.readdirSync (process.cwd());
+    if (contents.length === 0 || (contents.length === 1 && contents[0] === 'project.log')){
+        let project;
+        if (userApi){
+            let user = await userApi.get ();
+            if (user){
+                if (process.env.WYLIODRIN_PROJECT_ID){
+                    console.log ('Using environment configurations');
+                    let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+                    if (onlineProject){
+                        project = {
+                            name: onlineProject.name,
+                            appId: onlineProject.appId,
+                            language: projectLanguages[onlineProject.language],
+                            id: onlineProject.projectId,
+                            platform: onlineProject.platform,
+                            ui: onlineProject.ui
+                        };
+                    }
+                    else{
+                        console.error ('Could not find project.');
+                        process.exit (-1);
+                    }
                 }
                 else{
+                    // project = {
+                    //     name: argv.name,
+                    //     appId: argv.appId,
+                    //     language: projectLanguages[argv.language],
+                    //     id: argv.id,
+                    //     platform: argv.platform,
+                    //     ui: argv.ui
+                    // };
+                    console.error ('WYLIODRIN_PROJECT_ID is not defined.');
+                    process.exit (-1);
+                }
+                if (project.name && project.appId && project.language){
+                    if (project.appId.substring (0, 5) !== 'local'){
+                        let app = await appApi.get (project.appId);
+                        if (!app){
+                            console.error ('Please provide a valid application id.');
+                            process.exit (-1);
+                        }
+                    }
                     //Generate project structure
-                    fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project));
+                    // fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project));
                     fs.copySync(path.normalize (__dirname + '/../utils/project_templates/' + project.language),
                                             process.cwd());
                     //Generate package.json for js projects
@@ -67,20 +78,23 @@ exports.init = async function (argv){
                         fs.writeFileSync (path.join(process.cwd(), 'package.json'), package);
                     }
                 }
+                else{
+                    console.error ('Please provide a project name, a project language and a valid application id.');
+                    process.exit (-1);
+                }
             }
             else{
-                console.log ('Please provide a project name, a project language and a valid application id.');
+                console.error ('Invalid profile. Please login again.');
                 process.exit (-1);
             }
         }
         else{
-            console.log ('Invalid profile. Please login again.');
+            console.error ('No credentials. Please login or select a profile.');
             process.exit (-1);
         }
     }
     else{
-        console.error ('No credentials. Please login or select a profile.');
-        process.exit (-1);
+        console.log ('Folder not empty. Please run command in an empty folder.');
     }
 };
 
@@ -89,17 +103,17 @@ exports.run = async function (argv){
     let product = await productApi.get (productId);
     if (product){
         if (product.type ){//=== 'development'){
-            try{
-                let projectSettings = fs.readFileSync(path.join(process.cwd(), 'wylioproject.json'), 'utf8');
-                projectSettings = JSON.parse (projectSettings);
-                console.log (projectSettings);
-                if (projectSettings.id){
-                    let project = await projectApi.get (projectSettings.id);
-                    console.log (project);
-                    if (project)
-                        projectSettings = project;
+            if (process.env.WYLIODRIN_PROJECT_ID){
+                let projectSettings = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+                if (!projectSettings){
+                    console.error ('Could not find project.');
+                    process.exit (-1);
                 }
                 let appId = projectSettings.appId;
+                if (appId.substring (0, 5) !== 'local'){
+                    console.error ('Please provide an existing application id.');
+                    process.exit (-1);
+                }
                 let settings = await settingsApi.get ();
                 let docker = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
                 let libraries = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/libraries/' + projectSettings.language), 'utf8');
@@ -134,10 +148,8 @@ exports.run = async function (argv){
                     process.exit (-1);
                 }
             }
-            catch (e){
-                console.log (e);
-                console.log ('Not a wylio project repository.');
-                console.log ('Please run wylio init.');
+            else{
+                console.error ('WYLIODRIN_PROJECT_ID is not defined.');
                 process.exit (-1);
             }
         }
