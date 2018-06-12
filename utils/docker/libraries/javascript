@@ -1,4 +1,4 @@
 WORKDIR /application
-COPY package.json
+COPY package.json ./
 RUN npm install --production --no-optional
 COPY . ./

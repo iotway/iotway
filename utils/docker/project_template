@@ -1,13 +1,18 @@
-FROM {{{{REPOSITORY}}}/{{{DEPLOYER_DOMAIN}}}.{{{project.platform}}}.{{{project.ui}}}.{{{project.language}}}
+FROM {{{REPOSITORY}}}/{{{DEPLOYER_DOMAIN}}}.{{{project.platform}}}.{{{project.ui}}}.{{{project.language}}}
 
-{{#arm}} RUN [ "cross-build-start" ] {{/arm}}
+{{#arm}}RUN [ "cross-build-start" ] {{/arm}}
+
+# USER DOCKER COMMANDS START
 
 {{{dockerfile}}}
 
+# USER DOCKER COMMANDS STOP
+
 {{{libraries}}}
 
-{{#arm}} RUN [ "cross-build-stop" ] {{/arm}}
-
 COPY start.sh /start.sh
-
 RUN chmod a+x /start.sh
+
+{{#arm}}RUN [ "cross-build-end" ] {{/arm}}
+
+ENTRYPOINT /start.sh

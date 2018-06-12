@@ -10,6 +10,7 @@ const fs = require ('fs-extra');
 const path = require ('path');
 const spawn = require ('child_process').spawnSync;
 const mustache = require ('mustache');
+const child_process = require ('child_process');
 
 const projectLanguages = {
     js: 'javascript',
@@ -100,66 +101,173 @@ exports.init = async function (argv){
 
 exports.run = async function (argv){
     let productId = argv.product_id;
-    let product = await productApi.get (productId);
-    if (product){
-        if (product.type ){//=== 'development'){
-            if (process.env.WYLIODRIN_PROJECT_ID){
-                let projectSettings = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
-                if (!projectSettings){
-                    console.error ('Could not find project.');
-                    process.exit (-1);
-                }
-                let appId = projectSettings.appId;
-                if (appId.substring (0, 5) !== 'local'){
-                    console.error ('Please provide an existing application id.');
-                    process.exit (-1);
-                }
-                let settings = await settingsApi.get ();
-                let docker = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
-                let libraries = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/libraries/' + projectSettings.language), 'utf8');
-                if (settings){
-                    let profile = profileService.getCurrentProfile().profile;
-                    let dockerData = {
-                        REPOSITORY: settings.REPOSITORY,
-                        DEPLOYER_DOMAIN: settings.DEPLOYER,
-                        project: projectSettings,
-                        arm: (projectSettings.platform === 'arm')? true: false,
-                        dockerfile: docker,
-                        libraries: libraries
+    if (productApi){
+        let product = await productApi.get (productId);
+        if (product){
+            if (product.type === 'development'){
+                if (process.env.WYLIODRIN_PROJECT_ID){
+                    let projectSettings = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+                    if (!projectSettings){
+                        console.error ('Could not find project.');
+                        process.exit (-1);
                     }
-                    let dockerTemplate = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/project_template'), 'utf8');
-                    let dockerFile = mustache.render (dockerTemplate, dockerData);
-                    let buildFolder = path.join(process.cwd(), 'build');
-                    fs.writeFileSync (path.join(buildFolder, 'dockerfile'), dockerFile);
-                    try{
-                        child_process.execSync ('docker login ' + settings.REPOSITORY + ' -u ' + profile.username + ' -p ' + profile.token);
-                        child_process.execSync ('docker build -t '+settings.REPOSITORY+'/'+appId+':dev', {cwd: buildFolder});
-                        child_process.execSync ('docker push '+settings.REPOSITORY+'/'+appId+':dev', {cwd: buildFolder});
-                        child_process.execSync ('docker logout '+settings.REPOSITORY);
-                        console.log ('Docker image built and pushed successfully.');
+                    let appId = projectSettings.appId;
+                    if (appId.substring (0, 5) !== 'local'){
+                        let app = appApi.get (appId);
+                        if (!app){
+                            console.error ('Please provide an existing application id.');
+                            process.exit (-1);
+                        }
                     }
-                    catch (err){
-                        console.error ('Could not run docker build command. Make sure docker is installed.');
+                    let settings = await settingsApi.get ();
+                    if (settings){
+                        let profile = profileService.getCurrentProfile().profile;
+                        let docker = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
+                        let dockerFile;
+                        if (docker.substring (0, 7) != '#MANUAL'){
+                            let libraries = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/libraries/' + projectSettings.language), 'utf8');
+                            let dockerData = {
+                                REPOSITORY: settings.REPOSITORY,
+                                DEPLOYER_DOMAIN: settings.DEPLOYER,
+                                project: projectSettings,
+                                arm: (settings.PLATFORM[projectSettings.platform].docker.platform === 'arm')? true: false,
+                                dockerfile: docker,
+                                libraries: libraries
+                            }
+                            let dockerTemplate = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/project_template'), 'utf8');
+                            dockerFile = mustache.render (dockerTemplate, dockerData);
+                        }
+                        else{
+                            dockerFile = docker;
+                        }
+                        let buildFolder = path.join(process.cwd(), 'build');
+                        fs.writeFileSync (path.join(buildFolder, 'dockerfile'), dockerFile);
+                        try{
+                            console.log ('Loggin in.');
+                            console.log (child_process.execSync ('docker login ' + settings.REPOSITORY + ' -u ' + profile.username + ' -p ' + profile.token).toString());
+                        }    
+                        catch (err){
+                            console.error (err.stderr.toString());
+                            process.exit (-1);
+                        }
+                        try{
+                            console.log ('Building docker image.');
+                            console.log (child_process.execSync ('docker build -t '+settings.REPOSITORY+'/'+appId+':dev .', {cwd: buildFolder}).toString());
+                        }
+                        catch (err){
+                            console.error (err.stderr.toString());
+                            process.exit (-1);
+                        }
+                        try{
+                            console.log ('Pushing docker image. Please wait.');
+                            console.log (child_process.execSync ('docker push '+settings.REPOSITORY+'/'+appId+':dev', {cwd: buildFolder}).toString());
+                            console.log ('Docker image built and pushed successfully.');
+                            socketService.connect (profile.api, profile.token, ()=>{
+                                socketService.send ('packet', productId, {
+                                    t: 'r',
+                                    d: {
+                                        id: appId,
+                                        a: 'r',
+                                        c: process.stdout.columns,
+                                        r: process.stdout.rows
+                                    }
+                                });
+                                console.log ('Press any key to start the shell.');
+                                console.log ('Press Ctrl+c to exit the shell.')
+                                process.stdin.setRawMode (true);
+                                process.stdin.setEncoding( 'utf8' );
+                                readline.emitKeypressEvents(process.stdin);
+                                process.stdin.on('keypress', (str, key) => {
+                                    if (key.ctrl && key.name === 'c'){
+                                        socketService.send ('packet', productId, {
+                                            t: 'r',
+                                            d: {
+                                                id: appId,
+                                                a:'s'
+                                            }
+                                        });
+                                        console.log ('');
+                                        console.log ('Disconnected');
+                                        process.exit (0);
+                                    }
+                                    else{
+                                        socketService.send ('packet', productId, {
+                                            t: 'r',
+                                            d: {
+                                                id: appId,
+                                                a:'k',
+                                                t:str
+                                            }
+                                        });
+                                    }
+                                });
+                                process.stdout.on('resize', function() {
+                                    socketService.send ('packet', productId, {
+                                        t: 'r',
+                                        d: {
+                                            id: appId,
+                                            a: 'r',
+                                            c: process.stdout.columns,
+                                            r: process.stdout.rows
+                                        }
+                                    });
+                                });
+                            }, (data)=>{
+                                if (data.t === 'r' && data.d.id === appId){
+                                    if (data.d.a === 'e'){
+                                        if (data.d.e === 'noshell'){
+                                            socketService.send ('packet', productId, {
+                                                t: 's',
+                                                d: {
+                                                    id: appId,
+                                                    a: 'e',
+                                                    c: process.stdout.columns,
+                                                    r: process.stdout.rows
+                                                }
+                                            });
+                                        }
+                                    }
+                                    else if (data.d.a === 'k'){
+                                        process.stdout.write (data.d.t);
+                                    }
+                                }
+                            });
+                        }
+                        catch (err){
+                            console.error (err.stderr.toString());
+                            process.exit (-1);
+                        }
+                        try{
+                            console.log ('Logging out.');
+                            console.log (child_process.execSync ('docker logout '+settings.REPOSITORY).toString());
+                        }
+                        catch (err){
+                            console.log (err.stderr.toString());
+                            process.exit (-1);
+                        }
+                    }
+                    else{
+                        console.error ('Could not get account settings.');
                         process.exit (-1);
                     }
                 }
                 else{
-                    console.error ('Could not get account settings.');
+                    console.error ('WYLIODRIN_PROJECT_ID is not defined.');
                     process.exit (-1);
                 }
             }
             else{
-                console.error ('WYLIODRIN_PROJECT_ID is not defined.');
-                process.exit (-1);
+                console.log ('The provided product is not in development mode.');
+                console.log ('Please provide the id of a product in development mode.');
             }
         }
         else{
-            console.log ('The provided product is not in development mode.');
-            console.log ('Please provide the id of a product in development mode.');
+            console.log ('Please provide a valid project id.')
         }
     }
     else{
-        console.log ('Please provide a valid project id.')
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
     }
 };
 
