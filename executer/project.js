@@ -11,6 +11,8 @@ const path = require ('path');
 const spawn = require ('child_process').spawnSync;
 const mustache = require ('mustache');
 const child_process = require ('child_process');
+const socketService = require ('../service/socket');
+const readline = require('readline');
 
 const projectLanguages = {
     js: 'javascript',
@@ -101,6 +103,7 @@ exports.init = async function (argv){
 
 exports.run = async function (argv){
     let productId = argv.product_id;
+    let app;
     if (productApi){
         let product = await productApi.get (productId);
         if (product){
@@ -113,7 +116,7 @@ exports.run = async function (argv){
                     }
                     let appId = projectSettings.appId;
                     if (appId.substring (0, 5) !== 'local'){
-                        let app = appApi.get (appId);
+                        app = await appApi.get (appId);
                         if (!app){
                             console.error ('Please provide an existing application id.');
                             process.exit (-1);
@@ -121,6 +124,14 @@ exports.run = async function (argv){
                     }
                     let settings = await settingsApi.get ();
                     if (settings){
+                        try{
+                            console.log ('make');
+                            console.log (child_process.execSync ('make').toString());
+                        }
+                        catch (err){
+                            console.error (err.stderr.toString());
+                            process.exit (-1);
+                        }
                         let profile = profileService.getCurrentProfile().profile;
                         let docker = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
                         let dockerFile;
@@ -167,18 +178,21 @@ exports.run = async function (argv){
                                     t: 'r',
                                     d: {
                                         id: appId,
-                                        a: 'r',
+                                        a: 'e',
+                                        priv: app.privileged,
+                                        net: app.network,
+                                        p: app.parameters,
                                         c: process.stdout.columns,
                                         r: process.stdout.rows
                                     }
                                 });
                                 console.log ('Press any key to start the shell.');
-                                console.log ('Press Ctrl+c to exit the shell.')
+                                console.log ('Press Ctrl+q to exit the shell.')
                                 process.stdin.setRawMode (true);
                                 process.stdin.setEncoding( 'utf8' );
                                 readline.emitKeypressEvents(process.stdin);
                                 process.stdin.on('keypress', (str, key) => {
-                                    if (key.ctrl && key.name === 'c'){
+                                    if (key.ctrl && key.name === 'q'){
                                         socketService.send ('packet', productId, {
                                             t: 'r',
                                             d: {
@@ -215,26 +229,21 @@ exports.run = async function (argv){
                             }, (data)=>{
                                 if (data.t === 'r' && data.d.id === appId){
                                     if (data.d.a === 'e'){
-                                        if (data.d.e === 'noshell'){
-                                            socketService.send ('packet', productId, {
-                                                t: 's',
-                                                d: {
-                                                    id: appId,
-                                                    a: 'e',
-                                                    c: process.stdout.columns,
-                                                    r: process.stdout.rows
-                                                }
-                                            });
+                                        if (data.d.e === 'norun'){
+                                            //TODO
                                         }
                                     }
                                     else if (data.d.a === 'k'){
                                         process.stdout.write (data.d.t);
                                     }
+                                    else if (data.d.a === 's'){
+                                        process.exit (0);
+                                    }
                                 }
                             });
                         }
                         catch (err){
-                            console.error (err.stderr.toString());
+                            console.error (err);
                             process.exit (-1);
                         }
                         try{
