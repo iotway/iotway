@@ -100,20 +100,169 @@ exports.init = async function (argv){
     }
 };
 
-function build(){
-//il builduiesc cu orice versiune
-//daca nu are versiune pun dev
-//checkVersion si il atentionez
+function build(projectSettings, settings, appId, version, cb){
+    //Run make
+    console.log ('make');
+    let make = child_process.spawn ('make');
+    make.stdout.on ('data', (data)=>{
+        process.stdout.write (data.toString());
+    });
+    make.stderr.on ('data', (data)=>{
+        process.stderr.write (data.toString());
+    })
+    make.on ('exit', (code)=>{
+        if (code === 0){
+            //Generate dockerfile
+            let docker = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
+            let dockerFile;
+            if (docker.substring (0, 7) != '#MANUAL'){
+                let libraries = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/libraries/' + projectSettings.language), 'utf8');
+                let dockerData = {
+                    REPOSITORY: settings.REPOSITORY,
+                    DEPLOYER_DOMAIN: settings.DEPLOYER,
+                    project: projectSettings,
+                    arm: (settings.PLATFORM[projectSettings.platform].docker.platform === 'arm')? true: false,
+                    dockerfile: docker,
+                    libraries: libraries
+                }
+                let dockerTemplate = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/project_template'), 'utf8');
+                dockerFile = mustache.render (dockerTemplate, dockerData);
+            }
+            else{
+                dockerFile = docker;
+            }
+            let buildFolder = path.join(process.cwd(), 'build');
+            fs.writeFileSync (path.join(buildFolder, 'dockerfile'), dockerFile);
+            // Build docker image
+            console.log ('Building docker image.');
+            let dockerBuild = child_process.spawn ('docker', ['build', '-t', settings.REPOSITORY+'/'+appId+':'+version, '.'], {cwd: buildFolder});
+            dockerBuild.stdout.on ('data', (data)=>{
+                process.stdout.write (data.toString());
+            });
+            dockerBuild.stderr.on ('data', (data)=>{
+                process.stderr.write (data.toString());
+            });
+            dockerBuild.on ('exit', (code)=>{
+                cb (code);
+            });
+        }
+        else{
+            process.exit (code);
+        }
+    });
 }
 
-function publish (){
-//trebuie sa aiba appId fara local
-//checkVersion
+function publish (profile, settings, appId, version, cb){
+    let buildFolder = path.join(process.cwd(), 'build');
+    //Run docker login
+    let dockerLogin = child_process.spawn ('docker', ['login', settings.REPOSITORY, '-u', profile.username, '-p', profile.token]);
+    dockerLogin.stdout.on ('data', (data)=>{
+        process.stdout.write (data.toString());
+    });
+    dockerLogin.stderr.on ('data', (data)=>{
+        process.stderr.write (data.toString());
+    });
+    dockerLogin.on ('exit', (code)=>{
+        if (code === 0){
+            //Push docker image
+            console.log ('Pushing docker image. Please wait.');
+            let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
+            dockerPush.stdout.on ('data', (data)=>{
+                process.stdout.write (data.toString());
+            });
+            dockerPush.stderr.on ('data', (data)=>{
+                process.stderr.write (data.toString());
+            });
+            dockerPush.on ('exit', (code)=>{
+                //Docker logout
+                child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
+                cb (code);
+            });
+        }
+        else{
+            process.exit (code);
+        }
+    });
 }
 
-function checkVersion (){
-//check version is <= vs what is up
+function checkVersion (appId, version){
+    let versions = await appApi.versions (appId);
+    if (versions && versions.length === 0)
+        return true;
+    let max = Math.max (...versions);
+    return version > max;
 }
+
+exports.build = async function (argv){
+    let version = argv.version;
+    if (!version){
+        version = 'dev';
+    }
+    else if (!checkVersion (appId, version)){
+        console.log ('The provided version is less or equal to the latest published version.');
+        console.log ('The Docker image will be created but it cannot be published.');
+    }
+    let projectSettings;
+    if (process.env.WYLIODRIN_PROJECT_ID){
+        console.log ('Using environment variables');
+        projectSettings = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+        //TODO - write settings file
+    }
+    else{
+        //TODO - de citit fisierul
+    }
+    let settings = await settingsApi.get ();
+    if (settings){
+        let appId = projectSettings.appId;
+        build (projectSettings, settings, appId, version, (code)=>{
+            process.exit (code);
+        })
+    }
+    else{
+        console.error ('Could not get account settings.');
+        process.exit (-1);
+    }
+};
+
+exports.publish = async function (argv){
+    let profile = profileService.getCurrentProfile().profile;
+    let version = argv.version;
+    if (!checkVersion (appId, version)){
+        console.error ('The provided version is less or equal to the latest published version.');
+        console.error ('Cannot publish docker image.');
+        process.exit (-1);
+    }
+    let projectSettings;
+    if (process.env.WYLIODRIN_PROJECT_ID){
+        console.log ('Using environment variables');
+        projectSettings = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+        //TODO - write settings file
+    }
+    else{
+        //TODO - de citit fisierul
+    }
+    let settings = await settingsApi.get ();
+    if (settings){
+        let appId = projectSettings.appId;
+        if (appId.substring (0, 5) !== 'local'){
+            console.error ('This project has no application assigned.');
+            process.exit (-1);
+        }
+        app = await appApi.get (appId);
+        if (!app){
+            console.error ('Please provide an existing application id.');
+            process.exit (-1);
+        }
+        publish (profile, settings, appId, version, (code)=>{
+            process.exit (code);
+        });
+    }
+    else{
+        console.error ('Could not get account settings.');
+        process.exit (-1);
+    }
+   
+};
 
 exports.run = async function (argv){
     let productId = argv.product_id;
@@ -136,11 +285,11 @@ exports.run = async function (argv){
                             process.exit (-1);
                         }
                     }, 10000);
-                    socketService.connect (profile.api, profile.token, ()=>{
-                        socketService.send ('packet', productId, {
-                            t: 'ping'});
+                    let socket = socketService.connect (profile.api, profile.token, ()=>{
+                        socketService.send ('packet', productId, {t: 'ping'});
                     }, (data)=>{
                         if (data.t === 'pong'){
+                            socket.disconnect ();
                             online = true;
                             clearTimeout(timer);
                             if (process.env.WYLIODRIN_PROJECT_ID){
@@ -159,150 +308,75 @@ exports.run = async function (argv){
                                 }
                                 let settings = await settingsApi.get ();
                                 if (settings){
-                                    //Run make
-                                    console.log ('make');
-                                    let make = child_process.spawn ('make');
-                                    make.stdout.on ('data', (data)=>{
-                                        process.stdout.write (data.toString());
-                                    });
-                                    make.stderr.on ('data', (data)=>{
-                                        process.stderr.write (data.toString());
-                                    })
-                                    make.on ('exit', (code)=>{
+                                    build (projectSettings, settings, appId, 'dev', (code)=>{
                                         if (code === 0){
-                                            //Generate dockerfile
-                                            let docker = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
-                                            let dockerFile;
-                                            if (docker.substring (0, 7) != '#MANUAL'){
-                                                let libraries = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/libraries/' + projectSettings.language), 'utf8');
-                                                let dockerData = {
-                                                    REPOSITORY: settings.REPOSITORY,
-                                                    DEPLOYER_DOMAIN: settings.DEPLOYER,
-                                                    project: projectSettings,
-                                                    arm: (settings.PLATFORM[projectSettings.platform].docker.platform === 'arm')? true: false,
-                                                    dockerfile: docker,
-                                                    libraries: libraries
-                                                }
-                                                let dockerTemplate = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/project_template'), 'utf8');
-                                                dockerFile = mustache.render (dockerTemplate, dockerData);
-                                            }
-                                            else{
-                                                dockerFile = docker;
-                                            }
-                                            let buildFolder = path.join(process.cwd(), 'build');
-                                            fs.writeFileSync (path.join(buildFolder, 'dockerfile'), dockerFile);
-            
-                                            //Run docker login
-                                            let dockerLogin = child_process.spawn ('docker', ['login', settings.REPOSITORY, '-u', profile.username, '-p', profile.token]);
-                                            dockerLogin.stdout.on ('data', (data)=>{
-                                                process.stdout.write (data.toString());
-                                            });
-                                            dockerLogin.stderr.on ('data', (data)=>{
-                                                process.stderr.write (data.toString());
-                                            });
-                                            dockerLogin.on ('exit', (code)=>{
+                                            publish (profile, settings, appId, 'dev', (code)=>{
                                                 if (code === 0){
-                                                    // Build docker image
-                                                    console.log ('Building docker image.');
-                                                    let dockerBuild = child_process.spawn ('docker', ['build', '-t', settings.REPOSITORY+'/'+appId+':dev', '.'], {cwd: buildFolder});
-                                                    dockerBuild.stdout.on ('data', (data)=>{
-                                                        process.stdout.write (data.toString());
-                                                    });
-                                                    dockerBuild.stderr.on ('data', (data)=>{
-                                                        process.stderr.write (data.toString());
-                                                    });
-                                                    dockerBuild.on ('exit', (code)=>{
-                                                        if (code === 0){
-                                                            //Push docker image
-                                                            console.log ('Pushing docker image. Please wait.');
-                                                            let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':dev'], {cwd: buildFolder});
-                                                            dockerPush.stdout.on ('data', (data)=>{
-                                                                process.stdout.write (data.toString());
-                                                            });
-                                                            dockerPush.stderr.on ('data', (data)=>{
-                                                                process.stderr.write (data.toString());
-                                                            });
-                                                            dockerPush.on ('exit', (code)=>{
-                                                                if (code === 0){
-                                                                    //Open shell
-                                                                    socketService.connect (profile.api, profile.token, ()=>{
-                                                                        socketService.send ('packet', productId, {
-                                                                            t: 'r',
-                                                                            d: {
-                                                                                id: appId,
-                                                                                a: 'e',
-                                                                                priv: app.privileged,
-                                                                                net: app.network,
-                                                                                p: app.parameters,
-                                                                                c: process.stdout.columns,
-                                                                                r: process.stdout.rows
-                                                                            }
-                                                                        });
-                                                                        console.log ('Press Ctrl+q to exit the application.')
-                                                                        process.stdin.setRawMode (true);
-                                                                        process.stdin.setEncoding( 'utf8' );
-                                                                        readline.emitKeypressEvents(process.stdin);
-                                                                        process.stdin.on('keypress', (str, key) => {
-                                                                            if (key.ctrl && key.name === 'q'){
-                                                                                socketService.send ('packet', productId, {
-                                                                                    t: 'r',
-                                                                                    d: {
-                                                                                        id: appId,
-                                                                                        a:'s'
-                                                                                    }
-                                                                                });
-                                                                                console.log ('');
-                                                                                console.log ('Disconnected');
-                                                                                process.exit (0);
-                                                                            }
-                                                                            else{
-                                                                                socketService.send ('packet', productId, {
-                                                                                    t: 'r',
-                                                                                    d: {
-                                                                                        id: appId,
-                                                                                        a:'k',
-                                                                                        t:str
-                                                                                    }
-                                                                                });
-                                                                            }
-                                                                        });
-                                                                        process.stdout.on('resize', function() {
-                                                                            socketService.send ('packet', productId, {
-                                                                                t: 'r',
-                                                                                d: {
-                                                                                    id: appId,
-                                                                                    a: 'r',
-                                                                                    c: process.stdout.columns,
-                                                                                    r: process.stdout.rows
-                                                                                }
-                                                                            });
-                                                                        });
-                                                                    }, (data)=>{
-                                                                        if (data.t === 'r' && data.d.id === appId){
-                                                                            if (data.d.a === 'e'){
-                                                                                if (data.d.e === 'norun'){
-                                                                                    //TODO
-                                                                                }
-                                                                            }
-                                                                            else if (data.d.a === 'k'){
-                                                                                process.stdout.write (data.d.t);
-                                                                            }
-                                                                            else if (data.d.a === 's'){
-                                                                                process.exit (0);
-                                                                            }
-                                                                        }
-                                                                    });
-                                                                    
-                                                                    //Docker logout
-                                                                    child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
-                                                                }
-                                                                else{
-                                                                    process.exit (code);
+                                                    socketService.connect (profile.api, profile.token, ()=>{
+                                                        socketService.send ('packet', productId, {
+                                                            t: 'r',
+                                                            d: {
+                                                                id: appId,
+                                                                a: 'e',
+                                                                priv: app.privileged,
+                                                                net: app.network,
+                                                                p: app.parameters,
+                                                                c: process.stdout.columns,
+                                                                r: process.stdout.rows
+                                                            }
+                                                        });
+                                                        console.log ('Press Ctrl+q to exit the application.')
+                                                        process.stdin.setRawMode (true);
+                                                        process.stdin.setEncoding( 'utf8' );
+                                                        readline.emitKeypressEvents(process.stdin);
+                                                        process.stdin.on('keypress', (str, key) => {
+                                                            if (key.ctrl && key.name === 'q'){
+                                                                socketService.send ('packet', productId, {
+                                                                    t: 'r',
+                                                                    d: {
+                                                                        id: appId,
+                                                                        a:'s'
+                                                                    }
+                                                                });
+                                                                console.log ('');
+                                                                console.log ('Disconnected');
+                                                                process.exit (0);
+                                                            }
+                                                            else{
+                                                                socketService.send ('packet', productId, {
+                                                                    t: 'r',
+                                                                    d: {
+                                                                        id: appId,
+                                                                        a:'k',
+                                                                        t:str
+                                                                    }
+                                                                });
+                                                            }
+                                                        });
+                                                        process.stdout.on('resize', function() {
+                                                            socketService.send ('packet', productId, {
+                                                                t: 'r',
+                                                                d: {
+                                                                    id: appId,
+                                                                    a: 'r',
+                                                                    c: process.stdout.columns,
+                                                                    r: process.stdout.rows
                                                                 }
                                                             });
-                                                        }
-                                                        else{
-                                                            process.exit (code);
+                                                        });
+                                                    }, (data)=>{
+                                                        if (data.t === 'r' && data.d.id === appId){
+                                                            if (data.d.a === 'e'){
+                                                                if (data.d.e === 'norun'){
+                                                                    //TODO
+                                                                }
+                                                            }
+                                                            else if (data.d.a === 'k'){
+                                                                process.stdout.write (data.d.t);
+                                                            }
+                                                            else if (data.d.a === 's'){
+                                                                process.exit (0);
+                                                            }
                                                         }
                                                     });
                                                 }
@@ -310,7 +384,7 @@ exports.run = async function (argv){
                                                     process.exit (code);
                                                 }
                                             });
-                                        }
+                                        }   
                                         else{
                                             process.exit (code);
                                         }

@@ -40,6 +40,7 @@ exports.connect = async function (url, token, cb, packetcb){
         authenticated = false;
         console.log ('Disconnected');
     });
+    return socket;
 };
 
 exports.send = function (tag, productId, data){

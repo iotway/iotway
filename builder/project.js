@@ -1,5 +1,5 @@
 const _ = require ('lodash');
-const commands = ['init', 'run', 'list'];
+const commands = ['init', 'run', 'list', 'build', 'publish'];
 module.exports = function (yargs, handler){
     yargs.command(['project', 'proj'], 'Project settings.',
      (yargs) => {
@@ -25,6 +25,8 @@ module.exports = function (yargs, handler){
             }
         }, handler.init)
         .command (['run <product_id>', 'r'], 'Runs the current project', {}, handler.run)
+        .command (['build <version>', 'v'], 'Builds a docker image of the current project', {}, handler.build)
+        .command (['publish <version>', 'p'], 'Pushes the docker image into the registry.', {}, handler.publish)
         .check ((argv)=>{
             if (_.indexOf (commands, argv._[1]) != -1)
                 return true;
