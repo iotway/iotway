@@ -14,10 +14,17 @@ module.exports = function (yargs, handler){
                 type: 'string',
                 desc: 'The name of the project.'
             },
+            platform: {
+                alias: 'p',
+                choices: ['arm', 'x86']
+            },
             'app-id':{
                 alias: 'app',
                 type: 'string',
                 desc: 'The id of the application linked to this project.'
+            },
+            ui: {
+                choices: ['noui', 'chrome']
             },
             language: {
                 type: 'string',

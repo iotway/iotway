@@ -46,16 +46,14 @@ exports.init = async function (argv){
                     }
                 }
                 else{
-                    // project = {
-                    //     name: argv.name,
-                    //     appId: argv.appId,
-                    //     language: projectLanguages[argv.language],
-                    //     id: argv.id,
-                    //     platform: argv.platform,
-                    //     ui: argv.ui
-                    // };
-                    console.error ('WYLIODRIN_PROJECT_ID is not defined.');
-                    process.exit (-1);
+                    project = {
+                        name: argv.name,
+                        appId: argv.appId,
+                        language: projectLanguages[argv.language],
+                        id: argv.id,
+                        platform: argv.platform,
+                        ui: argv.ui
+                    };
                 }
                 if (project.name && project.appId && project.language){
                     if (project.appId.substring (0, 5) !== 'local'){
@@ -66,7 +64,7 @@ exports.init = async function (argv){
                         }
                     }
                     //Generate project structure
-                    // fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project));
+                    fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project));
                     fs.copySync(path.normalize (__dirname + '/../utils/project_templates/' + project.language),
                                             process.cwd());
                     //Generate package.json for js projects
@@ -206,17 +204,30 @@ exports.build = async function (argv){
     if (process.env.WYLIODRIN_PROJECT_ID){
         console.log ('Using environment variables');
         projectSettings = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
-        //TODO - write settings file
+        if (!projectSettings){
+            console.error ('Could not find project.');
+            process.exit (-1);
+        }
+        fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(projectSettings));
     }
     else{
-        //TODO - de citit fisierul
+        try{
+            projectSettings = fs.readFileSync (path.join(process.cwd(), 'wylioproject.json'), 'utf8');
+            projectSettings = JSON.parse (projectSettings);
+        }
+        catch (e){
+            console.error (e.message)
+            console.error ('Could not parse project settings file.');
+            console.error ('Run wylio project init.');
+            process.exit (-1);
+        }
     }
     let settings = await settingsApi.get ();
     if (settings){
         let appId = projectSettings.appId;
         build (projectSettings, settings, appId, version, (code)=>{
             process.exit (code);
-        })
+        });
     }
     else{
         console.error ('Could not get account settings.');
@@ -236,10 +247,23 @@ exports.publish = async function (argv){
     if (process.env.WYLIODRIN_PROJECT_ID){
         console.log ('Using environment variables');
         projectSettings = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
-        //TODO - write settings file
+        if (!projectSettings){
+            console.error ('Could not find project.');
+            process.exit (-1);
+        }
+        fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(projectSettings));
     }
     else{
-        //TODO - de citit fisierul
+        try{
+            projectSettings = fs.readFileSync (path.join(process.cwd(), 'wylioproject.json'), 'utf8');
+            projectSettings = JSON.parse (projectSettings);
+        }
+        catch (e){
+            console.error (e.message)
+            console.error ('Could not parse project settings file.');
+            console.error ('Run wylio project init.');
+            process.exit (-1);
+        }
     }
     let settings = await settingsApi.get ();
     if (settings){
@@ -271,7 +295,6 @@ exports.run = async function (argv){
     if (productApi){
         let product = await productApi.get (productId);
         if (product){
-            //todo - de mutat sus dupa pong
             if (product.type === 'development'){
                 if (product.status === 'offline'){
                     console.error ('Device offline');
@@ -292,12 +315,26 @@ exports.run = async function (argv){
                             socket.disconnect ();
                             online = true;
                             clearTimeout(timer);
+                            let projectSettings;
                             if (process.env.WYLIODRIN_PROJECT_ID){
-                                let projectSettings = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+                                projectSettings = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
                                 if (!projectSettings){
                                     console.error ('Could not find project.');
                                     process.exit (-1);
                                 }
+                            }
+                            else{
+                                try{
+                                    projectSettings = fs.readFileSync (path.join(process.cwd(), 'wylioproject.json'), 'utf8');
+                                    projectSettings = JSON.parse (projectSettings);
+                                }
+                                catch (e){
+                                    console.error (e.message)
+                                    console.error ('Could not parse project settings file.');
+                                    console.error ('Run wylio project init.');
+                                    process.exit (-1);
+                                }
+                            }
                                 let appId = projectSettings.appId;
                                 if (appId.substring (0, 5) !== 'local'){
                                     app = await appApi.get (appId);
@@ -394,10 +431,6 @@ exports.run = async function (argv){
                                     console.error ('Could not get account settings.');
                                     process.exit (-1);
                                 }
-                            }
-                            else{
-                                console.error ('WYLIODRIN_PROJECT_ID is not defined.');
-                                process.exit (-1);
                             }
                         }
                     });
