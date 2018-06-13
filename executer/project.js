@@ -432,8 +432,7 @@ exports.run = async function (argv){
                                     process.exit (-1);
                                 }
                             }
-                        }
-                    });
+                        });
                 }
             }
             else{
