@@ -1,10 +1,6 @@
 const readlineSync = require('readline-sync');
 const profileService = require ('../service/profile');
-const fs = require ('fs');
-const error = require ('../utils/error');
-const child_process = require ('child_process');
 let usersApi = require ('../utils/api').users;
-let settingsApi = require ('../utils/api').settings;
 let api = require ('../utils/api');
 
 module.exports.login = async function (argv){
@@ -39,7 +35,7 @@ module.exports.login = async function (argv){
     }
 };
 
-module.exports.logout = async function (argv){
+module.exports.logout = async function (){
     if (usersApi){
         let result = await usersApi.logout();
         if (result){
