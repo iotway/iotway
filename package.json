@@ -1,6 +1,6 @@
 {
   "name": "wylio",
-  "version": "1.0.555",
+  "version": "1.0.60",
   "license": "GPL-3.0",
   "repository": "https://github.com/Wyliodrin/wylio.git",
   "author": "Wyliodrin",
@@ -14,7 +14,6 @@
   "dependencies": {
     "axios": "^0.17.1",
     "cli-table": "^0.3.1",
-    "cookie": "^0.3.1",
     "dotenv": "^4.0.0",
     "fs-extra": "^6.0.1",
     "lodash": "^4.17.10",
@@ -22,7 +21,6 @@
     "msgpack5": "^4.2.0",
     "mustache": "^2.3.0",
     "readline-sync": "^1.4.7",
-    "socket.io-client": "^2.1.1",
     "websocket": "^1.0.26",
     "ws": "^5.1.1",
     "yargs": "^11.0.0"

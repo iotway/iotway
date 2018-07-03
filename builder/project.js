@@ -1,5 +1,5 @@
 const _ = require ('lodash');
-const commands = ['init', 'run', 'list', 'build', 'publish'];
+const commands = ['init', 'run', 'list', 'build', 'publish', 'edit'];
 module.exports = function (yargs, handler){
     yargs.command(['project', 'proj'], 'Project settings.',
      (yargs) => {
@@ -12,13 +12,13 @@ module.exports = function (yargs, handler){
             },
             platform: {
                 alias: 'p',
-                choices: ['arm', 'x86']
+                choices: ['raspberrypi']
             },
             'app-id':{
                 alias: 'app',
                 type: 'string',
                 desc: 'The id of the application linked to this project.',
-                default: 'local.'
+                default: 'local.project'
             },
             ui: {
                 choices: ['noui', 'Xorg', 'electron'],
@@ -42,7 +42,7 @@ module.exports = function (yargs, handler){
             },
             platform: {
                 alias: 'p',
-                choices: ['arm', 'x86']
+                choices: ['raspberrypi']
             },
             'app-id':{
                 alias: 'app',
@@ -51,7 +51,6 @@ module.exports = function (yargs, handler){
             },
             ui: {
                 choices: ['noui', 'Xorg', 'electron'],
-                default: 'noui'
 
             }
         }, handler.edit)

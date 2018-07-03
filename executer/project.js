@@ -247,21 +247,21 @@ exports.edit = async function  (argv){
 exports.build = async function (argv){
     let profile = profileService.getCurrentProfile().profile;
     let version = argv.version;
+    let projectSettings = await getProjectSettings();
     if (!version){
         version = 'dev';
     }
-    else if (!await checkVersion (appId, version)){
+    else if (!await checkVersion (projectSettings.appId, version)){
         console.log ('The provided version is less or equal to the latest published version.');
         console.log ('The Docker image will be created but it cannot be published.');
     }
-    let projectSettings = await getProjectSettings();
     let settings = await settingsApi.get ();
     if (settings){
         let appId = projectSettings.appId;
         //Run docker login
         dockerLogin (settings, profile, (code)=>{
             if (code === 0){
-                build (projectSettings, settings, appId, version, (code)=>{
+                build (projectSettings, settings, projectSettings.appId, version, (code)=>{
                     //Docker logout
                     child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
                     process.exit (code);
@@ -281,12 +281,12 @@ exports.build = async function (argv){
 exports.publish = async function (argv){
     let profile = profileService.getCurrentProfile().profile;
     let version = argv.version;
-    if (!await checkVersion (appId, version)){
+    let projectSettings = await getProjectSettings();
+    if (!await checkVersion (projectSettings.appId, version)){
         console.error ('The provided version is less or equal to the latest published version.');
         console.error ('Cannot publish docker image.');
         process.exit (-1);
     }
-    let projectSettings = await getProjectSettings();
     let settings = await settingsApi.get ();
     if (settings){
         let appId = projectSettings.appId;
@@ -301,7 +301,7 @@ exports.publish = async function (argv){
         }
         dockerLogin (settings, profile, (code)=>{
             if (code === 0){
-                publish (profile, settings, appId, version, (code)=>{
+                publish (profile, settings, projectSettings.appId, version, (code)=>{
                     //Docker logout
                     child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
                     process.exit (code);
@@ -329,133 +329,152 @@ exports.run = async function (argv){
         if (product){
             if (product.type === 'development'){
                 if (product.status === 'offline'){
-                    console.error ('Device offline');
-                    process.exit (-1);
+                    console.error ('Device might be offline.');
                 }
-                else {
-                    let projectSettings = await getProjectSettings();
-                    let appId = projectSettings.appId;
-                    if (appId.substring (0, 5) !== 'local'){
-                        app = await appApi.get (appId);
-                        if (!app){
-                            console.error ('Please provide an existing application id.');
-                            process.exit (-1);
-                        }
+                
+                let projectSettings = await getProjectSettings();
+                let appId = projectSettings.appId;
+                if (appId.substring (0, 5) !== 'local'){
+                    app = await appApi.get (appId);
+                    if (!app){
+                        console.error ('Please provide an existing application id.');
+                        process.exit (-1);
                     }
-                    let settings = await settingsApi.get ();
-                    if (settings){
-                        dockerLogin (settings, profile, (code)=>{
-                            if (code === 0){
-                                build (projectSettings, settings, appId, 'dev', (code)=>{
-                                    if (code === 0){
-                                        publish (profile, settings, appId, 'dev', (code)=>{
-                                            if (code === 0){
-                                                console.log ('Pinging device...');
-                                                let online = false;
-                                                let timer = setTimeout (function (){
-                                                    if (!online){
-                                                        console.error ('Ping timeout. Device offline.');
-                                                        process.exit (-1);
+                }
+                let settings = await settingsApi.get ();
+                if (settings){
+                    dockerLogin (settings, profile, (code)=>{
+                        if (code === 0){
+                            build (projectSettings, settings, appId, 'dev', (code)=>{
+                                if (code === 0){
+                                    publish (profile, settings, appId, 'dev', (code)=>{
+                                        if (code === 0){
+                                            console.log ('Pinging device...');
+                                            let online = false;
+                                            let timer = setTimeout (function (){
+                                                if (!online){
+                                                    console.error ('Ping timeout. Device offline.');
+                                                    process.exit (-1);
+                                                }
+                                            }, 10000);
+                                            socketService.connect (profile.api, profile.token, ()=>{
+                                                socketService.send ('packet', productId, {
+                                                    t: 'r',
+                                                    d:{
+                                                        a: 'p',
+                                                        id: appId
                                                     }
-                                                }, 10000);
-                                                socketService.connect (profile.api, profile.token, ()=>{
-                                                    socketService.send ('packet', productId, {
-                                                        t: 'r',
-                                                        d:{
-                                                            a: 'p',
-                                                            id: appId
+                                                });
+                                            }, async (data)=>{
+                                                if (data.t === 'r' && data.d.id === appId){
+                                                    if (data.d.a === 'e'){
+                                                        if (data.d.e === 'norun'){
+                                                            //TODO
                                                         }
-                                                    });
-                                                }, (data)=>{
-                                                    if (data.t === 'r' && data.d.id === appId){
-                                                        if (data.d.a === 'e'){
-                                                            if (data.d.e === 'norun'){
-                                                                //TODO
+                                                    }
+                                                    else if (data.d.a === 'k'){
+                                                        process.stdout.write (data.d.t);
+                                                    }
+                                                    else if (data.d.a === 's'){
+                                                        process.exit (0);
+                                                    }
+                                                    else if (data.d.a === 'p'){
+                                                        online = true;
+                                                        clearTimeout(timer);
+                                                        socketService.send ('packet', productId, {
+                                                            t: 'r',
+                                                            d: {
+                                                                id: appId,
+                                                                a: 'e',
+                                                                priv: app.privileged,
+                                                                net: app.network,
+                                                                p: app.parameters,
+                                                                c: process.stdout.columns,
+                                                                r: process.stdout.rows
                                                             }
-                                                        }
-                                                        else if (data.d.a === 'k'){
-                                                            process.stdout.write (data.d.t);
-                                                        }
-                                                        else if (data.d.a === 's'){
-                                                            process.exit (0);
-                                                        }
-                                                        else if (data.d.a === 'p'){
-                                                            online = true;
-                                                            clearTimeout(timer);
-                                                            socketService.send ('packet', productId, {
-                                                                t: 'r',
-                                                                d: {
-                                                                    id: appId,
-                                                                    a: 'e',
-                                                                    priv: app.privileged,
-                                                                    net: app.network,
-                                                                    p: app.parameters,
-                                                                    c: process.stdout.columns,
-                                                                    r: process.stdout.rows
-                                                                }
-                                                            });
-                                                            console.log ('Press Ctrl+q to exit the application.')
-                                                            process.stdin.setRawMode (true);
-                                                            process.stdin.setEncoding( 'utf8' );
-                                                            readline.emitKeypressEvents(process.stdin);
-                                                            process.stdin.on('keypress', (str, key) => {
-                                                                if (key.ctrl && key.name === 'q'){
-                                                                    socketService.send ('packet', productId, {
-                                                                        t: 'r',
-                                                                        d: {
-                                                                            id: appId,
-                                                                            a:'s'
-                                                                        }
-                                                                    });
-                                                                    console.log ('');
-                                                                    console.log ('Disconnected');
-                                                                    process.exit (0);
-                                                                }
-                                                                else{
-                                                                    socketService.send ('packet', productId, {
-                                                                        t: 'r',
-                                                                        d: {
-                                                                            id: appId,
-                                                                            a:'k',
-                                                                            t:str
-                                                                        }
-                                                                    });
-                                                                }
-                                                            });
-                                                            process.stdout.on('resize', function() {
+                                                        });
+                                                        console.log ('Press Ctrl+q to exit the application.');
+                                                        console.log ('Press Ctrl+r to reload application.');
+                                                        process.stdin.setRawMode (true);
+                                                        process.stdin.setEncoding( 'utf8' );
+                                                        readline.emitKeypressEvents(process.stdin);
+                                                        process.stdin.on('keypress', async (str, key) => {
+                                                            if (key.ctrl && key.name === 'q'){
                                                                 socketService.send ('packet', productId, {
                                                                     t: 'r',
                                                                     d: {
                                                                         id: appId,
-                                                                        a: 'r',
-                                                                        c: process.stdout.columns,
-                                                                        r: process.stdout.rows
+                                                                        a:'s'
                                                                     }
                                                                 });
-                                                            }); 
-                                                        }
+                                                                console.log ('');
+                                                                console.log ('Disconnected');
+                                                                process.exit (0);
+                                                            }
+                                                            else if (key.ctrl && key.name === 'r'){
+                                                                let app = await appApi.get (appId);
+                                                                if (app){
+                                                                    socketService.send ('packet', productId, {
+                                                                        t: 'r',
+                                                                        d: {
+                                                                            id: appId,
+                                                                            a: 'e',
+                                                                            priv: app.privileged,
+                                                                            net: app.network,
+                                                                            p: app.parameters,
+                                                                            c: process.stdout.columns,
+                                                                            r: process.stdout.rows
+                                                                        }
+                                                                    });
+                                                                }
+                                                                else{
+                                                                    console.error ('Application not found.');
+                                                                }
+                                                            }
+                                                            else{
+                                                                socketService.send ('packet', productId, {
+                                                                    t: 'r',
+                                                                    d: {
+                                                                        id: appId,
+                                                                        a:'k',
+                                                                        t:str
+                                                                    }
+                                                                });
+                                                            }
+                                                        });
+                                                        process.stdout.on('resize', function() {
+                                                            socketService.send ('packet', productId, {
+                                                                t: 'r',
+                                                                d: {
+                                                                    id: appId,
+                                                                    a: 'r',
+                                                                    c: process.stdout.columns,
+                                                                    r: process.stdout.rows
+                                                                }
+                                                            });
+                                                        }); 
                                                     }
-                                                });
-                                            }
-                                            else{
-                                                process.exit (code);
-                                            }
-                                        });
-                                    }
-                                    else{
-                                        process.exit (code);
-                                    }
-                                });
-                            }
-                            else{
-                                process.exit (code);
-                            }
-                        });
-                    }
-                    else{
-                        console.error ('Could not get account settings.');
-                        process.exit (-1);
-                    }
+                                                }
+                                            });
+                                        }
+                                        else{
+                                            process.exit (code);
+                                        }
+                                    });
+                                }
+                                else{
+                                    process.exit (code);
+                                }
+                            });
+                        }
+                        else{
+                            process.exit (code);
+                        }
+                    });
+                }
+                else{
+                    console.error ('Could not get account settings.');
+                    process.exit (-1);
                 }
             }
             else{
