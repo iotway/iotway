@@ -22,6 +22,7 @@ exports.shell = async function (argv){
             process.stdin.setEncoding( 'utf8' );
             readline.emitKeypressEvents(process.stdin);
             process.stdin.on('keypress', (str, key) => {
+                //console.log ('key'); console.log (key); console.log (str);
                 if (key.ctrl && key.name === 'q'){
                     console.log ('');
                     console.log ('Disconnected');
@@ -32,7 +33,7 @@ exports.shell = async function (argv){
                         t: 's',
                         d: {
                             a:'k',
-                            t:str
+                            t:key.sequence
                         }
                     });
                 }
