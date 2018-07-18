@@ -18,6 +18,14 @@ module.exports = function (http)
             return null;
         },
 
+        editVersion: async function (appId, version, params){
+            let response = await http.post ('/app/version/'+appId+'/'+version, params);
+            if (response.data && response.data.err === 0){
+                return true;
+            }
+            return false;
+        },
+
         new: async function (params){
             let response = await http.post ('/app/create', params);
             if (response.data && response.data.err === 0){
@@ -28,10 +36,10 @@ module.exports = function (http)
 
         get: async function (appId){
             let response = await http.get ('/app/list/'+appId);
-            if (response.data && response.data.err === 0){
-                return response.data.application;
-            }
-            return null;
+                if (response.data && response.data.err === 0){
+                    return response.data.application;
+                }
+                return null;
         },
 
         deploy: async function (params){

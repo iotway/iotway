@@ -13,6 +13,7 @@ const child_process = require ('child_process');
 const socketService = require ('../service/socket');
 const readline = require('readline');
 const readlineSync = require('readline-sync');
+const semver = require('semver')
 
 const projectLanguages = {
     js: 'nodejs',
@@ -160,11 +161,39 @@ function build(projectSettings, settings, appId, version, cb){
     });
 }
 
-function publish (profile, settings, appId, version, cb){
+function publish (profile, settings, appId, version, semanticVersion, description, cb){
     let buildFolder = path.join(process.cwd(), 'build');
     //Push docker image
+    if (semanticVersion === undefined){
+        let projectSettings = await getProjectSettings ();
+        if (projectSettings.language === 'nodejs'){
+            let packagePath = path.join(process.cwd(), 'package.json');
+            try{
+                let projectData = require (packagePath);
+                let projectVersion = projectData.version;
+                semanticVersion = semver.valid (semver.coerce (projectVersion));
+            }
+            catch (e){
+                semanticVersion = '1.0';
+            }
+        }
+        else semanticVersion = '1.0';
+    }
     console.log ('Pushing docker image. Please wait.');
     let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
+    if (appApi){
+        await appApi.versions ();
+        await appApi.updateVersion (appId, version, {
+            semver: semanticVersion,
+            text: description
+        });
+    }
+    else{
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
+    }
+    //get application versions
+    //post application/version/appid/version, 
     dockerPush.stdout.on ('data', (data)=>{
         process.stdout.write (data.toString());
     });
@@ -281,6 +310,8 @@ exports.build = async function (argv){
 exports.publish = async function (argv){
     let profile = profileService.getCurrentProfile().profile;
     let version = argv.version;
+    let description = (argv.description)? argv.description: "";
+    let semanticVersion = argv.semanticVersion;
     let projectSettings = await getProjectSettings();
     if (!await checkVersion (projectSettings.appId, version)){
         console.error ('The provided version is less or equal to the latest published version.');
@@ -301,7 +332,7 @@ exports.publish = async function (argv){
         }
         dockerLogin (settings, profile, (code)=>{
             if (code === 0){
-                publish (profile, settings, projectSettings.appId, version, (code)=>{
+                publish (profile, settings, projectSettings.appId, version, semanticVersion, description, (code)=>{
                     //Docker logout
                     child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
                     process.exit (code);

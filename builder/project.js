@@ -56,7 +56,16 @@ module.exports = function (yargs, handler){
         }, handler.edit)
         .command (['run <product_id>', 'r'], 'Runs the current project', {}, handler.run)
         .command (['build [version]', 'v'], 'Builds a docker image of the current project', {}, handler.build)
-        .command (['publish <version>', 'p'], 'Pushes the docker image into the registry.', {}, handler.publish)
+        .command (['publish <version>', 'p'], 'Pushes the docker image into the registry.', {
+            projectId: {
+                type: 'string',
+                desc: 'A semantic version of the project.'
+            },
+            description: {
+                type: 'string',
+                desc: 'The description of the new published version.'
+            }
+        }, handler.publish)
         .check ((argv)=>{
             if (_.indexOf (commands, argv._[1]) != -1)
                 return true;

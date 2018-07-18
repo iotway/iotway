@@ -1,4 +1,4 @@
-const commands = ['new', 'list', 'edit', 'remove', 'describe', 'parameter', 'versions', 'deploy', 'undeploy', 'init', 'build', 'push'];
+const commands = ['new', 'list', 'edit', 'remove', 'describe', 'parameter', 'versions', 'deploy', 'undeploy'];
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
     yargs.command(['app', 'a'], 'Application settings.',

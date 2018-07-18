@@ -14,8 +14,10 @@ exports.select = function (argv){
     //Check if profile name is legal.
     if (profileService.exists (profileName)){
         try{
-            profileService.get
+            //profileService.get
             fs.writeFileSync (settings.profileFile, profileName);
+            //TODO - setat noul token
+            //TODO - nou endpoint
         }
         catch(err){
             console.error ('Could not select profile.');

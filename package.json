@@ -1,6 +1,6 @@
 {
   "name": "wylio",
-  "version": "1.0.60",
+  "version": "1.0.61",
   "license": "GPL-3.0",
   "repository": "https://github.com/Wyliodrin/wylio.git",
   "author": "Wyliodrin",
@@ -21,6 +21,7 @@
     "msgpack5": "^4.2.0",
     "mustache": "^2.3.0",
     "readline-sync": "^1.4.7",
+    "semver": "^5.5.0",
     "websocket": "^1.0.26",
     "ws": "^5.1.1",
     "yargs": "^11.0.0"
