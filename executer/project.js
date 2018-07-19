@@ -164,35 +164,6 @@ function build(projectSettings, settings, appId, version, cb){
 async function publish (profile, settings, appId, version, semanticVersion, description, cb){
     let buildFolder = path.join(process.cwd(), 'build');
     //Push docker image
-    if (semanticVersion === undefined){
-        let projectSettings = await getProjectSettings ();
-        if (projectSettings.language === 'nodejs'){
-            let packagePath = path.join(process.cwd(), 'package.json');
-            try{
-                let projectData = require (packagePath);
-                let projectVersion = projectData.version;
-                if (projectVersion === undefined){
-                    projectVersion = '1.0';
-                }
-                semanticVersion = semver.valid (semver.coerce (projectVersion));
-            }
-            catch (e){
-                semanticVersion = '1.0';
-            }
-        }
-        else semanticVersion = '1.0';
-    }
-    if (appApi){
-        await appApi.versions (appId);
-        await appApi.editVersion (appId, version, {
-            semver: semanticVersion,
-            text: description
-        });
-    }
-    else{
-        console.error ('No credentials. Please login or select a profile.');
-        process.exit (-1);
-    }
 
     console.log ('Pushing docker image. Please wait.');
     let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
@@ -204,6 +175,35 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
         process.stderr.write (data.toString());
     });
     dockerPush.on ('exit', (code)=>{
+        if (semanticVersion === undefined){
+            let projectSettings = await getProjectSettings ();
+            if (projectSettings.language === 'nodejs'){
+                let packagePath = path.join(process.cwd(), 'package.json');
+                try{
+                    let projectData = require (packagePath);
+                    let projectVersion = projectData.version;
+                    if (projectVersion === undefined){
+                        projectVersion = '1.0';
+                    }
+                    semanticVersion = semver.valid (semver.coerce (projectVersion));
+                }
+                catch (e){
+                    semanticVersion = '1.0';
+                }
+            }
+            else semanticVersion = '1.0';
+        }
+        if (appApi){
+            await appApi.versions (appId);
+            await appApi.editVersion (appId, version, {
+                semver: semanticVersion,
+                text: description
+            });
+        }
+        else{
+            console.error ('No credentials. Please login or select a profile.');
+            process.exit (-1);
+        }
         cb (code);
     });
 }
