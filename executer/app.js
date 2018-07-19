@@ -1,6 +1,7 @@
 const appApi = require ('../utils/api').apps;
 const Table = require ('cli-table');
 const tableBuilder = require ('../utils/table');
+const semver = require ('semver');
 
 exports.new = async function (argv){
     let params = {
@@ -221,3 +222,29 @@ exports.undeploy = async function (argv){
         process.exit (-1);
     }
 };
+
+exports.updateVersion = async function (argv){
+    let semanticVersion = semver.valid (semver.coerce (argv.semver));
+    if (!semanticVersion){
+        console.error ('Invalid semantic version.');
+        process.exit (-1);
+    }
+    let params = {
+        semver: semanticVersion,
+        text: argv.description
+    };
+
+    if (appApi){
+        let response = await appApi.editVersion (argv.appId, argv.app_version, params);
+        if (response)
+            console.log ('Application updated successfully.');
+        else{
+            console.error ('Could not update application.');
+            process.exit (-1);
+        }
+    }
+    else{
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
+    }
+}

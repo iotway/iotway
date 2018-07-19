@@ -203,6 +203,18 @@ module.exports = function (yargs, handler){
                 type: 'string'
             }
         }, handler.undeploy)
+        .command ('update version <app_id> <app_version>', 'Update an existing application version.', {
+            semver: {
+                desc: 'The semantic version',
+                demandOption: true,
+                type: 'string'
+            },
+            description: {
+                desc: 'The description of the features of the new version',
+                demandOption: true,
+                type: 'string'
+            }
+        }, handler.updateVersion)
         .check ((argv)=>{
             if (_.indexOf (commands, argv._[1]) != -1)
                 return true;
