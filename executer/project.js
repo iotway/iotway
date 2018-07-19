@@ -174,36 +174,36 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
     dockerPush.stderr.on ('data', (data)=>{
         process.stderr.write (data.toString());
     });
-    dockerPush.on ('exit', (code)=>{
+    dockerPush.on ('exit', async (code)=>{
         if (semanticVersion === undefined){
-            let projectSettings = await getProjectSettings ();
-            if (projectSettings.language === 'nodejs'){
-                let packagePath = path.join(process.cwd(), 'package.json');
-                try{
-                    let projectData = require (packagePath);
-                    let projectVersion = projectData.version;
-                    if (projectVersion === undefined){
-                        projectVersion = '1.0';
-                    }
-                    semanticVersion = semver.valid (semver.coerce (projectVersion));
+        let projectSettings = await getProjectSettings ();
+        if (projectSettings.language === 'nodejs'){
+            let packagePath = path.join(process.cwd(), 'package.json');
+            try{
+                let projectData = require (packagePath);
+                let projectVersion = projectData.version;
+                if (projectVersion === undefined){
+                    projectVersion = '1.0';
                 }
-                catch (e){
-                    semanticVersion = '1.0';
-                }
+                semanticVersion = semver.valid (semver.coerce (projectVersion));
             }
-            else semanticVersion = '1.0';
+            catch (e){
+                semanticVersion = '1.0';
+            }
         }
-        if (appApi){
-            await appApi.versions (appId);
-            await appApi.editVersion (appId, version, {
-                semver: semanticVersion,
-                text: description
-            });
-        }
-        else{
-            console.error ('No credentials. Please login or select a profile.');
-            process.exit (-1);
-        }
+        else semanticVersion = '1.0';
+    }
+    if (appApi){
+        await appApi.versions (appId);
+        await appApi.editVersion (appId, version, {
+            semver: semanticVersion,
+            text: description
+        });
+    }
+    else{
+        console.error ('No credentials. Please login or select a profile.');
+        process.exit (-1);
+    }
         cb (code);
     });
 }
@@ -278,8 +278,7 @@ exports.edit = async function  (argv){
 
 exports.build = async function (argv){
     let profile = profileService.getCurrentProfile().profile;
-    let version = argv.version;
-    console.log (argv);
+    let version = argv.application_version;
     let projectSettings = await getProjectSettings();
     if (!version){
         version = 'dev';
@@ -313,7 +312,7 @@ exports.build = async function (argv){
 
 exports.publish = async function (argv){
     let profile = profileService.getCurrentProfile().profile;
-    let version = argv.version;
+    let version = argv.application_version;
     let description = (argv.description)? argv.description: "";
     let semanticVersion = argv.semanticVersion;
     let projectSettings = await getProjectSettings();
