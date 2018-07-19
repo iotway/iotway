@@ -175,6 +175,8 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
         process.stderr.write (data.toString());
     });
     dockerPush.on ('exit', async (code)=>{
+        console.log ('is done');
+        console.log (semanticVersion);
         if (semanticVersion === undefined){
             console.log ('is undefined');
             let projectSettings = await getProjectSettings ();
