@@ -176,34 +176,31 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
     });
     dockerPush.on ('exit', async (code)=>{
         if (semanticVersion === undefined){
-        let projectSettings = await getProjectSettings ();
-        if (projectSettings.language === 'nodejs'){
-            let packagePath = path.join(process.cwd(), 'package.json');
-            try{
-                let projectData = require (packagePath);
-                let projectVersion = projectData.version;
-                if (projectVersion === undefined){
-                    projectVersion = '1.0';
+            let projectSettings = await getProjectSettings ();
+            if (projectSettings.language === 'nodejs'){
+                let packagePath = path.join(process.cwd(), 'package.json');
+                try{
+                    let projectData = require (packagePath);
+                    let projectVersion = projectData.version;
+                    if (projectVersion)
+                        semanticVersion = semver.valid (semver.coerce (projectVersion));
                 }
-                semanticVersion = semver.valid (semver.coerce (projectVersion));
-            }
-            catch (e){
-                semanticVersion = '1.0';
+                catch (e){
+                    semanticVersion = undefined;
+                }
             }
         }
-        else semanticVersion = '1.0';
-    }
-    if (appApi){
-        await appApi.versions (appId);
-        await appApi.editVersion (appId, version, {
-            semver: semanticVersion,
-            text: description
-        });
-    }
-    else{
-        console.error ('No credentials. Please login or select a profile.');
-        process.exit (-1);
-    }
+        if (appApi){
+            await appApi.versions (appId);
+            await appApi.editVersion (appId, version, {
+                semver: semanticVersion,
+                text: description
+            });
+        }
+        else{
+            console.error ('No credentials. Please login or select a profile.');
+            process.exit (-1);
+        }
         cb (code);
     });
 }
@@ -314,7 +311,7 @@ exports.publish = async function (argv){
     let profile = profileService.getCurrentProfile().profile;
     let version = argv.application_version;
     let description = (argv.description)? argv.description: "";
-    let semanticVersion = argv.semanticVersion;
+    let semanticVersion = argv.project-version;
     let projectSettings = await getProjectSettings();
     if (!await checkVersion (projectSettings.appId, version)){
         console.error ('The provided version is less or equal to the latest published version.');
