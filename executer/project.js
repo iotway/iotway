@@ -13,7 +13,7 @@ const child_process = require ('child_process');
 const socketService = require ('../service/socket');
 const readline = require('readline');
 const readlineSync = require('readline-sync');
-const semver = require('semver')
+const semver = require('semver');
 
 const projectLanguages = {
     js: 'nodejs',
@@ -161,7 +161,7 @@ function build(projectSettings, settings, appId, version, cb){
     });
 }
 
-function publish (profile, settings, appId, version, semanticVersion, description, cb){
+async function publish (profile, settings, appId, version, semanticVersion, description, cb){
     let buildFolder = path.join(process.cwd(), 'build');
     //Push docker image
     if (semanticVersion === undefined){
@@ -171,6 +171,8 @@ function publish (profile, settings, appId, version, semanticVersion, descriptio
             try{
                 let projectData = require (packagePath);
                 let projectVersion = projectData.version;
+                console.log (projectVersion);
+                console.log (semver.coerce (projectVersion));
                 semanticVersion = semver.valid (semver.coerce (projectVersion));
             }
             catch (e){
@@ -182,8 +184,8 @@ function publish (profile, settings, appId, version, semanticVersion, descriptio
     console.log ('Pushing docker image. Please wait.');
     let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
     if (appApi){
-        await appApi.versions ();
-        await appApi.updateVersion (appId, version, {
+        await appApi.versions (appId);
+        await appApi.editVersion (appId, version, {
             semver: semanticVersion,
             text: description
         });
@@ -321,7 +323,7 @@ exports.publish = async function (argv){
     let settings = await settingsApi.get ();
     if (settings){
         let appId = projectSettings.appId;
-        if (appId.substring (0, 5) !== 'local'){
+        if (appId.substring (0, 5) === 'local'){
             console.error ('This project has no application assigned.');
             process.exit (-1);
         }
@@ -330,9 +332,9 @@ exports.publish = async function (argv){
             console.error ('Please provide an existing application id.');
             process.exit (-1);
         }
-        dockerLogin (settings, profile, (code)=>{
+        dockerLogin (settings, profile, async (code)=>{
             if (code === 0){
-                publish (profile, settings, projectSettings.appId, version, semanticVersion, description, (code)=>{
+                await publish (profile, settings, projectSettings.appId, version, semanticVersion, description, (code)=>{
                     //Docker logout
                     child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
                     process.exit (code);
@@ -376,9 +378,9 @@ exports.run = async function (argv){
                 if (settings){
                     dockerLogin (settings, profile, (code)=>{
                         if (code === 0){
-                            build (projectSettings, settings, appId, 'dev', (code)=>{
+                            build (projectSettings, settings, appId, 'dev', async (code)=>{
                                 if (code === 0){
-                                    publish (profile, settings, appId, 'dev', (code)=>{
+                                    await publish (profile, settings, appId, 'dev', (code)=>{
                                         if (code === 0){
                                             console.log ('Pinging device...');
                                             let online = false;
