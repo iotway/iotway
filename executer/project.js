@@ -171,8 +171,9 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
             try{
                 let projectData = require (packagePath);
                 let projectVersion = projectData.version;
-                console.log (projectVersion);
-                console.log (semver.coerce (projectVersion));
+                if (projectVersion === undefined){
+                    projectVersion = '1.0';
+                }
                 semanticVersion = semver.valid (semver.coerce (projectVersion));
             }
             catch (e){
@@ -181,8 +182,6 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
         }
         else semanticVersion = '1.0';
     }
-    console.log ('Pushing docker image. Please wait.');
-    let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
     if (appApi){
         await appApi.versions (appId);
         await appApi.editVersion (appId, version, {
@@ -194,8 +193,10 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
         console.error ('No credentials. Please login or select a profile.');
         process.exit (-1);
     }
-    //get application versions
-    //post application/version/appid/version, 
+
+    console.log ('Pushing docker image. Please wait.');
+    let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
+
     dockerPush.stdout.on ('data', (data)=>{
         process.stdout.write (data.toString());
     });
@@ -278,6 +279,7 @@ exports.edit = async function  (argv){
 exports.build = async function (argv){
     let profile = profileService.getCurrentProfile().profile;
     let version = argv.version;
+    console.log (argv);
     let projectSettings = await getProjectSettings();
     if (!version){
         version = 'dev';
