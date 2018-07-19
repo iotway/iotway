@@ -313,10 +313,11 @@ exports.build = async function (argv){
 };
 
 exports.publish = async function (argv){
+    console.log (argv);
     let profile = profileService.getCurrentProfile().profile;
     let version = argv.application_version;
     let description = (argv.description)? argv.description: "";
-    let semanticVersion = argv.project-version;
+    let semanticVersion = argv["project-version"];
     let projectSettings = await getProjectSettings();
     if (!await checkVersion (projectSettings.appId, version)){
         console.error ('The provided version is less or equal to the latest published version.');
