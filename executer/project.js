@@ -181,6 +181,7 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
                 let packagePath = path.join(process.cwd(), 'package.json');
                 try{
                     let projectData = require (packagePath);
+                    console.log (projectData);
                     let projectVersion = projectData.version;
                     if (projectVersion)
                         semanticVersion = semver.valid (semver.coerce (projectVersion));
