@@ -235,7 +235,7 @@ exports.updateVersion = async function (argv){
     };
 
     if (appApi){
-        let response = await appApi.editVersion (argv.appId, argv.app_version, params);
+        let response = await appApi.editVersion (argv.app_id, argv.app_version, params);
         if (response)
             console.log ('Application updated successfully.');
         else{
