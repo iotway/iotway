@@ -176,9 +176,11 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
     });
     dockerPush.on ('exit', async (code)=>{
         if (semanticVersion === undefined){
+            console.log ('is undefined');
             let projectSettings = await getProjectSettings ();
             if (projectSettings.language === 'nodejs'){
                 let packagePath = path.join(process.cwd(), 'package.json');
+                console.log (packagePath);
                 try{
                     let projectData = require (packagePath);
                     console.log (projectData);
