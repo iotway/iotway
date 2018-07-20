@@ -371,7 +371,7 @@ exports.run = async function (argv){
                 
                 let projectSettings = await getProjectSettings();
                 let appId = projectSettings.appId;
-                if (appId.substring (0, 5) !== 'local'){
+                if (appId.substring (0, 5) === 'local'){
                     app = await appApi.get (appId);
                     if (!app){
                         console.error ('Please provide an existing application id.');
