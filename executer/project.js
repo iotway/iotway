@@ -320,7 +320,7 @@ exports.build = async function (argv){
     let settings = await settingsApi.get ();
     if (settings){
         console.log (projectSettings);
-        if (settings.PLATFORM[projectSettings.platform].docker.platform !== 'none'){
+        if (settings.PLATFORM[projectSettings.platform].docker.platform === 'none'){
             build (projectSettings, settings, projectSettings.appId, version, (code)=>{
                 //Docker logout
                 child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
