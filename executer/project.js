@@ -59,7 +59,7 @@ exports.init = async function (argv){
                         projectName = readlineSync.question ('project name: ');
                     }
                     if (projectPlatform === undefined){
-                        projectPlatform = readlineSync.question ('platform (choose between arm or x86): ');
+                        projectPlatform = readlineSync.question ('platform (choose between raspberrypi, e10, beagleboneblack, msp432, raspberrypi2');
                     }
                     if (projectLanguage === undefined){
                         projectLanguage = readlineSync.question ('project language: ');
@@ -318,6 +318,7 @@ exports.build = async function (argv){
     }
     let settings = await settingsApi.get ();
     if (settings){
+        console.log (projectSettings);
         if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
             build (projectSettings, settings, projectSettings.appId, version, (code)=>{
                 //Docker logout

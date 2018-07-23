@@ -42,7 +42,7 @@ module.exports = function (yargs, handler){
             },
             platform: {
                 alias: 'p',
-                choices: ['raspberrypi']
+                choices: ['raspberrypi', 'e10', 'beagleboneblack', 'msp432', 'raspberrypi2']
             },
             'app-id':{
                 alias: 'app',
