@@ -312,7 +312,7 @@ exports.build = async function (argv){
     if (!version){
         version = 'dev';
     }
-    else if (!await checkVersion (projectSettings.appId, version)){
+    else if (appId.substring (0, 5) !== 'local' && !await checkVersion (projectSettings.appId, version)){
         console.log ('The provided version is less or equal to the latest published version.');
         console.log ('The Docker image will be created but it cannot be published.');
     }
