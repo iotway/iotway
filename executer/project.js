@@ -114,6 +114,7 @@ exports.init = async function (argv){
 function build(projectSettings, settings, appId, version, cb){
     //Run make
     console.log ('make');
+    console.log (settings.PLATFORM[projectSettings.platform].docker);
     let make = child_process.spawn ('make', {
         env: {
             platform: settings.PLATFORM[projectSettings.platform].options.platform,
@@ -127,7 +128,7 @@ function build(projectSettings, settings, appId, version, cb){
         process.stderr.write (data.toString());
     })
     make.on ('exit', (code)=>{
-        if (code === 0 && settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
+        if (code === 0 && settings.PLATFORM[projectSettings.platform].docker.platform !== 'none'){
             //Generate dockerfile
             let docker = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
             let dockerFile;
@@ -169,7 +170,7 @@ function build(projectSettings, settings, appId, version, cb){
 }
 
 async function publish (profile, settings, appId, version, semanticVersion, description, cb){
-    if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
+    if (settings.PLATFORM[projectSettings.platform].docker.platform !== 'none'){
         let buildFolder = path.join(process.cwd(), 'build');
         //Push docker image
         console.log ('Pushing docker image. Please wait.');
@@ -319,7 +320,7 @@ exports.build = async function (argv){
     let settings = await settingsApi.get ();
     if (settings){
         console.log (projectSettings);
-        if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
+        if (settings.PLATFORM[projectSettings.platform].docker.platform !== 'none'){
             build (projectSettings, settings, projectSettings.appId, version, (code)=>{
                 //Docker logout
                 child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
