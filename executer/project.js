@@ -120,7 +120,7 @@ function build(projectSettings, settings, appId, version, cb){
         process.stderr.write (data.toString());
     })
     make.on ('exit', (code)=>{
-        if (code === 0){
+        if (code === 0 && settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
             //Generate dockerfile
             let docker = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
             let dockerFile;
@@ -162,6 +162,57 @@ function build(projectSettings, settings, appId, version, cb){
 }
 
 async function publish (profile, settings, appId, version, semanticVersion, description, cb){
+    if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
+        let buildFolder = path.join(process.cwd(), 'build');
+        //Push docker image
+        console.log ('Pushing docker image. Please wait.');
+        let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
+
+        dockerPush.stdout.on ('data', (data)=>{
+            process.stdout.write (data.toString());
+        });
+        dockerPush.stderr.on ('data', (data)=>{
+            process.stderr.write (data.toString());
+        });
+        dockerPush.on ('exit', async (code)=>{
+            console.log ('is done');
+            console.log (semanticVersion);
+            if (semanticVersion === undefined){
+                console.log ('is undefined');
+                let projectSettings = await getProjectSettings ();
+                if (projectSettings.language === 'nodejs'){
+                    let packagePath = path.join(process.cwd(), 'package.json');
+                    console.log (packagePath);
+                    try{
+                        let projectData = require (packagePath);
+                        console.log (projectData);
+                        let projectVersion = projectData.version;
+                        if (projectVersion)
+                            semanticVersion = semver.valid (semver.coerce (projectVersion));
+                    }
+                    catch (e){
+                        semanticVersion = undefined;
+                    }
+                }
+            }
+            if (appApi){
+                await appApi.versions (appId);
+                await appApi.editVersion (appId, version, {
+                    semver: semanticVersion,
+                    text: description
+                });
+            }
+            else{
+                console.error ('No credentials. Please login or select a profile.');
+                process.exit (-1);
+            }
+            cb (code);
+        });
+    }
+    else cb(0);
+}
+
+async function publishDev (profile, settings, appId, version, cb){
     let buildFolder = path.join(process.cwd(), 'build');
     //Push docker image
 
@@ -175,37 +226,6 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
         process.stderr.write (data.toString());
     });
     dockerPush.on ('exit', async (code)=>{
-        console.log ('is done');
-        console.log (semanticVersion);
-        if (semanticVersion === undefined){
-            console.log ('is undefined');
-            let projectSettings = await getProjectSettings ();
-            if (projectSettings.language === 'nodejs'){
-                let packagePath = path.join(process.cwd(), 'package.json');
-                console.log (packagePath);
-                try{
-                    let projectData = require (packagePath);
-                    console.log (projectData);
-                    let projectVersion = projectData.version;
-                    if (projectVersion)
-                        semanticVersion = semver.valid (semver.coerce (projectVersion));
-                }
-                catch (e){
-                    semanticVersion = undefined;
-                }
-            }
-        }
-        if (appApi){
-            await appApi.versions (appId);
-            await appApi.editVersion (appId, version, {
-                semver: semanticVersion,
-                text: description
-            });
-        }
-        else{
-            console.error ('No credentials. Please login or select a profile.');
-            process.exit (-1);
-        }
         cb (code);
     });
 }
@@ -291,20 +311,28 @@ exports.build = async function (argv){
     }
     let settings = await settingsApi.get ();
     if (settings){
-        let appId = projectSettings.appId;
-        //Run docker login
-        dockerLogin (settings, profile, (code)=>{
-            if (code === 0){
-                build (projectSettings, settings, projectSettings.appId, version, (code)=>{
-                    //Docker logout
-                    child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
-                    process.exit (code);
-                });
-            }
-            else{
+        if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
+            build (projectSettings, settings, projectSettings.appId, version, (code)=>{
+                //Docker logout
+                child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
                 process.exit (code);
+            });
+        }
+        else{
+            //Run docker login
+            dockerLogin (settings, profile, (code)=>{
+                if (code === 0){
+                    build (projectSettings, settings, projectSettings.appId, version, (code)=>{
+                        //Docker logout
+                        child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
+                        process.exit (code);
+                    });
+                }
+                else{
+                    process.exit (code);
+                }
+            });
             }
-        });
     }
     else{
         console.error ('Could not get account settings.');
@@ -384,7 +412,7 @@ exports.run = async function (argv){
                         if (code === 0){
                             build (projectSettings, settings, appId, 'dev', async (code)=>{
                                 if (code === 0){
-                                    await publish (profile, settings, appId, 'dev', (code)=>{
+                                    await publishDev (profile, settings, appId, 'dev', (code)=>{
                                         if (code === 0){
                                             console.log ('Pinging device...');
                                             let online = false;
