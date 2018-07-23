@@ -113,7 +113,7 @@ exports.init = async function (argv){
 
 function build(projectSettings, settings, appId, version, cb){
     //Run make
-    console.log ('make');
+    console.log ('makeeeee');
     console.log (settings.PLATFORM[projectSettings.platform].docker);
     let make = child_process.spawn ('make', {
         env: {
