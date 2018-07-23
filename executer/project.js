@@ -113,8 +113,7 @@ exports.init = async function (argv){
 
 function build(projectSettings, settings, appId, version, cb){
     //Run make
-    console.log ('makeeeee');
-    console.log (settings.PLATFORM[projectSettings.platform].docker);
+    console.log ('make');
     let make = child_process.spawn ('make', {
         env: {
             platform: settings.PLATFORM[projectSettings.platform].options.platform,
@@ -319,7 +318,6 @@ exports.build = async function (argv){
     }
     let settings = await settingsApi.get ();
     if (settings){
-        console.log (projectSettings);
         if (settings.PLATFORM[projectSettings.platform].docker.platform === 'none'){
             build (projectSettings, settings, projectSettings.appId, version, (code)=>{
                 //Docker logout
@@ -350,7 +348,6 @@ exports.build = async function (argv){
 };
 
 exports.publish = async function (argv){
-    console.log (argv);
     let profile = profileService.getCurrentProfile().profile;
     let version = argv.application_version;
     let description = (argv.description)? argv.description: "";
