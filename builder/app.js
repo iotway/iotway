@@ -58,25 +58,6 @@ module.exports = function (yargs, handler){
         }, handler.edit)
         .command (['remove <app_id>', 'r'], 'Remove application.', {}, handler.delete)
         .command (['describe <app_id>', 'd'], 'Describe application.', {}, handler.get)
-        .command ('init', 'Init application for building docker image.', {
-            id: {
-                alias: 'a',
-                type: 'string',
-                desc: 'The id of the application.'
-            },
-            dir: {
-                alias: 'd',
-                type: 'string',
-                desc: 'The path to the directory where the application will be built.'
-            }
-        }, handler.init)
-        .command ('build', 'Build docker image for application', {
-            'app-version': {
-                alias: 'v',
-                desc: 'The number of this image version.',
-                type: 'number'
-            }
-        }, handler.build)
         .command (['parameter', 'p'], 'Adds or removes a parameter.', 
         (yarg) => {
             yarg.command ('add', 'Adds a new parameter.', {
