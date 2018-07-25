@@ -2,7 +2,7 @@ const commands = ['new', 'list', 'edit', 'remove', 'describe', 'parameter', 'ver
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
     yargs.command(['app', 'a'], 'Application settings.',
-     (yargs) => {
+     async (yargs) => {
         yargs.command (['new','n'],  'Creates a new application.', {
             name: {
                 alias: 'n',
@@ -24,8 +24,7 @@ module.exports = function (yargs, handler){
             platform: {
                 alias: 'p',
                 type: 'string',
-                demandOption: true,
-                choices: ['arm', 'x86']
+                demandOption: true
             },
             privileged: {
                 alias: 'prv',
