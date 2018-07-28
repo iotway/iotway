@@ -20,7 +20,6 @@ module.exports = function (yargs, handler){
             platform: {
                 alias: 'p',
                 desc: 'The platform the products in the cluster are running.',
-                choices: ['x86', 'arm'],
                 demandOption: true,
                 type: 'string'
             },

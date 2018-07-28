@@ -31,8 +31,7 @@ module.exports = function (yargs, handler){
             platform: {
                 alias: 'p',
                 type: 'string',
-                demandOption: true,
-                choices: ['arm', 'x86']
+                demandOption: true
             },
             'public-key':  {
                 alias: 'k-pub',
