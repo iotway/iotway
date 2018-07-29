@@ -23,6 +23,14 @@ module.exports = function (http){
                 return response.data.project;
             }
             return null;
+        },
+
+        build: async function (projectId){
+            let response = await http.get ('/project/build/'+projectId+'/done');
+            if (response.data && response.data.err === 0){
+                return true
+            }
+            return null;
         }
     }
 };

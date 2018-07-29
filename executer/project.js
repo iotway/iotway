@@ -14,6 +14,7 @@ const socketService = require ('../service/socket');
 const readline = require('readline');
 const readlineSync = require('readline-sync');
 const semver = require('semver');
+const _ = require ('lodash');
 
 const projectLanguages = {
     js: 'nodejs',
@@ -115,10 +116,7 @@ function build(projectSettings, settings, appId, version, cb){
     //Run make
     console.log ('make');
     let make = child_process.spawn ('make', {
-        env: {
-            platform: settings.PLATFORM[projectSettings.platform].options.platform,
-            arch: settings.PLATFORM[projectSettings.platform].options.arch
-        }
+        env: _.assign ({}, process.env, settings.PLATFORM[projectSettings.platform].options)
     });
     make.stdout.on ('data', (data)=>{
         process.stdout.write (data.toString());
@@ -127,6 +125,9 @@ function build(projectSettings, settings, appId, version, cb){
         process.stderr.write (data.toString());
     })
     make.on ('exit', (code)=>{
+        if (code === 0){
+            await projectApi.build (projectSettings.id);
+        }
         if (code === 0 && settings.PLATFORM[projectSettings.platform].docker.platform !== 'none'){
             //Generate dockerfile
             let docker = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
