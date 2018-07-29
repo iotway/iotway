@@ -253,10 +253,11 @@ function dockerLogin (settings, profile, cb){
 
 async function checkVersion (appId, version){
     let versions = await appApi.versions (appId);
-    if (versions && versions.length === 0)
-        return true;
-    let max = Math.max (...versions);
-    return version > max;
+    if (versions && versions.length === 0){
+        let max = Math.max (...versions);
+        return version > max;
+    }
+    return false;
 }
 
 async function getProjectSettings (){
