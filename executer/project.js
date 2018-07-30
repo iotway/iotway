@@ -369,7 +369,7 @@ exports.build = async function (argv){
     let settings = await settingsApi.get ();
     if (settings){
         if (settings.PLATFORM[projectSettings.platform].docker.platform === 'none'){
-            build (projectSettings, settings, projectSettings.appId, version, (code)=>{
+            build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, (code)=>{
                 //Docker logout
                 child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
                 process.exit (code);
@@ -379,7 +379,7 @@ exports.build = async function (argv){
             //Run docker login
             dockerLogin (settings, profile, (code)=>{
                 if (code === 0){
-                    build (projectSettings, settings, projectSettings.appId, version, (code)=>{
+                    build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, (code)=>{
                         //Docker logout
                         child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
                         process.exit (code);
@@ -507,7 +507,7 @@ exports.run = async function (argv){
                 let settings = await settingsApi.get ();
                 if (settings){
                     if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
-                        build (projectSettings, settings, appId, 'dev', argv.session-id, async (code)=>{
+                        build (projectSettings, settings, appId, 'dev', argv['session-id'], productId, async (code)=>{
                             if (code === 0){
                                 await publishDev (profile, settings, appId, 'dev', (code)=>{
                                     if (code === 0){
@@ -632,7 +632,7 @@ exports.run = async function (argv){
                     else{
                         dockerLogin (settings, profile, (code)=>{
                             if (code === 0){
-                                build (projectSettings, settings, appId, 'dev', async (code)=>{
+                                build (projectSettings, settings, appId, 'dev', undefined, undefined, async (code)=>{
                                     if (code === 0){
                                         await publishDev (profile, settings, appId, 'dev', (code)=>{
                                             if (code === 0){
