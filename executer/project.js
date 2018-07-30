@@ -15,6 +15,7 @@ const readline = require('readline');
 const readlineSync = require('readline-sync');
 const semver = require('semver');
 const _ = require ('lodash');
+const nonce = require ('../utils/nonce');
 
 const projectLanguages = {
     js: 'nodejs',
@@ -26,6 +27,8 @@ const projectLanguages = {
     msp432: 'msp432'
 }
 exports.init = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let contents = fs.readdirSync (process.cwd());
     if (contents.length === 0 || (contents.length === 1 && contents[0] === 'project.log')){
         let project;
@@ -314,6 +317,8 @@ async function getProjectSettings (sourceFolder){
 }
 
 exports.edit = async function  (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let projectSettings = await getProjectSettings();
     if (argv.name){
         projectSettings.name = argv.name;
@@ -335,6 +340,8 @@ exports.edit = async function  (argv){
 };
 
 exports.build = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let profile = profileService.getCurrentProfile().profile;
     let version = argv.application_version;
     let projectSettings;
@@ -398,6 +405,8 @@ exports.build = async function (argv){
 };
 
 exports.publish = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let profile = profileService.getCurrentProfile().profile;
     let version = argv.application_version;
     let description = (argv.description)? argv.description: "";
@@ -463,6 +472,8 @@ exports.publish = async function (argv){
 };
 
 exports.run = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let productId = argv.product_id;
     let profile = profileService.getCurrentProfile().profile;
     let app;
@@ -781,6 +792,8 @@ exports.run = async function (argv){
 };
 
 exports.list = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (projectApi){
         let projects = await projectApi.list ();
         if (argv.o === 'json')

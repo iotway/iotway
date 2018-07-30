@@ -2,7 +2,11 @@ const profileService = require ('../service/profile');
 const socketService = require ('../service/socket');
 const productApi = require ('../utils/api').products;
 const readline = require('readline');
+const nonce = require ('../utils/nonce');
+
 exports.shell = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let productId = argv.product_id;
     let product = await productApi.get (productId);
     if (product){

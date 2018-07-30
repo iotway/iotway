@@ -6,6 +6,7 @@ const nonce = require ('../utils/nonce');
 
 module.exports.login = async function (argv){
     nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let username = argv.username;
     let password = argv.password;
     let host = argv.host;
@@ -38,6 +39,8 @@ module.exports.login = async function (argv){
 };
 
 module.exports.logout = async function (){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (usersApi){
         let result = await usersApi.logout();
         if (result){

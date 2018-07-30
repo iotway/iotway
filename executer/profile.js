@@ -7,6 +7,8 @@ const profileService = require ('../service/profile');
 const nonce = require ('../utils/nonce');
 
 exports.select = function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let profileName = argv.profile_name + '.json';
     //Check which profile to be selected.
     if (profileName === undefined){
@@ -32,6 +34,8 @@ exports.select = function (argv){
 };
 
 exports.save = function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let profileName = argv.profile_name+'.json';
     let currentProfile = profileService.getCurrentProfile();
     let profileData = currentProfile.profile;
@@ -40,6 +44,8 @@ exports.save = function (argv){
 };
 
 exports.delete = function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let profileName = argv.profile_name + '.json';
     try{
         fs.unlinkSync (path.normalize(settings.profilesDir + profileName));

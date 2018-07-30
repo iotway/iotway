@@ -3,7 +3,10 @@ const deployApi = require ('../utils/api').deploy;
 const Table = require ('cli-table');
 const moment = require ('moment');
 const tableBuilder = require ('../utils/table');
+const nonce = require ('../utils/nonce');
 exports.provision = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     params = {
         clusterId: argv.clusterId,
         type: argv.type,
@@ -41,6 +44,8 @@ exports.provision = async function (argv){
 };
 
 exports.list = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (productApi){
         let products = await productApi.list (argv.cluster_id);
         if (argv.o === 'json')
@@ -103,6 +108,8 @@ exports.list = async function (argv){
 };
 
 exports.get = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (productApi){
         let product = await productApi.get (argv.product_id);
         if (product){
@@ -118,6 +125,8 @@ exports.get = async function (argv){
 };
 
 exports.delete = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (productApi){
         let response = await productApi.delete (argv.product_id);
         if (response){
@@ -135,6 +144,8 @@ exports.delete = async function (argv){
 };
 
 exports.schedule = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (productApi){
         let response = await productApi.schedule({
             productId: argv.product_id,
@@ -154,6 +165,8 @@ exports.schedule = async function (argv){
 };
 
 exports.unschedule = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (productApi){
         let response = await productApi.unschedule({
             productId: argv.product_id,
@@ -173,6 +186,8 @@ exports.unschedule = async function (argv){
 };
 
 exports.edit = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         productId: argv.product_id,
         name: argv.name,
@@ -215,6 +230,8 @@ exports.edit = async function (argv){
 };
 
 exports.getJson = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (productApi){
         let file = await productApi.getWyliodrinJSON (argv.productId);
         if (file)
@@ -231,6 +248,8 @@ exports.getJson = async function (argv){
 };
 
 exports.addScript = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         productId: argv.productId,
         name: argv.name,
@@ -252,6 +271,8 @@ exports.addScript = async function (argv){
 };
 
 exports.deleteScript = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         productId: argv.productId,
         name: argv.name
@@ -272,6 +293,8 @@ exports.deleteScript = async function (argv){
 };
 
 exports.logs = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (productApi){
         let product = await productApi.get (argv.product_id);
         if (argv.o === 'json' && product){
@@ -312,6 +335,8 @@ exports.logs = async function (argv){
 };
 
 exports.applications = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (productApi && deployApi){
         let product = await productApi.get (argv.product_id);
         let depl = await deployApi.deploymentsProduct (argv.product_id);

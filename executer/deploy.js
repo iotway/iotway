@@ -1,8 +1,10 @@
 const deployApi = require ('../utils/api').deploy;
 const Table = require ('cli-table');
 const tableBuilder = require ('../utils/table');
-
+const nonce = require ('../utils/nonce');
 exports.list = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (deployApi){
         let deployments = [];
         if (argv.app){
@@ -57,6 +59,8 @@ exports.list = async function (argv){
 };
 
 exports.versions = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (deployApi){
         let versions = await deployApi.versions (argv.platform);
 
@@ -72,6 +76,8 @@ exports.versions = async function (argv){
 };
 
 exports.edit = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         deployId: argv.deploy_id,
         network: argv.network,
@@ -94,6 +100,8 @@ exports.edit = async function (argv){
 };
 
 exports.upgrade = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         deployId: argv.deploy_id,
         appId: argv.app_id
@@ -115,6 +123,8 @@ exports.upgrade = async function (argv){
 };
 
 exports.addParam = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         deployId: argv.id,
         appId: argv.appId,
@@ -137,6 +147,8 @@ exports.addParam = async function (argv){
 };
 
 exports.deleteParam = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         deployId: argv.id,
         appId: argv.appId,
@@ -158,6 +170,8 @@ exports.deleteParam = async function (argv){
 };
 
 exports.get = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (deployApi){
         let response = await deployApi.get (argv.deploy_id);
         if (response)

@@ -1,7 +1,10 @@
 const clusterApi = require ('../utils/api').clusters;
 const Table = require ('cli-table');
 const tableBuilder = require ('../utils/table');
+const nonce = require ('../utils/nonce');
 exports.new = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         authKey: true,
         name: argv.name,
@@ -34,6 +37,8 @@ exports.new = async function (argv){
 };
 
 exports.list = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (clusterApi){
         let clusters = await clusterApi.list ();
         if (argv.o === 'json')
@@ -68,6 +73,8 @@ exports.list = async function (argv){
 };
 
 exports.get = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (clusterApi){
         let cluster = await clusterApi.get (argv.cluster_id);
         if (cluster){
@@ -83,6 +90,8 @@ exports.get = async function (argv){
 };
 
 exports.getScripts = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (clusterApi){
         let cluster = await clusterApi.get (argv.cluster_id);
         if (argv.o === 'json')
@@ -109,6 +118,8 @@ exports.getScripts = async function (argv){
 };
 
 exports.delete = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (clusterApi){
         let response = await clusterApi.delete (argv.cluster_id);
         if (response){
@@ -126,6 +137,8 @@ exports.delete = async function (argv){
 };
 
 exports.edit = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         clusterId: argv.cluster_id,
         name: argv.name,
@@ -163,6 +176,8 @@ exports.edit = async function (argv){
 };
 
 exports.addScript = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         clusterId: argv.id,
         name: argv.name,
@@ -184,6 +199,8 @@ exports.addScript = async function (argv){
 };
 
 exports.deleteScript = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         clusterId: argv.id,
         name: argv.name
@@ -204,6 +221,8 @@ exports.deleteScript = async function (argv){
 };
 
 exports.getJson = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (clusterApi){
         let file = await clusterApi.getWyliodrinJSON (argv.clusterId);
         if (file)

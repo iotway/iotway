@@ -2,8 +2,11 @@ const appApi = require ('../utils/api').apps;
 const Table = require ('cli-table');
 const tableBuilder = require ('../utils/table');
 const semver = require ('semver');
+const nonce = require ('../utils/nonce');
 
 exports.new = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         appId: argv.id,
         author: argv.author,
@@ -28,6 +31,8 @@ exports.new = async function (argv){
 };
 
 exports.list = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (appApi){
         let apps = await appApi.list ();
         if (argv.o === 'json'){
@@ -63,6 +68,8 @@ exports.list = async function (argv){
 };
 
 exports.edit = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         appId: argv.app_id,
         name: argv.name,
@@ -85,6 +92,8 @@ exports.edit = async function (argv){
 };
 
 exports.delete = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (appApi){
         let response = await appApi.delete (argv.app_id);
         if (response)
@@ -101,6 +110,8 @@ exports.delete = async function (argv){
 };
 
 exports.get = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (appApi){
         let app = await appApi.get (argv.app_id);
         if (app)
@@ -117,6 +128,8 @@ exports.get = async function (argv){
 };
 
 exports.addParam = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         appId: argv.id,
         name: argv.name,
@@ -138,6 +151,8 @@ exports.addParam = async function (argv){
 };
 
 exports.deleteParam = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         appId: argv.id,
         name: argv.name
@@ -158,6 +173,8 @@ exports.deleteParam = async function (argv){
 };
 
 exports.versions = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     if (appApi){
         let versions = await appApi.versions (argv.app_id);
         if (versions)
@@ -174,6 +191,8 @@ exports.versions = async function (argv){
 };
 
 exports.deploy = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         appId: argv.id,
         clusterId: argv.clusterId,
@@ -202,6 +221,8 @@ exports.deploy = async function (argv){
 };
 
 exports.undeploy = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let params = {
         deployId: argv.id,
         appId: argv.appId,
@@ -224,6 +245,8 @@ exports.undeploy = async function (argv){
 };
 
 exports.updateVersion = async function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let semanticVersion = semver.valid (semver.coerce (argv.semver));
     if (!semanticVersion){
         console.error ('Invalid semantic version.');
