@@ -81,5 +81,13 @@ module.exports = function (http)
             }
             return false;
         },
+
+        run: async function (params){
+            let response = await http.get ('/product/run/'+params.productId+'/'+params.projectId+'?session='+params.session);
+            if (response.data && response.data.err === 0){
+                return true;
+            }
+            return false;
+        }
     };
 };

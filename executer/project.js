@@ -112,7 +112,7 @@ exports.init = async function (argv){
     }
 };
 
-function build(projectSettings, settings, appId, version, cb){
+function build(projectSettings, settings, appId, version, sessionId, productId, cb){
     //Run make
     console.log ('make');
     let make = child_process.spawn ('make', {
@@ -124,9 +124,26 @@ function build(projectSettings, settings, appId, version, cb){
     make.stderr.on ('data', (data)=>{
         process.stderr.write (data.toString());
     })
-    make.on ('exit', (code)=>{
+    make.on ('exit', async (code)=>{
         if (code === 0){
             await projectApi.build (projectSettings.id);
+            if (settings.PLATFORM[projectSettings.platform].options && settings.PLATFORM[projectSettings.platform].options.binary){
+                let options = settings.PLATFORM[projectSettings.platform].options.binary;
+                let paths = options.split ('/');
+                let fileName = paths [paths.length-1];
+                let newName = paths.splice (paths.length-2, 1).join ('/');
+                let extensions = fileName.split ('.');
+                let extension = extensions[extensions.length - 1];
+                newName = newName + '/' + productId + '.' + extension;
+                fs.renameSync (path.join (process.cwd(), options.binary), path.join (process.cwd(), newName));
+                if (sessionId && projectSettings.id){
+                    await productApi.run ({
+                        session: sessionId,
+                        productId: productId,
+                        projectId: projectSettings.id
+                    });
+                }
+            }
         }
         if (code === 0 && settings.PLATFORM[projectSettings.platform].docker.platform !== 'none'){
             //Generate dockerfile
@@ -260,9 +277,19 @@ async function checkVersion (appId, version){
     return false;
 }
 
-async function getProjectSettings (){
+function searchSettings (myPath){
+    let files = fs.readdirSync (myPath);
+    if (files.indexOf('wylioproject.json') != -1)
+        return fs.readFileSync (path.join (myPath, 'wylioproject.json'), 'utf8');
+    else if (myPath === path.join (myPath, '..'))
+        return null;
+    else
+        search (path.join (myPath, '..'));
+}
+
+async function getProjectSettings (sourceFolder){
     try{
-        let tempProjectSettings = fs.readFileSync (path.join(process.cwd(), 'wylioproject.json'), 'utf8');
+        let tempProjectSettings = searchSettings (sourceFolder);
         tempProjectSettings = JSON.parse (tempProjectSettings);
         if (tempProjectSettings.id){
             projectSettings = await projectApi.get (tempProjectSettings.id);
@@ -310,7 +337,28 @@ exports.edit = async function  (argv){
 exports.build = async function (argv){
     let profile = profileService.getCurrentProfile().profile;
     let version = argv.application_version;
-    let projectSettings = await getProjectSettings();
+    let projectSettings;
+    if (process.env.WYLIODRIN_PROJECT_ID){
+        console.log ('Using environment configurations');
+        let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+        if (onlineProject){
+            projectSettings = {
+                name: onlineProject.name,
+                appId: onlineProject.appId,
+                language: projectLanguages[onlineProject.language],
+                id: onlineProject.projectId,
+                platform: onlineProject.platform,
+                ui: onlineProject.ui
+            };
+        }
+        else{
+            console.error ('Cannot get project.');
+            process.exit (-1);
+        }
+    }
+    else{
+        projectSettings = await getProjectSettings();
+    }
     if (!version){
         version = 'dev';
     }
@@ -354,7 +402,28 @@ exports.publish = async function (argv){
     let version = argv.application_version;
     let description = (argv.description)? argv.description: "";
     let semanticVersion = argv["project-version"];
-    let projectSettings = await getProjectSettings();
+    let projectSettings;
+    if (process.env.WYLIODRIN_PROJECT_ID){
+        console.log ('Using environment configurations');
+        let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+        if (onlineProject){
+            projectSettings = {
+                name: onlineProject.name,
+                appId: onlineProject.appId,
+                language: projectLanguages[onlineProject.language],
+                id: onlineProject.projectId,
+                platform: onlineProject.platform,
+                ui: onlineProject.ui
+            };
+        }
+        else{
+            console.error ('Cannot get project.');
+            process.exit (-1);
+        }
+    }
+    else{
+        projectSettings = await getProjectSettings();
+    }
     if (!await checkVersion (projectSettings.appId, version)){
         console.error ('The provided version is less or equal to the latest published version.');
         console.error ('Cannot publish docker image.');
@@ -405,9 +474,30 @@ exports.run = async function (argv){
                     console.error ('Device might be offline.');
                 }
                 
-                let projectSettings = await getProjectSettings();
+                let projectSettings;
+                if (process.env.WYLIODRIN_PROJECT_ID){
+                    console.log ('Using environment configurations');
+                    let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+                    if (onlineProject){
+                        projectSettings = {
+                            name: onlineProject.name,
+                            appId: onlineProject.appId,
+                            language: projectLanguages[onlineProject.language],
+                            id: onlineProject.projectId,
+                            platform: onlineProject.platform,
+                            ui: onlineProject.ui
+                        };
+                    }
+                    else{
+                        console.error ('Cannot get project.');
+                        process.exit (-1);
+                    }
+                }
+                else{
+                    projectSettings = await getProjectSettings();
+                }
                 let appId = projectSettings.appId;
-                if (appId.substring (0, 5) === 'local'){
+                if (appId.substring (0, 5) !== 'local'){
                     app = await appApi.get (appId);
                     if (!app){
                         console.error ('Please provide an existing application id.');
@@ -417,7 +507,7 @@ exports.run = async function (argv){
                 let settings = await settingsApi.get ();
                 if (settings){
                     if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
-                        build (projectSettings, settings, appId, 'dev', async (code)=>{
+                        build (projectSettings, settings, appId, 'dev', argv.session-id, async (code)=>{
                             if (code === 0){
                                 await publishDev (profile, settings, appId, 'dev', (code)=>{
                                     if (code === 0){
