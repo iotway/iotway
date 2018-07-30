@@ -135,7 +135,7 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
                 let extensions = fileName.split ('.');
                 let extension = extensions[extensions.length - 1];
                 newName = newName + '/' + productId + '.' + extension;
-                fs.renameSync (path.join (process.cwd(), options.binary), path.join (process.cwd(), newName));
+                fs.renameSync (path.join (process.cwd(), options), path.join (process.cwd(), newName));
                 if (sessionId && projectSettings.id){
                     await productApi.run ({
                         session: sessionId,
