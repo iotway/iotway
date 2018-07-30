@@ -27,4 +27,8 @@ yargs.help()
   global: true,
   choices: ['human', 'json']
 })
+.option ('nonce', {
+  global: true,
+  type: 'string'
+})
 .argv

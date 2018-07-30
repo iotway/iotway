@@ -4,6 +4,7 @@ const Table = require ('cli-table');
 const settings = require ('../utils/settings');
 const path = require ('path');
 const profileService = require ('../service/profile');
+const nonce = require ('../utils/nonce');
 
 exports.select = function (argv){
     let profileName = argv.profile_name + '.json';
@@ -54,6 +55,8 @@ exports.delete = function (argv){
 };
 
 exports.list = function (argv){
+    nonce.check (argv.nonce);
+    nonce.add (argv.nonce);
     let table = new Table({
         head: ['Profile', 'Username', 'Server', 'Selected'],
     });

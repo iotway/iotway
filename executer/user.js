@@ -2,8 +2,10 @@ const readlineSync = require('readline-sync');
 const profileService = require ('../service/profile');
 let usersApi = require ('../utils/api').users;
 let api = require ('../utils/api');
+const nonce = require ('../utils/nonce');
 
 module.exports.login = async function (argv){
+    nonce.check (argv.nonce);
     let username = argv.username;
     let password = argv.password;
     let host = argv.host;
