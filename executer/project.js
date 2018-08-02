@@ -33,7 +33,7 @@ function print (data, prefix, channel){
         lines.splice (lines.length-1, 1);
     }
     for (let l of lines){
-        if (l.length > 0 && l !== '\n')
+        if (l.length > 0)
             channel.write (prefix+l+'\n');
     }
 }
