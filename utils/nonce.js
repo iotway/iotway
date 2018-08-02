@@ -5,8 +5,13 @@ exports.check = function (nonce){
             let nonceData = fs.readFileSync ('/tmp/wylio/nonce', 'utf8');
             if (nonceData){
                 let nonces = nonceData.split (',');
-                if (nonces.indexOf(nonce) >= 0)
+                if (nonces.indexOf(nonce) >= 0){
+                    console.log ('wylio terminated');
+                    if (process.env.WYLIODRIN_STUDIO_THEIA){
+                        console.log ('Please close this terminal.');
+                    }
                     process.exit (-1);
+                }
             }
         }
         catch (e){

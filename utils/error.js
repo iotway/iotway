@@ -1,7 +1,31 @@
-exports = {
-    INVALID_DATA: -1,
-    NO_PROFILE: 1,
-    EDIT_PROFILE: 2,
-    NO_TOKEN: 3,
-    SERVER_ERROR: 10
-};
+const fs = require ('fs-extra');
+const settings = require ('./settings');
+
+process.on('uncaughtException', function(err) {
+    try{
+        fs.appendFileSync (path.join (settings.baseDir, 'error.log'), err);
+    }
+    catch (e){
+        try{
+            fs.mkdirSync (settings.baseDir);
+            fs.appendFileSync (path.join (settings.baseDir, 'error.log'), err);
+        }
+        catch (e){}
+    }
+    console.log ('wylio stopped working');
+    console.log ('check log files in '+settings.baseDir);
+    process.exit (-1);
+});
+    
+exports.addError = function (error){
+    try{
+        fs.appendFileSync (path.join (settings.baseDir, 'error.log'), error);
+    }
+    catch (e){
+        try{
+            fs.mkdirSync (settings.baseDir);
+            fs.appendFileSync (path.join (settings.baseDir, 'error.log'), error);
+        }
+        catch (e){}
+    }
+}

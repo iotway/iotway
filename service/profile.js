@@ -1,7 +1,6 @@
 const fs = require ('fs');
 const settings = require ('../utils/settings');
 const path = require ('path');
-const error = require ('../utils/error');
 
 exports.exists = function (name){
     let profiles = fs.readdirSync (settings.profilesDir);

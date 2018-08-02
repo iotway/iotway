@@ -3,7 +3,7 @@ const commands = ['user', 'profile', 'cluster', 'product', 'app', 'deploy', 'she
 const _ = require ('lodash');
 require('dotenv').config();
 let yargs = require ('yargs');
-
+require ('./utils/error');
 
 yargs = require ('./builder/user')(yargs, require ('./executer/user'));
 yargs = require ('./builder/profile')(yargs, require ('./executer/profile'));

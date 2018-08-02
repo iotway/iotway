@@ -122,23 +122,24 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
         env: _.assign ({}, process.env, settings.PLATFORM[projectSettings.platform].options)
     });
     make.stdout.on ('data', (data)=>{
-        process.stdout.write (data.toString());
+        let lines = data.toString().split ('\n');
+        for (let l of lines){
+            process.stdout.write ('MAKE>> '+l+'\n');
+        }
     });
     make.stderr.on ('data', (data)=>{
-        process.stderr.write (data.toString());
+        let lines = data.toString().split ('\n');
+        for (let l of lines){
+            process.stderr.write ('MAKE>> '+l+'\n');
+        }
     })
     make.on ('exit', async (code)=>{
         if (code === 0){
             await projectApi.build (projectSettings.id);
             if (settings.PLATFORM[projectSettings.platform].options && settings.PLATFORM[projectSettings.platform].options.binary){
                 let options = settings.PLATFORM[projectSettings.platform].options.binary;
-                let paths = options.split ('/');
-                let fileName = paths [paths.length-1];
-                let newName = paths.splice (paths.length-2, 1).join ('/');
-                let extensions = fileName.split ('.');
-                let extension = extensions[extensions.length - 1];
-                newName = newName + '/' + productId + '.' + extension;
-                fs.renameSync (path.join (process.cwd(), options), path.join (process.cwd(), newName));
+                let newFile = path.join (path.dirname (options), productId + '.' + path.extname (options));
+                fs.renameSync (path.join (process.cwd(), options), path.join (process.cwd(), newFile));
                 if (sessionId && projectSettings.id){
                     await productApi.run ({
                         session: sessionId,
@@ -174,10 +175,16 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
             console.log ('Building docker image.');
             let dockerBuild = child_process.spawn ('docker', ['build', '-t', settings.REPOSITORY+'/'+appId+':'+version, '.'], {cwd: buildFolder});
             dockerBuild.stdout.on ('data', (data)=>{
-                process.stdout.write (data.toString());
+                let lines = data.toString().split ('\n');
+                for (let l of lines){
+                    process.stdout.write ('DOCKER BUILD>> '+l+'\n');
+                }
             });
             dockerBuild.stderr.on ('data', (data)=>{
-                process.stderr.write (data.toString());
+                let lines = data.toString().split ('\n');
+                for (let l of lines){
+                    process.stderr.write ('DOCKER BUILD>> '+l+'\n');
+                }
             });
             dockerBuild.on ('exit', (code)=>{
                 cb (code);
@@ -197,16 +204,19 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
         let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
 
         dockerPush.stdout.on ('data', (data)=>{
-            process.stdout.write (data.toString());
+            let lines = data.toString().split ('\n');
+            for (let l of lines){
+                process.stdout.write ('DOCKER PUSH> '+l+'\n');
+            }
         });
         dockerPush.stderr.on ('data', (data)=>{
-            process.stderr.write (data.toString());
+            let lines = data.toString().split ('\n');
+            for (let l of lines){
+                process.stderr.write ('DOCKER PUSH>> '+l+'\n');
+            }
         });
         dockerPush.on ('exit', async (code)=>{
-            console.log ('is done');
-            console.log (semanticVersion);
             if (semanticVersion === undefined){
-                console.log ('is undefined');
                 let projectSettings = await getProjectSettings ();
                 if (projectSettings.language === 'nodejs'){
                     let packagePath = path.join(process.cwd(), 'package.json');
@@ -248,10 +258,16 @@ async function publishDev (profile, settings, appId, version, cb){
     let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
 
     dockerPush.stdout.on ('data', (data)=>{
-        process.stdout.write (data.toString());
+        let lines = data.toString().split ('\n');
+        for (let l of lines){
+            process.stdout.write ('DOCKER PUSH>> '+l+'\n');
+        }
     });
     dockerPush.stderr.on ('data', (data)=>{
-        process.stderr.write (data.toString());
+        let lines = data.toString().split ('\n');
+        for (let l of lines){
+            process.stderr.write ('DOCKER PUSH>> '+l+'\n');
+        }
     });
     dockerPush.on ('exit', async (code)=>{
         cb (code);
@@ -261,10 +277,16 @@ async function publishDev (profile, settings, appId, version, cb){
 function dockerLogin (settings, profile, cb){
     let dockerLogin = child_process.spawn ('docker', ['login', settings.REPOSITORY, '-u', profile.username, '-p', profile.token]);
     dockerLogin.stdout.on ('data', (data)=>{
-        process.stdout.write (data.toString());
+        let lines = data.toString().split ('\n');
+        for (let l of lines){
+            process.stdout.write ('DOCKER LOGIN>> '+l+'\n');
+        }
     });
     dockerLogin.stderr.on ('data', (data)=>{
-        process.stderr.write (data.toString());
+        let lines = data.toString().split ('\n');
+        for (let l of lines){
+            process.stderr.write ('DOCKER LOGIN>> '+l+'\n');
+        }
     });
     dockerLogin.on ('exit', (code)=>{
         cb (code);
@@ -474,8 +496,14 @@ exports.publish = async function (argv){
 exports.run = async function (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
+    let profile;
+    if (process.env.USER){
+        profile = process.env.USER;
+    }
+    else{
+        profile = profileService.getCurrentProfile().profile;
+    }
     let productId = argv.product_id;
-    let profile = profileService.getCurrentProfile().profile;
     let app;
     if (productApi){
         let product = await productApi.get (productId);

@@ -33,7 +33,7 @@ exports.provision = async function (argv){
         if (response)
             console.log ('Product successfully provisioned.');
         else{
-            console.error ('Could not provision product');
+            console.error ('Could not provision product. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -133,7 +133,7 @@ exports.delete = async function (argv){
         console.log ('Product deleted successfully.');
         }
         else{
-            console.log ('Could not delete product.');
+            console.log ('Could not delete product. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -154,7 +154,7 @@ exports.schedule = async function (argv){
         console.log ('Action scheduled successfully.');
         }
         else{
-            console.error ('Could not schedule action for product.');
+            console.error ('Could not schedule action for product. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -175,7 +175,7 @@ exports.unschedule = async function (argv){
         console.log ('Action unschedule successfully.');
         }
         else{
-            console.log ('Could not unschedule action for product.');
+            console.log ('Could not unschedule action for product. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -219,7 +219,7 @@ exports.edit = async function (argv){
             console.log ('Product successfully updated.');
         }
         else{
-            console.error ('Could not update product.');
+            console.error ('Could not update product. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -260,7 +260,7 @@ exports.addScript = async function (argv){
         if (response)
             console.log ('Script added successfully.');
         else{
-            console.log ('Could not add script to product.');
+            console.log ('Could not add script to product. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -282,7 +282,7 @@ exports.deleteScript = async function (argv){
         if (response)
             console.log ('Script removed successfully.');
         else{
-            console.log ('Could not remove script from product.');
+            console.log ('Could not remove script from product. Check log file for more details.');
             process.exit (-1);
         }
     }

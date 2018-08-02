@@ -20,7 +20,7 @@ exports.new = async function (argv){
             console.log ('Application created successfully.');
 
         else{
-            console.error ('Could not create application.');
+            console.error ('Could not create application. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -81,7 +81,7 @@ exports.edit = async function (argv){
         if (response)
             console.log ('Application updated successfully.');
         else{
-            console.error ('Could not update application.');
+            console.error ('Could not update application. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -99,7 +99,7 @@ exports.delete = async function (argv){
         if (response)
             console.log ('Application removed.');
         else{
-            console.error ('Could not remove application.');
+            console.error ('Could not remove application. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -140,7 +140,7 @@ exports.addParam = async function (argv){
         if (response)
             console.log ('Parameter added to application.');
         else{
-            console.error ('Could not add parameter to application.');
+            console.error ('Could not add parameter to application. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -162,7 +162,7 @@ exports.deleteParam = async function (argv){
         if (response)
             console.log ('Parameter removed from application.');
         else{
-            console.error ('Could not remove parameter from application.');
+            console.error ('Could not remove parameter from application. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -180,7 +180,7 @@ exports.versions = async function (argv){
         if (versions)
             console.log (versions);
         else{
-            console.error ('Could not get versions.');
+            console.error ('Could not get versions. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -210,7 +210,7 @@ exports.deploy = async function (argv){
         if (response)
             console.log ('Application deployed successfully.');
         else{
-            console.error ('Could not deploy application.');
+            console.error ('Could not deploy application. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -234,7 +234,7 @@ exports.undeploy = async function (argv){
         if (response)
             console.log ('Application undeployed successfully.');
         else{
-            console.error ('Could not undeploy application.');
+            console.error ('Could not undeploy application. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -262,7 +262,7 @@ exports.updateVersion = async function (argv){
         if (response)
             console.log ('Application updated successfully.');
         else{
-            console.error ('Could not update application.');
+            console.error ('Could not update application. Check log file for more details.');
             process.exit (-1);
         }
     }

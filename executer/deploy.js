@@ -89,7 +89,7 @@ exports.edit = async function (argv){
         if (result)
             console.log ('Deployment updated successfully.');
         else{
-            console.error ('Could not update deployment.');
+            console.error ('Could not update deployment. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -112,7 +112,7 @@ exports.upgrade = async function (argv){
         if (result)
             console.log ('Deployment upgraded successfully.');
         else{
-            console.error ('Could not upgrade deployment.');
+            console.error ('Could not upgrade deployment. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -136,7 +136,7 @@ exports.addParam = async function (argv){
         if (response)
             console.log ('Parameter added to application.');
         else{
-            console.error ('Could not add parameter to application.');
+            console.error ('Could not add parameter to application. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -159,7 +159,7 @@ exports.deleteParam = async function (argv){
         if (response)
             console.log ('Parameter removed from application.');
         else{
-            console.error ('Could not remove parameter from application.');
+            console.error ('Could not remove parameter from application. Check log file for more details.');
             process.exit (-1);
         }
     }

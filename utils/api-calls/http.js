@@ -1,4 +1,5 @@
 const axios = require ('axios');
+const errorService = require ('../error');
 
 module.exports = function (endpoint){
     let token = null;
@@ -18,9 +19,9 @@ module.exports = function (endpoint){
         return response;
     }, function (error) {
         if (error.response && error.response.data)
-            console.error (error.response.data.err);
+            errorService.addError (error);
         if (error.response && error.response.status === 401)
-            console.error ('Please authenticate.');
+            errorService.addError ('Unauthenticated');
         return error;
     });
 

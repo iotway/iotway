@@ -26,7 +26,7 @@ exports.new = async function (argv){
         if (await clusterApi.new (params))
             console.log ('Cluster created successfully.');
         else{
-            console.error ('Could not create cluster. ');
+            console.error ('Could not create cluster. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -126,7 +126,7 @@ exports.delete = async function (argv){
         console.log ('Cluster deleted successfully.');
         }
         else{
-            console.error ('Could not delete cluster');
+            console.error ('Could not delete cluster. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -165,7 +165,7 @@ exports.edit = async function (argv){
             console.log ('Cluster updated.');
         }
         else{
-            console.error ('Could not update cluster.');
+            console.error ('Could not update cluster. Check log file for more details.');
             process.exit (-1);
         }
     }
@@ -210,7 +210,7 @@ exports.deleteScript = async function (argv){
         if (response)
             console.log ('Script removed successfully.');
         else{
-            console.error ('Could not remove script from cluster.');
+            console.error ('Could not remove script from cluster. Check log file for more details.');
             process.exit (-1);
         }
     }
