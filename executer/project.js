@@ -26,6 +26,17 @@ const projectLanguages = {
     e10: 'e10',
     msp432: 'msp432'
 }
+
+function print (data, prefix, channel){
+    let lines = data.toString().split ('\n');
+    if (lines[lines.length-1] === '\n'){
+        lines.splice (lines.length-1, 1);
+    }
+    for (let l of lines){
+        if (l.length > 0 && l !== '\n')
+            channel.write (prefix+l+'\n');
+    }
+}
 exports.init = async function (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
@@ -122,16 +133,10 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
         env: _.assign ({}, process.env, settings.PLATFORM[projectSettings.platform].options)
     });
     make.stdout.on ('data', (data)=>{
-        let lines = data.toString().split ('\n');
-        for (let l of lines){
-            process.stdout.write ('MAKE>> '+l+'\n');
-        }
+        print (data, 'MAKE>> ', process.stdout);
     });
     make.stderr.on ('data', (data)=>{
-        let lines = data.toString().split ('\n');
-        for (let l of lines){
-            process.stderr.write ('MAKE>> '+l+'\n');
-        }
+        print (data, 'MAKE>> ', process.stderr);
     })
     make.on ('exit', async (code)=>{
         if (code === 0){
@@ -175,16 +180,10 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
             console.log ('Building docker image.');
             let dockerBuild = child_process.spawn ('docker', ['build', '-t', settings.REPOSITORY+'/'+appId+':'+version, '.'], {cwd: buildFolder});
             dockerBuild.stdout.on ('data', (data)=>{
-                let lines = data.toString().split ('\n');
-                for (let l of lines){
-                    process.stdout.write ('DOCKER BUILD>> '+l+'\n');
-                }
+                print (data, 'DOCKER BUILD>> ', process.stdout);
             });
             dockerBuild.stderr.on ('data', (data)=>{
-                let lines = data.toString().split ('\n');
-                for (let l of lines){
-                    process.stderr.write ('DOCKER BUILD>> '+l+'\n');
-                }
+                print (data, 'DOCKER BUILD>> ', process.stderr);
             });
             dockerBuild.on ('exit', (code)=>{
                 cb (code);
@@ -204,26 +203,18 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
         let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
 
         dockerPush.stdout.on ('data', (data)=>{
-            let lines = data.toString().split ('\n');
-            for (let l of lines){
-                process.stdout.write ('DOCKER PUSH> '+l+'\n');
-            }
+            print (data, 'DOCKER PUSH>> ', process.stdout);
         });
         dockerPush.stderr.on ('data', (data)=>{
-            let lines = data.toString().split ('\n');
-            for (let l of lines){
-                process.stderr.write ('DOCKER PUSH>> '+l+'\n');
-            }
+            print (data, 'DOCKER PUSH>> ', process.stderr);
         });
         dockerPush.on ('exit', async (code)=>{
             if (semanticVersion === undefined){
                 let projectSettings = await getProjectSettings ();
                 if (projectSettings.language === 'nodejs'){
                     let packagePath = path.join(process.cwd(), 'package.json');
-                    console.log (packagePath);
                     try{
                         let projectData = require (packagePath);
-                        console.log (projectData);
                         let projectVersion = projectData.version;
                         if (projectVersion)
                             semanticVersion = semver.valid (semver.coerce (projectVersion));
@@ -258,16 +249,10 @@ async function publishDev (profile, settings, appId, version, cb){
     let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
 
     dockerPush.stdout.on ('data', (data)=>{
-        let lines = data.toString().split ('\n');
-        for (let l of lines){
-            process.stdout.write ('DOCKER PUSH>> '+l+'\n');
-        }
+        print (data, 'DOCKER PUSH>> ', process.stdout);
     });
     dockerPush.stderr.on ('data', (data)=>{
-        let lines = data.toString().split ('\n');
-        for (let l of lines){
-            process.stderr.write ('DOCKER PUSH>> '+l+'\n');
-        }
+        print (data, 'DOCKER PUSH>> ', process.stderr);
     });
     dockerPush.on ('exit', async (code)=>{
         cb (code);
@@ -277,16 +262,10 @@ async function publishDev (profile, settings, appId, version, cb){
 function dockerLogin (settings, profile, cb){
     let dockerLogin = child_process.spawn ('docker', ['login', settings.REPOSITORY, '-u', profile.username, '-p', profile.token]);
     dockerLogin.stdout.on ('data', (data)=>{
-        let lines = data.toString().split ('\n');
-        for (let l of lines){
-            process.stdout.write ('DOCKER LOGIN>> '+l+'\n');
-        }
+        print (data, 'DOCKER LOGIN>> ', process.stdout);
     });
     dockerLogin.stderr.on ('data', (data)=>{
-        let lines = data.toString().split ('\n');
-        for (let l of lines){
-            process.stderr.write ('DOCKER LOGIN>> '+l+'\n');
-        }
+        print (data, 'DOCKER LOGIN>> ', process.stderr);
     });
     dockerLogin.on ('exit', (code)=>{
         cb (code);
@@ -591,7 +570,8 @@ exports.run = async function (argv){
                                                             net: app.network,
                                                             p: app.parameters,
                                                             c: process.stdout.columns,
-                                                            r: process.stdout.rows
+                                                            r: process.stdout.rows,
+                                                            reset: (argv.reset)? true: false
                                                         }
                                                     });
                                                     console.log ('Press Ctrl+q to exit the application.');

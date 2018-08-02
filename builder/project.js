@@ -55,13 +55,16 @@ module.exports = function (yargs, handler){
             }
         }, handler.edit)
         .command (['run <product_id>', 'r'], 'Runs the current project', {
-            "session-id": {
+            'session-id': {
+                type: 'string'
+            },
+            reset: {
                 type: 'string'
             }
         }, handler.run)
         .command (['build [application_version]', 'b'], 'Builds a docker image of the current project', {}, handler.build)
         .command (['publish <application_version>', 'p'], 'Pushes the docker image into the registry.', {
-            "project-version": {
+            'project-version': {
                 type: 'string',
                 desc: 'A semantic version of the project.'
             },
