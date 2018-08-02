@@ -604,7 +604,8 @@ exports.run = async function (argv){
                                                                         net: app.network,
                                                                         p: app.parameters,
                                                                         c: process.stdout.columns,
-                                                                        r: process.stdout.rows
+                                                                        r: process.stdout.rows,
+                                                                        reset: (argv.reset)? true: false
                                                                     }
                                                                 });
                                                             }
@@ -696,7 +697,8 @@ exports.run = async function (argv){
                                                                     net: app.network,
                                                                     p: app.parameters,
                                                                     c: process.stdout.columns,
-                                                                    r: process.stdout.rows
+                                                                    r: process.stdout.rows,
+                                                                    reset: (argv.reset)? true: false
                                                                 }
                                                             });
                                                             console.log ('Press Ctrl+q to exit the application.');
@@ -729,7 +731,8 @@ exports.run = async function (argv){
                                                                                 net: app.network,
                                                                                 p: app.parameters,
                                                                                 c: process.stdout.columns,
-                                                                                r: process.stdout.rows
+                                                                                r: process.stdout.rows,
+                                                                                reset: (argv.reset)? true: false
                                                                             }
                                                                         });
                                                                     }
