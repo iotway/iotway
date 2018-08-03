@@ -34,7 +34,7 @@ function print (data, prefix, channel){
     }
     for (let l of lines){
         if (l.length > 0)
-            channel.write (prefix+l+'\n');
+            channel.write (prefix+'> '+l+'\n');
     }
 }
 exports.init = async function (argv){
@@ -133,17 +133,17 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
         env: _.assign ({}, process.env, settings.PLATFORM[projectSettings.platform].options)
     });
     make.stdout.on ('data', (data)=>{
-        print (data, 'MAKE>> ', process.stdout);
+        print (data, 'MAKE', process.stdout);
     });
     make.stderr.on ('data', (data)=>{
-        print (data, 'MAKE>> ', process.stderr);
+        print (data, 'MAKE', process.stderr);
     })
     make.on ('exit', async (code)=>{
         if (code === 0){
             await projectApi.build (projectSettings.id);
             if (settings.PLATFORM[projectSettings.platform].options && settings.PLATFORM[projectSettings.platform].options.binary){
                 let options = settings.PLATFORM[projectSettings.platform].options.binary;
-                let newFile = path.join (path.dirname (options), productId + '.' + path.extname (options));
+                let newFile = path.join (path.dirname (options), productId + path.extname (options));
                 fs.renameSync (path.join (process.cwd(), options), path.join (process.cwd(), newFile));
                 if (sessionId && projectSettings.id){
                     await productApi.run ({
@@ -180,10 +180,10 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
             console.log ('Building docker image.');
             let dockerBuild = child_process.spawn ('docker', ['build', '-t', settings.REPOSITORY+'/'+appId+':'+version, '.'], {cwd: buildFolder});
             dockerBuild.stdout.on ('data', (data)=>{
-                print (data, 'DOCKER BUILD>> ', process.stdout);
+                print (data, 'DOCKER BUILD', process.stdout);
             });
             dockerBuild.stderr.on ('data', (data)=>{
-                print (data, 'DOCKER BUILD>> ', process.stderr);
+                print (data, 'DOCKER BUILD', process.stderr);
             });
             dockerBuild.on ('exit', (code)=>{
                 cb (code);
@@ -203,10 +203,10 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
         let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
 
         dockerPush.stdout.on ('data', (data)=>{
-            print (data, 'DOCKER PUSH>> ', process.stdout);
+            print (data, 'DOCKER PUSH', process.stdout);
         });
         dockerPush.stderr.on ('data', (data)=>{
-            print (data, 'DOCKER PUSH>> ', process.stderr);
+            print (data, 'DOCKER PUSH', process.stderr);
         });
         dockerPush.on ('exit', async (code)=>{
             if (semanticVersion === undefined){
@@ -249,10 +249,10 @@ async function publishDev (profile, settings, appId, version, cb){
     let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
 
     dockerPush.stdout.on ('data', (data)=>{
-        print (data, 'DOCKER PUSH>> ', process.stdout);
+        print (data, 'DOCKER PUSH', process.stdout);
     });
     dockerPush.stderr.on ('data', (data)=>{
-        print (data, 'DOCKER PUSH>> ', process.stderr);
+        print (data, 'DOCKER PUSH', process.stderr);
     });
     dockerPush.on ('exit', async (code)=>{
         cb (code);
@@ -262,10 +262,10 @@ async function publishDev (profile, settings, appId, version, cb){
 function dockerLogin (settings, profile, cb){
     let dockerLogin = child_process.spawn ('docker', ['login', settings.REPOSITORY, '-u', profile.username, '-p', profile.token]);
     dockerLogin.stdout.on ('data', (data)=>{
-        print (data, 'DOCKER LOGIN>> ', process.stdout);
+        print (data, 'DOCKER LOGIN', process.stdout);
     });
     dockerLogin.stderr.on ('data', (data)=>{
-        print (data, 'DOCKER LOGIN>> ', process.stderr);
+        print (data, 'DOCKER LOGIN', process.stderr);
     });
     dockerLogin.on ('exit', (code)=>{
         cb (code);
