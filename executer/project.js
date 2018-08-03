@@ -23,8 +23,7 @@ const projectLanguages = {
     nodejs: 'nodejs',
     py: 'python',
     python: 'python',
-    e10: 'e10',
-    msp432: 'msp432'
+    energia: 'energia'
 }
 
 function print (data, prefix, channel){
