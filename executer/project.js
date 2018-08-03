@@ -16,6 +16,7 @@ const readlineSync = require('readline-sync');
 const semver = require('semver');
 const _ = require ('lodash');
 const nonce = require ('../utils/nonce');
+const errors = require ('../utils/error');
 
 const projectLanguages = {
     js: 'nodejs',
@@ -87,7 +88,15 @@ exports.init = async function (argv){
                         ui: projectUi
                     };
                 }
-                
+                //parse project name and delete all illegal characters
+                project.name = project.name.toLowerCase();
+                let chars = project.name.split ('');
+                chars = _.map (chars, (c)=>{
+                    if (c.toLowerCase() !== c.toUpperCase())
+                        return c;
+                    return '_';
+                });
+                project.name = chars.join('');
                 if (project.appId.substring (0, 5) !== 'local'){
                     let app = await appApi.get (project.appId);
                     if (!app){
@@ -141,16 +150,23 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
     make.on ('exit', async (code)=>{
         if (code === 0){
             await projectApi.build (projectSettings.id);
-            if (settings.PLATFORM[projectSettings.platform].options && settings.PLATFORM[projectSettings.platform].options.binary){
+            if (productId && settings.PLATFORM[projectSettings.platform].options && settings.PLATFORM[projectSettings.platform].options.binary){
                 let options = settings.PLATFORM[projectSettings.platform].options.binary;
                 let newFile = path.join (path.dirname (options), productId + path.extname (options));
-                fs.renameSync (path.join (process.cwd(), options), path.join (process.cwd(), newFile));
-                if (sessionId && projectSettings.id){
-                    await productApi.run ({
-                        session: sessionId,
-                        productId: productId,
-                        projectId: projectSettings.id
-                    });
+                try{
+                    fs.copySync (path.join (process.cwd(), options), path.join (process.cwd(), newFile));
+                    if (sessionId && projectSettings.id){
+                        await productApi.run ({
+                            session: sessionId,
+                            productId: productId,
+                            projectId: projectSettings.id
+                        });
+                    }
+                }
+                catch (e){
+                    console.log ('Build error. ');
+                    errors.addError (e.message);
+                    process.exit (-1);
                 }
             }
         }
@@ -515,138 +531,19 @@ exports.run = async function (argv){
                     projectSettings = await getProjectSettings();
                 }
                 let appId = projectSettings.appId;
-                if (appId.substring (0, 5) !== 'local'){
-                    app = await appApi.get (appId);
-                    if (!app){
-                        console.error ('Please provide an existing application id.');
-                        process.exit (-1);
-                    }
+                if (appId.substring (0, 5) === 'local'){
+                    console.error ('No application assigned.');
+                }
+                app = await appApi.get (appId);
+                if (!app){
+                    console.error ('Please provide an existing application id.');
+                    process.exit (-1);
                 }
                 let settings = await settingsApi.get ();
                 if (settings){
                     if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
                         build (projectSettings, settings, appId, 'dev', argv['session-id'], productId, async (code)=>{
-                            if (code === 0){
-                                await publishDev (profile, settings, appId, 'dev', (code)=>{
-                                    if (code === 0){
-                                        console.log ('Pinging device...');
-                                        let online = false;
-                                        let timer = setTimeout (function (){
-                                            if (!online){
-                                                console.error ('Ping timeout. Device offline.');
-                                                process.exit (-1);
-                                            }
-                                        }, 10000);
-                                        socketService.connect (profile.api, profile.token, ()=>{
-                                            socketService.send ('packet', productId, {
-                                                t: 'r',
-                                                d:{
-                                                    a: 'p',
-                                                    id: appId
-                                                }
-                                            });
-                                        }, async (data)=>{
-                                            if (data.t === 'r' && data.d.id === appId){
-                                                if (data.d.a === 'e'){
-                                                    if (data.d.e === 'norun'){
-                                                        //TODO
-                                                    }
-                                                }
-                                                else if (data.d.a === 'k'){
-                                                    process.stdout.write (data.d.t);
-                                                }
-                                                else if (data.d.a === 's'){
-                                                    process.exit (0);
-                                                }
-                                                else if (data.d.a === 'p'){
-                                                    online = true;
-                                                    clearTimeout(timer);
-                                                    socketService.send ('packet', productId, {
-                                                        t: 'r',
-                                                        d: {
-                                                            id: appId,
-                                                            a: 'e',
-                                                            priv: app.privileged,
-                                                            net: app.network,
-                                                            p: app.parameters,
-                                                            c: process.stdout.columns,
-                                                            r: process.stdout.rows,
-                                                            reset: (argv.reset)? true: false
-                                                        }
-                                                    });
-                                                    console.log ('Press Ctrl+q to exit the application.');
-                                                    console.log ('Press Ctrl+r to reload application.');
-                                                    process.stdin.setRawMode (true);
-                                                    process.stdin.setEncoding( 'utf8' );
-                                                    readline.emitKeypressEvents(process.stdin);
-                                                    process.stdin.on('keypress', async (str, key) => {
-                                                        if (key.ctrl && key.name === 'q'){
-                                                            socketService.send ('packet', productId, {
-                                                                t: 'r',
-                                                                d: {
-                                                                    id: appId,
-                                                                    a:'s'
-                                                                }
-                                                            });
-                                                            console.log ('');
-                                                            console.log ('Disconnected');
-                                                            process.exit (0);
-                                                        }
-                                                        else if (key.ctrl && key.name === 'r'){
-                                                            let app = await appApi.get (appId);
-                                                            if (app){
-                                                                socketService.send ('packet', productId, {
-                                                                    t: 'r',
-                                                                    d: {
-                                                                        id: appId,
-                                                                        a: 'e',
-                                                                        priv: app.privileged,
-                                                                        net: app.network,
-                                                                        p: app.parameters,
-                                                                        c: process.stdout.columns,
-                                                                        r: process.stdout.rows,
-                                                                        reset: (argv.reset)? true: false
-                                                                    }
-                                                                });
-                                                            }
-                                                            else{
-                                                                console.error ('Application not found.');
-                                                            }
-                                                        }
-                                                        else{
-                                                            socketService.send ('packet', productId, {
-                                                                t: 'r',
-                                                                d: {
-                                                                    id: appId,
-                                                                    a:'k',
-                                                                    t:str
-                                                                }
-                                                            });
-                                                        }
-                                                    });
-                                                    process.stdout.on('resize', function() {
-                                                        socketService.send ('packet', productId, {
-                                                            t: 'r',
-                                                            d: {
-                                                                id: appId,
-                                                                a: 'r',
-                                                                c: process.stdout.columns,
-                                                                r: process.stdout.rows
-                                                            }
-                                                        });
-                                                    }); 
-                                                }
-                                            }
-                                        });
-                                    }
-                                    else{
-                                        process.exit (code);
-                                    }
-                                });
-                            }
-                            else{
-                                process.exit (code);
-                            }
+                            process.exit (code);
                         });
                     }
                     else{
@@ -698,7 +595,7 @@ exports.run = async function (argv){
                                                                     p: app.parameters,
                                                                     c: process.stdout.columns,
                                                                     r: process.stdout.rows,
-                                                                    reset: (argv.reset)? true: false
+                                                                    reset: (argv.reset !== 'false')? true: false
                                                                 }
                                                             });
                                                             console.log ('Press Ctrl+q to exit the application.');
@@ -732,7 +629,7 @@ exports.run = async function (argv){
                                                                                 p: app.parameters,
                                                                                 c: process.stdout.columns,
                                                                                 r: process.stdout.rows,
-                                                                                reset: (argv.reset)? true: false
+                                                                                reset: (argv.reset !== 'false')? true: false
                                                                             }
                                                                         });
                                                                     }

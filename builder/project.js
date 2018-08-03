@@ -59,7 +59,8 @@ module.exports = function (yargs, handler){
                 type: 'string'
             },
             reset: {
-                type: 'string'
+                type: 'string',
+                default: 'false'
             }
         }, handler.run)
         .command (['build [application_version]', 'b'], 'Builds a docker image of the current project', {}, handler.build)
