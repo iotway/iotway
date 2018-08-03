@@ -23,7 +23,8 @@ const projectLanguages = {
     nodejs: 'nodejs',
     py: 'python',
     python: 'python',
-    energia: 'energia'
+    energia: 'energia',
+    arduino: 'arduino'
 }
 
 function print (data, prefix, channel){
