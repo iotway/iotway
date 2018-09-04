@@ -69,31 +69,31 @@ exports.list = function (argv){
     let selectedProfile = profileService.getCurrentProfileName();
     let files = fs.readdirSync (settings.profilesDir);
     let profilesJson = [];
-    if (files.length === 0 && selectedProfile){
-        let profile = selectedProfile.substr (0, selectedProfile.length-5);
-        table.push ([profile, '', '', '*']);
-    }
-    else{
-        for (file of files){
-            let currentProfile = JSON.parse(fs.readFileSync (settings.profilesDir + file));
-            let profile = file.substr (0, file.length-5);
-            let username = (currentProfile.username)? currentProfile.username: '';
-            let api = (currentProfile.api)? currentProfile.api: '';
-            if (argv.o === 'json'){
-                currentProfile.name = profile;
-                if (file === selectedProfile){
-                    currentProfile.selected = true;
-                    
-                }
-                profilesJson.push (currentProfile);
+    let foundSelectedProfile = false;
+    for (file of files){
+        let currentProfile = JSON.parse(fs.readFileSync (settings.profilesDir + file));
+        let profile = file.substr (0, file.length-5);
+        let username = (currentProfile.username)? currentProfile.username: '';
+        let api = (currentProfile.api)? currentProfile.api: '';
+        if (argv.o === 'json'){
+            currentProfile.name = profile;
+            if (file === selectedProfile){
+                currentProfile.selected = true;
+                
             }
-            else {
-                if (file === selectedProfile)
-                    table.push ([profile, username, api, '*']);
-                else
-                    table.push ([profile, username, api, '']);
-            }
+            profilesJson.push (currentProfile);
         }
+        else {
+            if (file === selectedProfile){
+                table.push ([profile, username, api, '*']);
+                foundSelectedProfile = true;
+            }
+            else
+                table.push ([profile, username, api, '']);
+        }
+    }
+    if (!foundSelectedProfile){
+        table.push ([selectedProfile.substr (0, selectedProfile.length-5), '', '', '*']);
     }
     if (argv.o != 'json')
         console.log (table.toString());

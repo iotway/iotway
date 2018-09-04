@@ -38,13 +38,13 @@ module.exports.login = async function (argv){
     }
 };
 
-module.exports.logout = async function (){
+module.exports.logout = async function (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
     if (usersApi){
         let result = await usersApi.logout();
         if (result){
-            profileService.deleteTokenForCurrentProfile();
+            profileService.deleteCurrentProfile();
         }
         else{
             console.error ('No token. Log in or select profile.');

@@ -38,6 +38,19 @@ function print (data, prefix, channel){
             channel.write (prefix+'> '+l+'\n');
     }
 }
+
+function normalizeProjectName (name){
+    //parse project name and delete all illegal characters
+    name = name.toLowerCase();
+    let chars = name.split ('');
+    chars = _.map (chars, (c)=>{
+        if (c.toLowerCase() !== c.toUpperCase())
+            return c;
+        return '_';
+    });
+    return chars.join('');
+}
+
 exports.init = async function (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
@@ -52,13 +65,20 @@ exports.init = async function (argv){
                     let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
                     if (onlineProject){
                         project = {
-                            name: onlineProject.name,
+                            name: normalizeProjectName (onlineProject.name),
                             appId: onlineProject.appId,
                             language: projectLanguages[onlineProject.language],
                             id: onlineProject.projectId,
                             platform: onlineProject.platform,
                             ui: onlineProject.ui
                         };
+                        try{
+                            fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project, null, 3));
+                        }
+                        catch (e){
+                            errors.addError (e.message);
+                            console.error ('filesystem error.');
+                        }
                     }
                     else{
                         console.error ('Project not found.');
@@ -66,7 +86,7 @@ exports.init = async function (argv){
                     }
                 }
                 else{
-                    let projectName = argv.name;
+                    let projectName = normalizeProjectName (argv.name);
                     let projectPlatform = argv.platform;
                     let projectAppId = argv.appId;
                     let projectUi = argv.ui;
@@ -75,7 +95,7 @@ exports.init = async function (argv){
                         projectName = readlineSync.question ('project name: ');
                     }
                     if (projectPlatform === undefined){
-                        projectPlatform = readlineSync.question ('platform (choose between raspberrypi, e10, beagleboneblack, msp432, raspberrypi2');
+                        projectPlatform = readlineSync.question ('platform (choose between raspberrypi, e10, beagleboneblack, msp432, raspberrypi2): ');
                     }
                     if (projectLanguage === undefined){
                         projectLanguage = readlineSync.question ('project language: ');
@@ -88,15 +108,6 @@ exports.init = async function (argv){
                         ui: projectUi
                     };
                 }
-                //parse project name and delete all illegal characters
-                project.name = project.name.toLowerCase();
-                let chars = project.name.split ('');
-                chars = _.map (chars, (c)=>{
-                    if (c.toLowerCase() !== c.toUpperCase())
-                        return c;
-                    return '_';
-                });
-                project.name = chars.join('');
                 if (project.appId.substring (0, 5) !== 'local'){
                     let app = await appApi.get (project.appId);
                     if (!app){
@@ -105,7 +116,7 @@ exports.init = async function (argv){
                     }
                 }
                 //Generate project structure
-                fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project));
+                fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project, null, 3));
                 fs.copySync(path.normalize (__dirname + '/../utils/project_templates/' + project.language),
                                         process.cwd());
                 //Generate package.json for js projects

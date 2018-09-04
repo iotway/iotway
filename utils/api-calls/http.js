@@ -20,8 +20,10 @@ module.exports = function (endpoint){
     }, function (error) {
         if (error.response && error.response.data)
             errorService.addError (error);
-        if (error.response && error.response.status === 401)
+        if (error.response && error.response.status === 401){
             errorService.addError ('Unauthenticated');
+            console.error ('Authorization error. Please log in again.');
+        }
         return error;
     });
 

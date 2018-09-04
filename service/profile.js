@@ -40,6 +40,11 @@ exports.deleteTokenForCurrentProfile = function (){
     fs.writeFileSync (path.normalize(settings.profilesDir + profile.name), JSON.stringify (profile.profile));
 };
 
+exports.deleteCurrentProfile = function (){
+    let profileName = exports.getCurrentProfileName ();
+    fs.unlinkSync (path.join(settings.profilesDir, profileName));
+};
+
 exports.saveTokenToCurrentProfile = function (token){
     let currentProfile = exports.getCurrentProfile();
     let profileName = currentProfile.name;

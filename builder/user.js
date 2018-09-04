@@ -1,5 +1,6 @@
 const commands = ['login', 'logout'];
 const _ = require ('lodash');
+
 module.exports = function (yargs, handler){
     yargs.command (['user', 'u'], 'User settings.', 
      (yargs) =>{

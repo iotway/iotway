@@ -4,12 +4,7 @@ module.exports = function (yargs, handler){
     yargs.command('profile', 'Profile settings.', 
      (yargs) =>{
         yargs.command ('select [profile_name]', 'Select profile, default if none specifed.', {}, handler.select)
-        .command ('save <profile_name>', 'Save profile.', {
-            // profile: {
-            //     alias: 'p',
-            //     default: 'default'
-            // }
-        }, handler.save)
+        .command ('save <profile_name>', 'Save profile.', {}, handler.save)
         .command ('delete <profile_name>', 'Delete profile.', {}, handler.delete)
         .command ('list', 'List all profiles.', {
             format: {
