@@ -1,9 +1,10 @@
 const _ = require ('lodash');
 const commands = ['init', 'run', 'list', 'build', 'publish', 'edit'];
+const projectService = require ('../service/project');
 module.exports = function (yargs, handler){
     yargs.command(['project', 'proj'], 'Project settings.',
      (yargs) => {
-        yargs.command ('list', 'List all current user\'s projects.', {}, handler.list)
+        yargs.command ('list', 'List all current user\'s online projects.', {}, handler.list)
         .command ('init',  'Creates a new project template.', {
             name: {
                 alias: 'n',
@@ -12,7 +13,7 @@ module.exports = function (yargs, handler){
             },
             platform: {
                 alias: 'p',
-                choices: ['raspberrypi']
+                desc: 'Can choose between ' + projectService.platforms.join()
             },
             'app-id':{
                 alias: 'app',
@@ -21,13 +22,13 @@ module.exports = function (yargs, handler){
                 default: 'local.project'
             },
             ui: {
-                choices: ['noui', 'Xorg', 'electron'],
+                desc: 'Can choose between ' + projectService.ui.join(),
                 default: 'noui'
 
             },
             language: {
                 type: 'string',
-                choices: ['javascript', 'js', 'python', 'py']
+                choices: Object.keys(projectService.languages)
             }
         }, handler.init)
         .command (['edit', 'e'], 'Edit project.', {
@@ -42,7 +43,7 @@ module.exports = function (yargs, handler){
             },
             platform: {
                 alias: 'p',
-                choices: ['raspberrypi', 'e10', 'beagleboneblack', 'msp432', 'raspberrypi2']
+                desc: 'Can choose between ' + projectService.platforms.join()
             },
             'app-id':{
                 alias: 'app',
@@ -50,8 +51,7 @@ module.exports = function (yargs, handler){
                 desc: 'The id of the application linked to this project.',
             },
             ui: {
-                choices: ['noui', 'Xorg', 'electron'],
-
+                desc: 'Can choose between ' + projectService.ui.join(),
             }
         }, handler.edit)
         .command (['run <product_id>', 'r'], 'Runs the current project', {

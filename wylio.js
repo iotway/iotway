@@ -14,6 +14,10 @@ yargs = require ('./builder/deploy')(yargs, require ('./executer/deploy'));
 yargs = require ('./builder/shell')(yargs, require ('./executer/shell'));
 yargs = require ('./builder/project')(yargs, require ('./executer/project'));
 
+function test (){
+  console.log ('test');
+}
+
 yargs.help()
 .check ((argv)=>{
   if (_.indexOf (commands, argv._[0]) != -1)

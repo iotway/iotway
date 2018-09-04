@@ -17,16 +17,9 @@ const semver = require('semver');
 const _ = require ('lodash');
 const nonce = require ('../utils/nonce');
 const errors = require ('../utils/error');
+const projectService = require ('../service/project');
 
-const projectLanguages = {
-    js: 'nodejs',
-    javascript: 'nodejs',
-    nodejs: 'nodejs',
-    py: 'python',
-    python: 'python',
-    energia: 'energia',
-    arduino: 'arduino'
-}
+const projectLanguages = projectService.languages;
 
 function print (data, prefix, channel){
     let lines = data.toString().split ('\n');
@@ -57,88 +50,104 @@ exports.init = async function (argv){
     let contents = fs.readdirSync (process.cwd());
     if (contents.length === 0 || (contents.length === 1 && contents[0] === 'project.log')){
         let project;
-        if (userApi){
-            let user = await userApi.get ();
-            if (user){
-                if (process.env.WYLIODRIN_PROJECT_ID){
-                    console.log ('Using environment configurations');
-                    let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
-                    if (onlineProject){
-                        project = {
-                            name: normalizeProjectName (onlineProject.name),
-                            appId: onlineProject.appId,
-                            language: projectLanguages[onlineProject.language],
-                            id: onlineProject.projectId,
-                            platform: onlineProject.platform,
-                            ui: onlineProject.ui
-                        };
-                        try{
-                            fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project, null, 3));
-                        }
-                        catch (e){
-                            errors.addError (e.message);
-                            console.error ('filesystem error.');
-                        }
-                    }
-                    else{
-                        console.error ('Project not found.');
-                        process.exit (-1);
-                    }
+        if (process.env.WYLIODRIN_PROJECT_ID){
+            console.log ('Using environment configurations');
+            let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+            if (onlineProject){
+                project = {
+                    name: normalizeProjectName (onlineProject.name),
+                    appId: onlineProject.appId,
+                    language: projectLanguages[onlineProject.language],
+                    id: onlineProject.projectId,
+                    platform: onlineProject.platform,
+                    ui: onlineProject.ui
+                };
+                try{
+                    fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project, null, 3));
                 }
-                else{
-                    let projectName = normalizeProjectName (argv.name);
-                    let projectPlatform = argv.platform;
-                    let projectAppId = argv.appId;
-                    let projectUi = argv.ui;
-                    let projectLanguage = argv.language;
-                    if (projectName === undefined){
-                        projectName = readlineSync.question ('project name: ');
-                    }
-                    if (projectPlatform === undefined){
-                        projectPlatform = readlineSync.question ('platform (choose between raspberrypi, e10, beagleboneblack, msp432, raspberrypi2): ');
-                    }
-                    if (projectLanguage === undefined){
-                        projectLanguage = readlineSync.question ('project language: ');
-                    }
-                    project = {
-                        name: projectName,
-                        appId: projectAppId,
-                        language: projectLanguages[projectLanguage],
-                        platform: projectPlatform,
-                        ui: projectUi
-                    };
+                catch (e){
+                    errors.addError (e.message);
+                    console.error ('filesystem error.');
                 }
-                if (project.appId.substring (0, 5) !== 'local'){
-                    let app = await appApi.get (project.appId);
-                    if (!app){
-                        console.error ('Please provide a valid application id.');
-                        process.exit (-1);
-                    }
-                }
-                //Generate project structure
-                fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project, null, 3));
-                fs.copySync(path.normalize (__dirname + '/../utils/project_templates/' + project.language),
-                                        process.cwd());
-                //Generate package.json for js projects
-                if (project.language === 'nodejs'){
-                    let package = fs.readFileSync (path.normalize (__dirname + '/../utils/project_templates/package.json'), 'utf8');
-                    let packageData = {
-                        project: project,
-                        user: user
-                    }
-                    package = mustache.render (package, packageData);
-                    fs.writeFileSync (path.join(process.cwd(), 'package.json'), package);
-                }
-
             }
             else{
-                console.error ('Invalid profile. Please login again.');
+                console.error ('Project not found.');
                 process.exit (-1);
             }
         }
         else{
-            console.error ('No credentials. Please login or select a profile.');
-            process.exit (-1);
+            let projectName = argv.name;
+            let projectPlatform = argv.platform;
+            let projectAppId = argv.appId;
+            let projectUi = argv.ui;
+            let projectLanguage = argv.language;
+
+            if (projectName === undefined || projectName.length === 0)
+                projectName = readlineSync.question ('project name: '); 
+            
+            if (projectName.length === 0)
+                process.exit (-1);
+            
+            projectName = normalizeProjectName (projectName);
+
+            if (projectPlatform === undefined){
+                if (settingsApi){
+                    let settings = await settingsApi.get();
+                    if (settings){
+                        let platforms = Object.keys(settings.PLATFORM);
+                        projectPlatform = readlineSync.question ('platform (choose between ' + platforms.join() + '): ');
+                    }
+                    else{
+                        projectPlatform = readlineSync.question ('platform (log in or check website for supported platforms): ');
+                    }
+                }
+                else{
+                    projectPlatform = readlineSync.question ('platform (log in or check website for supported platforms): ');
+                }
+            }
+            if (projectLanguage === undefined){
+                projectLanguage = readlineSync.question ('project language (choose between '+Object.keys(projectService.languages).join()+'): ');
+            }
+            project = {
+                name: projectName,
+                appId: projectAppId,
+                language: projectLanguages[projectLanguage],
+                platform: projectPlatform,
+                ui: projectUi
+            };
+        }
+        if (project.appId.substring (0, 5) !== 'local'){
+            if (appApi){
+                let app = await appApi.get (project.appId);
+                if (!app){
+                    console.error ('Please provide a valid application id.');
+                    process.exit (-1);
+                }
+            }
+        }
+        //Generate project structure
+        fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project, null, 3));
+        fs.copySync(path.normalize (__dirname + '/../utils/project_templates/' + project.language),
+                                process.cwd());
+        //Generate package.json for js projects
+        if (project.language === 'nodejs'){
+            let user = {
+                email: '',
+                name: ''
+            };
+            if (userApi){
+                let onlineUser = await userApi.get ();
+                if (onlineUser){
+                    user = onlineUser;
+                }
+            }
+            let package = fs.readFileSync (path.normalize (__dirname + '/../utils/project_templates/package.json'), 'utf8');
+            let packageData = {
+                project: project,
+                user: user
+            }
+            package = mustache.render (package, packageData);
+            fs.writeFileSync (path.join(process.cwd(), 'package.json'), package);
         }
     }
     else{
@@ -237,7 +246,7 @@ async function publish (profile, settings, appId, version, semanticVersion, desc
         });
         dockerPush.on ('exit', async (code)=>{
             if (semanticVersion === undefined){
-                let projectSettings = await getProjectSettings ();
+                let projectSettings = await getProjectSettings (process.cwd());
                 if (projectSettings.language === 'nodejs'){
                     let packagePath = path.join(process.cwd(), 'package.json');
                     try{
@@ -347,7 +356,7 @@ async function getProjectSettings (sourceFolder){
 exports.edit = async function  (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
-    let projectSettings = await getProjectSettings();
+    let projectSettings = await getProjectSettings(process.cwd());
     if (argv.name){
         projectSettings.name = argv.name;
     }
@@ -392,7 +401,7 @@ exports.build = async function (argv){
         }
     }
     else{
-        projectSettings = await getProjectSettings();
+        projectSettings = await getProjectSettings(process.cwd());
     }
     if (!version){
         version = 'dev';
@@ -459,7 +468,7 @@ exports.publish = async function (argv){
         }
     }
     else{
-        projectSettings = await getProjectSettings();
+        projectSettings = await getProjectSettings(process.cwd());
     }
     if (!await checkVersion (projectSettings.appId, version)){
         console.error ('The provided version is less or equal to the latest published version.');
@@ -503,7 +512,7 @@ exports.run = async function (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
     let profile;
-    if (process.env.USER){
+    if (process.env.WYLIODRIN_STUDIO_THEIA && process.env.USER){
         profile = process.env.USER;
     }
     else{
@@ -518,7 +527,6 @@ exports.run = async function (argv){
                 if (product.status === 'offline'){
                     console.error ('Device might be offline.');
                 }
-                
                 let projectSettings;
                 if (process.env.WYLIODRIN_PROJECT_ID){
                     console.log ('Using environment configurations');
@@ -539,8 +547,9 @@ exports.run = async function (argv){
                     }
                 }
                 else{
-                    projectSettings = await getProjectSettings();
+                    projectSettings = await getProjectSettings(process.cwd());
                 }
+                console.log (projectSettings);
                 let appId = projectSettings.appId;
                 if (appId.substring (0, 5) === 'local'){
                     console.error ('No application assigned.');
