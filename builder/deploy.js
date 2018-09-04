@@ -1,4 +1,5 @@
 const commands = ['list', 'versions', 'edit', 'upgrade', 'parameter', 'describe'];
+const projectService = require ('../service/project');
 const _ = require ('lodash');
 module.exports = function (yargs, handler){
     yargs.command(['deploy', 'd'], 'Deployment settings.', 
@@ -98,7 +99,7 @@ module.exports = function (yargs, handler){
             .demandCommand ();
         })
         .command ('upgrade <deploy_id> <app_id>', 'Upgrade deployment for application.', {}, handler.upgrade)
-        .command ('versions <platform>', 'Get the deployer versions for arm or x86 platform.', {}, handler.versions)
+        .command ('versions <platform>', 'Get the deployer versions for '+projectService.platforms.join(), {}, handler.versions)
         .check ((argv)=>{
             if (_.indexOf (commands, argv._[1]) != -1)
                 return true;
