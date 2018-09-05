@@ -5,7 +5,8 @@ exports.languages = {
     py: 'python',
     python: 'python',
     energia: 'energia',
-    arduino: 'arduino'
+    arduino: 'arduino',
+    c: 'c'
 };
 
 exports.platforms = ['raspberrypi', 'raspberrypi2','beagleboneblack', 'arduino', 'intel64'];

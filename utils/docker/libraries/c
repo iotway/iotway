@@ -1,0 +1,7 @@
+RUN cd /home/debian/ibot-elkay && \
+	apt-get update && \
+    apt-get install -y --no-install-recommends build-essential && \
+    make && \
+    apt-get remove -y --purge build-essential  && \
+	apt-get autoremove && \
+    apt-get clean
