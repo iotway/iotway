@@ -1,5 +1,6 @@
 const commands = ['new', 'list', 'edit', 'remove', 'describe', 'parameter', 'versions', 'deploy', 'undeploy', 'update'];
 const _ = require ('lodash');
+const projectService = require ('../service/project');
 
 module.exports = function (yargs, handler){
     yargs.command(['app', 'a'], 'Application settings.',
@@ -25,6 +26,7 @@ module.exports = function (yargs, handler){
             platform: {
                 alias: 'p',
                 type: 'string',
+                desc: 'Choose one from: '+ projectService.platforms.join(),
                 demandOption: true
             },
             privileged: {
