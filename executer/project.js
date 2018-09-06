@@ -318,13 +318,14 @@ async function checkVersion (appId, version){
 }
 
 function searchSettings (myPath){
+
     let files = fs.readdirSync (myPath);
     if (files.indexOf('wylioproject.json') != -1)
         return fs.readFileSync (path.join (myPath, 'wylioproject.json'), 'utf8');
     else if (myPath === path.join (myPath, '..'))
         return null;
     else
-        search (path.join (myPath, '..'));
+        return searchSettings (path.join (myPath, '..'));
 }
 
 async function getProjectSettings (sourceFolder){
@@ -549,7 +550,6 @@ exports.run = async function (argv){
                 else{
                     projectSettings = await getProjectSettings(process.cwd());
                 }
-                console.log (projectSettings);
                 let appId = projectSettings.appId;
                 if (appId.substring (0, 5) === 'local'){
                     console.error ('No application assigned.');
