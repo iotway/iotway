@@ -231,7 +231,8 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
     });
 }
 
-async function publish (profile, settings, appId, version, semanticVersion, description, cb){
+function publish (profile, settings, projectSettings, version, semanticVersion, description, cb){
+    let appId = projectSettings.appId;
     if (settings.PLATFORM[projectSettings.platform].docker.platform !== 'none'){
         let buildFolder = path.join(process.cwd(), 'build');
         //Push docker image
@@ -310,7 +311,7 @@ function dockerLogin (settings, profile, cb){
 
 async function checkVersion (appId, version){
     let versions = await appApi.versions (appId);
-    if (versions && versions.length === 0){
+    if (versions && versions.length > 0){
         let max = Math.max (...versions);
         return version > max;
     }
@@ -490,12 +491,13 @@ exports.publish = async function (argv){
         }
         dockerLogin (settings, profile, async (code)=>{
             if (code === 0){
-                await publish (profile, settings, projectSettings.appId, version, semanticVersion, description, (code)=>{
-                    //Docker logout
-                    child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
-                    process.exit (code);
+                build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, (code)=>{
+                    publish (profile, settings, projectSettings, version, semanticVersion, description, (code)=>{
+                        //Docker logout
+                        child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
+                        process.exit (code);
+                    });
                 });
-
             }
             else{
                 process.exit (code);

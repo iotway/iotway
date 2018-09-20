@@ -51,12 +51,7 @@ module.exports = function (http)
         },
 
         undeploy: async function (params){
-            let response = await http.post ('/app/undeploy/'+params.deployId, {
-                appId: params.appId,
-                type: params.type,
-                clusterId: params.clusterId,
-                productId: params.productId
-            });
+            let response = await http.post ('/app/undeploy/'+params.deployId, {});
             if (response.data && response.data.err === 0){
                 return true;
             }

@@ -57,7 +57,7 @@ module.exports = function (yargs, handler){
                 type: 'number'
             },
             'longitude': {
-                desc: 'lot',
+                desc: 'lon',
                 desc: 'The longitude of the product\'s location.',
                 demandOption: false,
                 type: 'number'
@@ -69,7 +69,7 @@ module.exports = function (yargs, handler){
                 type: 'number'
             }
         }, handler.provision)
-        .command (['list <cluster_id>', 'l'], 'List all product in cluster.', {
+        .command (['list <cluster_id>', 'l'], 'List all products in cluster.', {
             format: {
                 alias: 'f',
                 type: 'array',
@@ -129,8 +129,7 @@ module.exports = function (yargs, handler){
             },
             'update-hours': {
                 desc: 'Perform updates only between specified hours. If set to true, need to specify update-from and update-to',
-                type: 'boolean',
-                default: false
+                type: 'boolean'
             },
             'update-from': {
                 desc: 'Start performing updates from this hour. update-hours needs to be set to true.',

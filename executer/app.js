@@ -199,8 +199,7 @@ exports.deploy = async function (argv){
         version: argv.version,
         rollback: (argv.rollback === 0)? null: argv.rollback,
         network:argv.network,
-        privileged: argv.privileged,
-        type: argv.type
+        privileged: argv.privileged
     }
     if (argv.parameterName && argv.parameterValues){
         params.parameters[argv.parameterName] = argv.parameterValues;
@@ -224,10 +223,7 @@ exports.undeploy = async function (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
     let params = {
-        deployId: argv.id,
-        appId: argv.appId,
-        clusterId: argv.clusterId,
-        type: argv.type
+        deployId: argv.app_id
     };
     if (appApi){
         let response = await appApi.undeploy (params);

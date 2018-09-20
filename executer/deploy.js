@@ -127,7 +127,6 @@ exports.addParam = async function (argv){
     nonce.add (argv.nonce);
     let params = {
         deployId: argv.id,
-        appId: argv.appId,
         name: argv.name,
         value: argv.values
     };
@@ -151,7 +150,6 @@ exports.deleteParam = async function (argv){
     nonce.add (argv.nonce);
     let params = {
         deployId: argv.id,
-        appId: argv.appId,
         name: argv.name
     };
     if (deployApi){

@@ -62,12 +62,6 @@ module.exports = function (yargs, handler){
                     desc: 'Parameter values',
                     type: 'array',
                     demandOption: true
-                },
-                'app-id': {
-                    alias: 'app',
-                    desc: 'The application id',
-                    type: 'string',
-                    demandOption: true
                 }
             }, handler.addParam)
             .command ('remove', 'Removes a parameter.', {
@@ -79,13 +73,6 @@ module.exports = function (yargs, handler){
                 name: {
                     alias: 'n',
                     desc: 'Parameter name',
-                    type: 'string',
-                    demandOption: true
-                },
-    
-                'app-id': {
-                    alias: 'app',
-                    desc: 'The application id',
                     type: 'string',
                     demandOption: true
                 }
