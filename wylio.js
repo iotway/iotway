@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const commands = ['user', 'profile', 'cluster', 'product', 'app', 'deploy', 'shell', 'project'];
+const commands = ['user', 'profile', 'cluster', 'product', 'app', 'deploy', 'shell', 'remote', 'project'];
 const _ = require ('lodash');
 require('dotenv').config();
 let yargs = require ('yargs');
@@ -12,6 +12,7 @@ yargs = require ('./builder/product')(yargs, require ('./executer/product'));
 yargs = require ('./builder/app')(yargs, require ('./executer/app'));
 yargs = require ('./builder/deploy')(yargs, require ('./executer/deploy'));
 yargs = require ('./builder/shell')(yargs, require ('./executer/shell'));
+yargs = require ('./builder/remote')(yargs, require ('./executer/remote'));
 yargs = require ('./builder/project')(yargs, require ('./executer/project'));
 
 function test (){
