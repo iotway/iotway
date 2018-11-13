@@ -1,4 +1,5 @@
 const Table = require ('cli-table');
+const _ = require ('lodash');
 const appHeader = {
     author: 'Author',
     appId: 'Id',
@@ -65,6 +66,28 @@ const projectHeader = {
 
 };
 
+const emulatorImageHeader = {
+    platform: 'Platform',
+    version: 'Version',
+    machine: 'Machine',
+    cpu: 'CPU Type',
+    cmdline: 'Kernel Command Line',
+    mem: "Memory Size",
+    hda: 'Storage',
+    kernel: 'Kernel',
+    dtb: 'Device Tree'
+};
+
+const emulatorPlatformHeader = _.assign (emulatorImageHeader,
+{
+    link: 'Download Link'
+});
+
+const emulatorHeader = _.assign (
+    {
+        productId: 'productId'
+    }, emulatorImageHeader);
+
 exports.getDefaultProject = function (){
     return ['projectId', 'name', 'platform', 'ui'];
 };
@@ -84,6 +107,17 @@ exports.getDefaultDeploy = function (){
 exports.getDefaultProduct = function (){
     return ['name', 'productId', 'type', 'status', 'actions', 'cpu', 'latestStatus'];
 };
+
+exports.getDefaultEmulatorImage = function (){
+    return ['platform', 'version'];
+}
+
+exports.getDefaultEmulatorPlatform = exports.getDefaultEmulatorImage;
+
+exports.getDefaultEmulator = function ()
+{
+    return ['productId', 'platform', 'version'];
+}
 
 exports.getWideProject = function (){
     let returnVlues = [];
@@ -122,6 +156,18 @@ exports.getWideProduct = function (){
     'registerDate', 'platform', 'latestStatus', 'status', 'allow', 'productId', 'cpu'];
 }
 
+exports.getWideEmulatorImage = function (){
+    return Object.keys (emulatorImageHeader);
+};
+
+exports.getWideEmulatorPlatform = function (){
+    return Object.keys (emulatorPlatformHeader);
+};
+
+exports.getWideEmulator = function (){
+    return Object.keys (emulatorHeader);
+};
+
 exports.header = function (argv, type){
     let header;
     if (type === 'app'){
@@ -138,6 +184,15 @@ exports.header = function (argv, type){
     }
     else if (type === 'project'){
         header = projectHeader;
+    }
+    else if (type === 'emulatorImage'){
+        header = emulatorImageHeader;
+    }
+    else if (type === 'emulatorPlatform'){
+        header = emulatorPlatformHeader;
+    }
+    else if (type === 'emulator'){
+        header = emulatorHeader;
     }
     if (header){
         let returnHeader = [];

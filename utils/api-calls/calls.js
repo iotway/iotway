@@ -8,6 +8,7 @@ module.exports = function (endpoint){
     const deploy = require ('./deploy')(httpService.http);
     const settings = require ('./settings')(httpService.http);
     const projects = require ('./projects')(httpService.http);
+    const emulators = require ('./emulators')(httpService.http);
     return {
         users: users,
         clusters: clusters,
@@ -15,6 +16,7 @@ module.exports = function (endpoint){
         apps: apps,
         deploy: deploy,
         settings: settings,
-        projects: projects
+        projects: projects,
+        emulators: emulators
     };
 };
