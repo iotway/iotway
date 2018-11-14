@@ -75,7 +75,9 @@ const emulatorImageHeader = {
     mem: "Memory Size",
     hda: 'Storage',
     kernel: 'Kernel',
-    dtb: 'Device Tree'
+    dtb: 'Device Tree',
+    user: 'Username',
+    password: 'Password'
 };
 
 const emulatorPlatformHeader = _.assign (emulatorImageHeader,
