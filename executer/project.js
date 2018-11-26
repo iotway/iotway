@@ -309,8 +309,7 @@ function dockerLogin (settings, profile, cb){
     });
 }
 
-async function checkVersion (appId, version){
-    let versions = await appApi.versions (appId);
+async function checkVersion (version, versions){
     if (versions && versions.length > 0){
         let max = Math.max (...versions);
         return version > max;
@@ -408,9 +407,12 @@ exports.build = async function (argv){
     if (!version){
         version = 'dev';
     }
-    else if (projectSettings.appId.substring (0, 5) !== 'local' && !await checkVersion (projectSettings.appId, version)){
-        console.log ('The provided version is less or equal to the latest published version.');
-        console.log ('The Docker image will be created but it cannot be published.');
+    else if (projectSettings.appId.substring (0, 5) !== 'local'){
+        let versions = await appApi.versions (projectSettings.appId);
+        if (!await checkVersion (version, versions)){
+            console.log ('The provided version is less or equal to the latest published version.');
+            console.log ('The Docker image will be created but it cannot be published.');
+        }
     }
     let settings = await settingsApi.get ();
     if (settings){
@@ -472,7 +474,14 @@ exports.publish = async function (argv){
     else{
         projectSettings = await getProjectSettings(process.cwd());
     }
-    if (!await checkVersion (projectSettings.appId, version)){
+    let versions = await appApi.versions (projectSettings.appId);
+    if (!version && versions && versions.length > 0){
+        version = Math.max (...versions) + 1;
+    }
+    else if (!version){
+        version = 0;
+    }
+    else if (!await checkVersion (version, versions)){
         console.error ('The provided version is less or equal to the latest published version.');
         console.error ('Cannot publish docker image.');
         process.exit (-1);

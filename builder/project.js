@@ -64,7 +64,7 @@ module.exports = function (yargs, handler){
             }
         }, handler.run)
         .command (['build [application_version]', 'b'], 'Builds a docker image of the current project', {}, handler.build)
-        .command (['publish <application_version>', 'p'], 'Pushes the docker image into the registry.', {
+        .command (['publish [application_version]', 'p'], 'Pushes the docker image into the registry.', {
             'project-version': {
                 type: 'string',
                 desc: 'A semantic version of the project.'
