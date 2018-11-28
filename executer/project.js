@@ -479,7 +479,7 @@ exports.publish = async function (argv){
         version = Math.max (...versions) + 1;
     }
     else if (!version){
-        version = 0;
+        version = 1;
     }
     else if (!await checkVersion (version, versions)){
         console.error ('The provided version is less or equal to the latest published version.');
