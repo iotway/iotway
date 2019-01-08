@@ -169,7 +169,7 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
     })
     make.on ('exit', async (code)=>{
         if (code === 0){
-            await projectApi.build (projectSettings.id);
+            //await projectApi.build (projectSettings.id);
             if (productId && settings.PLATFORM[projectSettings.platform].options && settings.PLATFORM[projectSettings.platform].options.binary){
                 let options = settings.PLATFORM[projectSettings.platform].options.binary;
                 let newFile = path.join (path.dirname (options), productId + path.extname (options));
@@ -564,9 +564,10 @@ exports.run = async function (argv){
                 let settings = await settingsApi.get ();
                 if (settings){
                     if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
-                        build (projectSettings, settings, appId, 'dev', argv['session-id'], productId, async (code)=>{
+                        build (projectSettings, settings, undefined, 'dev', argv['session-id'], productId, async (code)=>{
                             if (code === 0){
-                                
+                                console.log ('Build successfully');
+                                process.exit (code);
                             }
                             else{
                                 console.error ('Build failed');

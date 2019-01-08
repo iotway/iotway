@@ -3,7 +3,6 @@ const errorService = require ('../error');
 
 module.exports = function (endpoint){
     let token = null;
-
     const instance = axios.create({
         baseURL: endpoint
       });
