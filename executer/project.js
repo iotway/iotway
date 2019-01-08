@@ -226,7 +226,7 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
             });
         }
         else{
-            process.exit (code);
+            cb (code);
         }
     });
 }
@@ -561,23 +561,29 @@ exports.run = async function (argv){
                 else{
                     projectSettings = await getProjectSettings(process.cwd());
                 }
-                let appId = projectSettings.appId;
-                if (appId.substring (0, 5) === 'local'){
-                    console.error ('No application assigned.');
-                }
-                app = await appApi.get (appId);
-                if (!app){
-                    console.error ('Please provide an existing application id.');
-                    process.exit (-1);
-                }
                 let settings = await settingsApi.get ();
                 if (settings){
                     if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
                         build (projectSettings, settings, appId, 'dev', argv['session-id'], productId, async (code)=>{
-                            process.exit (code);
+                            if (code === 0){
+                                
+                            }
+                            else{
+                                console.error ('Build failed');
+                                process.exit (code);
+                            }
                         });
                     }
                     else{
+                        let appId = projectSettings.appId;
+                        if (appId.substring (0, 5) === 'local'){
+                            console.error ('No application assigned.');
+                        }
+                        app = await appApi.get (appId);
+                        if (!app){
+                            console.error ('Please provide an existing application id.');
+                            process.exit (-1);
+                        }
                         dockerLogin (settings, profile, (code)=>{
                             if (code === 0){
                                 build (projectSettings, settings, appId, 'dev', undefined, undefined, async (code)=>{
