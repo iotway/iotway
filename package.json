@@ -1,15 +1,15 @@
 {
-  "name": "wylio",
-  "version": "2.0.60",
+  "name": "iotway",
+  "version": "1.0.0",
   "license": "GPL-3.0",
   "repository": "https://github.com/Wyliodrin/wylio.git",
   "author": "Wyliodrin",
-  "main": "wylio.js",
+  "main": "iotway.js",
   "bin": {
-    "wylio": "wylio.js"
+    "iotway": "iotway.js"
   },
   "scripts": {
-    "start": "node wylio.js"
+    "start": "node iotway.js"
   },
   "dependencies": {
     "axios": "^0.17.1",
