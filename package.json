@@ -2,7 +2,7 @@
   "name": "iotway",
   "version": "1.0.0",
   "license": "GPL-3.0",
-  "repository": "https://github.com/Wyliodrin/wylio.git",
+  "repository": "https://github.com/iotway/iotway.git",
   "author": "Wyliodrin",
   "main": "iotway.js",
   "bin": {
