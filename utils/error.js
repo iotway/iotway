@@ -1,33 +1,26 @@
 const fs = require ('fs-extra');
 const settings = require ('./settings');
-const path = require ('path');
 
 process.on('uncaughtException', function(err) {
     try{
-        fs.appendFileSync (path.join (settings.baseDir, 'error.log'), err.stack+'\n');
+        fs.appendFileSync (settings.errorFile, err.stack+'\n');
     }
     catch (e){
         try{
-            fs.mkdirSync (settings.baseDir);
-            fs.appendFileSync (path.join (settings.baseDir, 'error.log'), err.stack+'\n');
+            fs.appendFileSync (settings.errorFile, err.stack+'\n');
         }
         catch (e){
         }
     }
-    console.log ('wylio stopped working');
-    console.log ('check log files in '+settings.baseDir);
+    console.log (settings.executor + ' enountered an internal error.');
+    console.log ('Please check log files in '+ settings.settingsDir);
     process.exit (-1);
 });
     
 exports.addError = function (error){
     try{
-        fs.appendFileSync (path.join (settings.baseDir, 'error.log'), error);
+        fs.appendFileSync (settings.errorFile, error);
     }
     catch (e){
-        try{
-            fs.mkdirSync (settings.baseDir);
-            fs.appendFileSync (path.join (settings.baseDir, 'error.log'), error);
-        }
-        catch (e){}
     }
 }

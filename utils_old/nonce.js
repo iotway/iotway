@@ -1,14 +1,12 @@
 const fs = require ('fs-extra');
-const settings = require ('./settings');
-
 exports.check = function (nonce){
     if (nonce){
         try{
-            let nonceData = fs.readFileSync ('/tmp/iotway/nonce', 'utf8');
+            let nonceData = fs.readFileSync ('/tmp/wylio/nonce', 'utf8');
             if (nonceData){
-                let nonces = nonceData.split (';');
+                let nonces = nonceData.split (',');
                 if (nonces.indexOf(nonce) >= 0){
-                    console.log (settings.executor+' terminated');
+                    console.log ('wylio terminated');
                     if (process.env.WYLIODRIN_STUDIO_THEIA){
                         console.log ('Please close this terminal.');
                     }
@@ -16,7 +14,8 @@ exports.check = function (nonce){
                 }
             }
         }
-        catch (err){
+        catch (e){
+
         }
     }
 };
@@ -30,12 +29,20 @@ exports.add = function (nonce){
                 nonces = nonceData.split (';');
             }
         }
-        catch (err){
-            fs.mkdirSync ('/tmp/wylio');
+        catch (e){
+            try{
+                fs.mkdirSync ('/tmp/wylio');
+            }
+            catch (e){}
         }
         finally{
             nonces.push (nonce);
-            fs.writeFileSync ('/tmp/wylio/nonce', nonces.toString ());
+            try{
+                fs.writeFileSync ('/tmp/wylio/nonce', nonces.toString ());
+            }
+            catch (e){
+                
+            }
         }
     }
 }
