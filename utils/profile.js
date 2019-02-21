@@ -28,8 +28,9 @@ exports.deleteProfile = function (profileName){
 };
 
 exports.exists = function (name){
-    let profiles = fs.readdirSync (settings.profilesDir);
-    if (profiles.indexOf(name) != -1)
+    let profilesFiles = fs.readdirSync (settings.profilesDir);
+    let profileFile = filename (name);
+    if (profilesFiles.indexOf(profileFile) != -1)
         return true;
     return false;
 };

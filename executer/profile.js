@@ -1,4 +1,5 @@
 const Table = require ('cli-table');
+const usersApi = require ('libiotway').users;
 
 const profileService = require ('../utils/profile');
 const nonce = require ('../utils/nonce');
@@ -64,8 +65,7 @@ exports.save = function (argv){
     nonce.add (argv.nonce);
     let profileName = argv.profile_name;
     let currentProfile = profileService.getCurrentProfile().profile;
-    let profileData = currentProfile.profile;
-    profileService.storeProfileData (profileName, profileData);
+    profileService.storeProfileData (profileName, currentProfile);
     profileService.setCurrentProfile (profileName);
 };
 
@@ -82,8 +82,6 @@ exports.select = function (argv){
         //Check profile exists
         if (profileService.exists (profileName)){
             profileService.changeCurrentProfile (profileName);
-            //TODO - set new token
-            //TODO - set new endpoint
         }
         else{
             console.error ('Profile does not exist.');

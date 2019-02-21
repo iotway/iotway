@@ -4,8 +4,15 @@ const _ = require ('lodash');
 require('dotenv').config();
 require ('./utils/error');
 let yargs = require ('yargs');
+const libiotway = require ('libiotway');
 
-//yargs = require ('./builder/user')(yargs, require ('./executer/user'));
+const profileService = require ('./utils/profile');
+let profile = profileService.getCurrentProfile().profile;
+if (profile.api){
+    libiotway.init(profile.api, profile.token);
+}
+
+yargs = require ('./builder/user')(yargs, require ('./executer/user'));
 yargs = require ('./builder/profile')(yargs, require ('./executer/profile'));
 // yargs = require ('./builder/cluster')(yargs, require ('./executer/cluster'));
 // yargs = require ('./builder/product')(yargs, require ('./executer/product'));
