@@ -4,15 +4,17 @@ const mkdirp = require ('mkdirp');
 const Table = require ('cli-table');
 const tableBuilder = require ('../utils/table');
 const fs = require ('fs-extra');
-const emulatorApi = require ('../utils/api').emulators;;
-const clusterApi = require ('../utils/api').clusters;;
-const productApi = require ('../utils/api').products;;
 const semver = require ('semver');
 const _ = require ('lodash');
 const axios = require ('axios');
 const yauzl = require ('yauzl');
 const spawn = require ('child_process').spawn;
 const express = require ('express');
+const libiotway = require ('libiotway').get();
+
+const emulatorApi = libiotway.emulators;
+const clusterApi = libiotway.clusters;
+const productApi = libiotway.products;
 
 const DIR = '';
 const IMAGES = 'images';
@@ -118,17 +120,24 @@ async function getPlatform (platform)
 async function getPlatforms ()
 {
 	if (emulatorApi){
-		let platforms = await emulatorApi.platforms ();
-		if (platforms === null)
-		{
-			console.log ('Unable to load platforms');
+		try{
+			let platforms = await emulatorApi.platforms ();
+			if (platforms === null)
+			{
+				console.log ('Unable to load platforms');
+			}
+					return platforms;
 		}
-        return platforms;
-    }
-    else{
-        console.error ('No credentials. Please login or select a profile.');
-        process.exit (-1);
-    }
+		catch (err){
+			console.error ('Could not get platforms. Check' + settings.errorFile + ' for more details.');
+      error.addError (err);
+      process.exit (-1);
+		}
+  }
+	else{
+			console.error ('No credentials. Please login or select a profile.');
+			process.exit (-1);
+	}
 }
 
 async function downloadImage (platform)
@@ -184,7 +193,8 @@ async function runEmulator (productId)
 		}
 		catch (e)
 		{
-			
+			console.error ('Could not get product. Check' + settings.errorFile + ' for more details.');
+      error.addError (err);
 		}
 		let server = express ();
 		server.get ('/wyliodrin.json', function (req, res)
@@ -250,9 +260,22 @@ async function newEmulator (clusterId, productId, type)
 			clusterId = provisioningFile.clusterId;
 		}
 		if (!type) type = 'beta';
-		if (!provisioningFile) provisioningFile = await clusterApi.getWyliodrinJSON (clusterId);
-		if (provisioningFile)
-		{
+		if (!provisioningFile){
+			if (clusterApi){
+				try{
+					provisioningFile = await clusterApi.getWyliodrinJSON (clusterId);
+				}
+				catch (err){
+					console.error ('Could not get provisoning file. Check' + settings.errorFile + ' for more details.');
+					error.addError (err);
+					process.exit (-1);
+				}
+			}
+			else{
+				console.error ('No session. Please login or select a different profile.');
+			}
+		}
+		if (provisioningFile){
 			let platform = provisioningFile.platform;
 			if (!platform) 
 			{
@@ -278,7 +301,7 @@ async function newEmulator (clusterId, productId, type)
 			}
 			else
 			{
-				console.log ('There is no emulator available for the platform '+cluster.platform);
+			console.log ('There is no emulator available for the platform '+cluster.platform);
 			}
 		}
 		else

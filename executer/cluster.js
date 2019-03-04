@@ -76,6 +76,7 @@ exports.list = async function (argv){
         catch (err){
             console.error ('Could not get clusters. Check' + settings.errorFile + ' for more details.');
             error.addError (err);
+            process.exit (-1);
         } 
     }
     else{
