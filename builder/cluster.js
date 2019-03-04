@@ -62,7 +62,7 @@ module.exports = function (yargs, handler){
                 }
         }, handler.list)
         .command (['describe <cluster_id>', 'd'], 'Show cluster information.', {}, handler.get)
-        .command (['scripts <cluster_id>', 's'], 'Show cluster scripts.', {}, handler.getScripts)
+        //.command (['scripts <cluster_id>', 's'], 'Show cluster scripts.', {}, handler.getScripts)
         .command (['delete <cluster_id>', 'del'], 'Deletes the cluster.', {}, handler.delete)
         .command (['edit <cluster_id>', 'e'], 'Edit the cluster.', {
             name: {
@@ -108,51 +108,51 @@ module.exports = function (yargs, handler){
                 type: 'number'
            }
         }, handler.edit)
-        .command ('script', 'Adds or removes a script.',
-        (yargs) =>  {
-            yargs.command ('add', 'Adds a new script.',{
-                name: {
-                    alias: 'n',
-                    desc: 'Script name',
-                    type: 'string',
-                    demandOption: true
-                },
-                command: {
-                    alias: 'cmd',
-                    desc: 'Command chain',
-                    type: 'string',
-                    demandOption: true
-                },
-                id: {
-                    alias: 'c',
-                    desc: 'The clusterId',
-                    type: 'string',
-                    demandOption: true
-                }
-            }, handler.addScript)
-            .command ('remove', 'Removes the script from the cluster.', {
-                name: {
-                    alias: 'n',
-                    desc: 'Script name',
-                    type: 'string',
-                    demandOption: true
-                },
+        // .command ('script', 'Adds or removes a script.',
+        // (yargs) =>  {
+        //     yargs.command ('add', 'Adds a new script.',{
+        //         name: {
+        //             alias: 'n',
+        //             desc: 'Script name',
+        //             type: 'string',
+        //             demandOption: true
+        //         },
+        //         command: {
+        //             alias: 'cmd',
+        //             desc: 'Command chain',
+        //             type: 'string',
+        //             demandOption: true
+        //         },
+        //         id: {
+        //             alias: 'c',
+        //             desc: 'The clusterId',
+        //             type: 'string',
+        //             demandOption: true
+        //         }
+        //     }, handler.addScript)
+        //     .command ('remove', 'Removes the script from the cluster.', {
+        //         name: {
+        //             alias: 'n',
+        //             desc: 'Script name',
+        //             type: 'string',
+        //             demandOption: true
+        //         },
     
-                id: {
-                    alias: 'c',
-                    desc: 'The clusterId',
-                    type: 'string',
-                    demandOption: true
-                }
-            }, handler.deleteScript)
-            .check ((argv)=>{
-                if (argv._[2] === 'add' || argv._[2] === 'remove')
-                return true;
-            throw new Error ('Invalid command.');
-            })
-            .help ()
-            .demandCommand ();
-        })
+        //         id: {
+        //             alias: 'c',
+        //             desc: 'The clusterId',
+        //             type: 'string',
+        //             demandOption: true
+        //         }
+        //     }, handler.deleteScript)
+        //     .check ((argv)=>{
+        //         if (argv._[2] === 'add' || argv._[2] === 'remove')
+        //         return true;
+        //     throw new Error ('Invalid command.');
+        //     })
+        //     .help ()
+        //     .demandCommand ();
+        // })
         .command (['provisioning-file <cluster-id>','pf'], 'Get cluster\'s provisioning file.' , {}, handler.getJson)
         .check ((argv)=>{
             if (_.indexOf (commands, argv._[1]) != -1)

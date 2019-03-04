@@ -1,6 +1,5 @@
 const commands = ['new', 'list', 'edit', 'remove', 'describe', 'parameter', 'versions', 'deploy', 'undeploy', 'update'];
 const _ = require ('lodash');
-const projectService = require ('../service/project');
 
 module.exports = function (yargs, handler){
     yargs.command(['app', 'a'], 'Application settings.',
@@ -26,7 +25,7 @@ module.exports = function (yargs, handler){
             platform: {
                 alias: 'p',
                 type: 'string',
-                desc: 'Choose one from: '+ projectService.platforms.join(),
+                desc: 'The platform type (eg. raspberrypi, beagleboneblack)',
                 demandOption: true
             },
             privileged: {
@@ -61,43 +60,43 @@ module.exports = function (yargs, handler){
         }, handler.edit)
         .command (['remove <app_id>', 'r'], 'Remove application.', {}, handler.delete)
         .command (['describe <app_id>', 'd'], 'Describe application.', {}, handler.get)
-        .command (['parameter', 'p'], 'Adds or removes a parameter.', 
-        (yarg) => {
-            yarg.command ('add', 'Adds a new parameter.', {
-                name: {
-                    alias: 'n',
-                    desc: 'Parameter name.',
-                    type: 'string',
-                    demandOption: true
-                },
-                values: {
-                    alias: 'v',
-                    desc: 'Parameter values.',
-                    type: 'array',
-                    demandOption: true
-                },
-                id: {
-                    alias: 'app',
-                    desc: 'The application id.',
-                    type: 'string',
-                    demandOption: true
-                }
-            }, handler.addParam)
-            .command ('remove', 'removes the parameter from the product', {
-                name: {
-                    alias: 'n',
-                    desc: 'Parameter name.',
-                    type: 'string',
-                    demandOption: true
-                },
+        // .command (['parameter', 'p'], 'Adds or removes a parameter.', 
+        // (yarg) => {
+        //     yarg.command ('add', 'Adds a new parameter.', {
+        //         name: {
+        //             alias: 'n',
+        //             desc: 'Parameter name.',
+        //             type: 'string',
+        //             demandOption: true
+        //         },
+        //         values: {
+        //             alias: 'v',
+        //             desc: 'Parameter values.',
+        //             type: 'array',
+        //             demandOption: true
+        //         },
+        //         id: {
+        //             alias: 'app',
+        //             desc: 'The application id.',
+        //             type: 'string',
+        //             demandOption: true
+        //         }
+        //     }, handler.addParam)
+        //     .command ('remove', 'removes the parameter from the product', {
+        //         name: {
+        //             alias: 'n',
+        //             desc: 'Parameter name.',
+        //             type: 'string',
+        //             demandOption: true
+        //         },
     
-                id: {
-                    alias: 'app',
-                    desc: 'The application id.',
-                    type: 'string',
-                    demandOption: true
-                }
-            }, handler.deleteParam)
+        //         id: {
+        //             alias: 'app',
+        //             desc: 'The application id.',
+        //             type: 'string',
+        //             demandOption: true
+        //         }
+        //     }, handler.deleteParam)
             .check ((argv)=>{
                 if (argv._[2] === 'add' || argv._[2] === 'remove')
                 return true;

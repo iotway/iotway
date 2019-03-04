@@ -43,40 +43,40 @@ module.exports = function (yargs, handler){
             }
         }, handler.edit)
         .command (['describe <deploy_id>', 'd'], 'Show information on the deployment.', {}, handler.get)
-        .command (['parameter', 'param'], 'Adds or removes a parameter.', 
-        (yarg) => {
-            yarg.command ('add', 'adds a new parameter', {
-                id: {
-                    desc: 'Deployment id',
-                    type: 'string',
-                    demandOption: true
-                },
-                name: {
-                    alias: 'n',
-                    desc: 'Parameter name',
-                    type: 'string',
-                    demandOption: true
-                },
-                values: {
-                    alias: 'v',
-                    desc: 'Parameter values',
-                    type: 'array',
-                    demandOption: true
-                }
-            }, handler.addParam)
-            .command ('remove', 'Removes a parameter.', {
-                id: {
-                    desc: 'Deployment id',
-                    type: 'string',
-                    demandOption: true
-                },
-                name: {
-                    alias: 'n',
-                    desc: 'Parameter name',
-                    type: 'string',
-                    demandOption: true
-                }
-            }, handler.deleteParam)
+        // .command (['parameter', 'param'], 'Adds or removes a parameter.', 
+        // (yarg) => {
+        //     yarg.command ('add', 'adds a new parameter', {
+        //         id: {
+        //             desc: 'Deployment id',
+        //             type: 'string',
+        //             demandOption: true
+        //         },
+        //         name: {
+        //             alias: 'n',
+        //             desc: 'Parameter name',
+        //             type: 'string',
+        //             demandOption: true
+        //         },
+        //         values: {
+        //             alias: 'v',
+        //             desc: 'Parameter values',
+        //             type: 'array',
+        //             demandOption: true
+        //         }
+        //     }, handler.addParam)
+        //     .command ('remove', 'Removes a parameter.', {
+        //         id: {
+        //             desc: 'Deployment id',
+        //             type: 'string',
+        //             demandOption: true
+        //         },
+        //         name: {
+        //             alias: 'n',
+        //             desc: 'Parameter name',
+        //             type: 'string',
+        //             demandOption: true
+        //         }
+        //     }, handler.deleteParam)
             .check ((argv)=>{
                 if (argv._[2] === 'add' || argv._[2] === 'remove')
                 return true;

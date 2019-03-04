@@ -21,7 +21,6 @@ exports.connect = async function (url, token, cb, packetcb){
     });
     socket.on ('message', function (data){
         data = JSON.parse (data);
-        // console.log (data);
         if (data.t === 'a')
         {
             if (data.authenticated === true) authenticated = true;

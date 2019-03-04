@@ -1,23 +1,26 @@
-const appApi = require ('../utils/api').apps;
-const productApi = require ('../utils/api').products;
-const settingsApi = require ('../utils/api').settings;
-const projectApi = require ('../utils/api').projects;
-const userApi = require ('../utils/api').users;
-const profileService = require ('../service/profile');
-const tableBuilder = require ('../utils/table');
 const Table = require ('cli-table');
 const fs = require ('fs-extra');
 const path = require ('path');
 const mustache = require ('mustache');
 const child_process = require ('child_process');
-const socketService = require ('../service/socket');
 const readline = require('readline');
 const readlineSync = require('readline-sync');
 const semver = require('semver');
 const _ = require ('lodash');
+const libwyliodrin = require ('libwyliodrin').get();
+
+const profileService = require ('../utils/profile');
+const tableBuilder = require ('../utils/table');
+const socketService = require ('../utils/socket');
 const nonce = require ('../utils/nonce');
 const errors = require ('../utils/error');
-const projectService = require ('../service/project');
+const projectService = require ('../utils/project');
+
+const appApi = libwyliodrin.apps;
+const productApi = libwyliodrin.products;
+const settingsApi = libwyliodrin.settings;
+const projectApi = libwyliodrin.projects;
+const userApi = libwyliodrin.users;
 
 const projectLanguages = projectService.languages;
 

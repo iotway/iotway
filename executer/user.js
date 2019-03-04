@@ -3,6 +3,7 @@ let libiotway = require ('libiotway');
 
 const nonce = require ('../utils/nonce');
 const profileService = require ('../utils/profile');
+const error = require ('../utils/error');
 
 module.exports.login = async function (argv){
     nonce.check (argv.nonce);
@@ -27,17 +28,17 @@ module.exports.login = async function (argv){
         host = 'https://'+host;
     libiotway = libiotway.init (host)
     usersApi = libiotway.users;
-    let token = await usersApi.login ({
-        username: username,
-        password: password
-    });
-
-    if (token){
+    try{
+        let token = await usersApi.login ({
+            username: username,
+            password: password
+        });
         let profileName = profileService.getCurrentProfileName();
         profileService.storeProfileData (profileName, {username: username, token: token, api: host});
     }
-    else{
+    catch (err){
         console.error ('Log in failed');
+        error.addError (err);
         process.exit (-1);
     }
 };
@@ -47,8 +48,8 @@ module.exports.logout = async function (argv){
     nonce.add (argv.nonce);
     let usersApi = libiotway.get().users;
     if (usersApi){
-        let result = await usersApi.logout();
-        if (result){
+        try{
+            await usersApi.logout();
             let currentProfile = profileService.getCurrentProfile();
             let currentProfileData = currentProfile.profile;
             if (currentProfileData.token)
@@ -57,8 +58,9 @@ module.exports.logout = async function (argv){
                 delete currentProfileData.username;
             profileService.storeProfileData (currentProfile.name, currentProfileData);
         }
-        else{
+        catch (err){
             console.error ('Session expired. Log in or select different profile.');
+            error.addError (err);
             process.exit (-1);
         }
     }

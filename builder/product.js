@@ -145,43 +145,43 @@ module.exports = function (yargs, handler){
            }
         }, handler.edit)
         .command ('applications <product_id>', 'Get product applications.', {}, handler.applications)
-        .command ('script', 'Adds or removes a script.', 
-        (yarg) => {
-            yarg.command ('add', 'adds a new script', {
-                name: {
-                    alias: 'n',
-                    desc: 'Script name',
-                    type: 'string',
-                    demandOption: true
-                },
-                command: {
-                    alias: 'c',
-                    desc: 'Command chain',
-                    type: 'string',
-                    demandOption: true
-                },
-                'product-id': {
-                    alias: 'product',
-                    desc: 'The productId',
-                    type: 'string',
-                    demandOption: true
-                }
-            }, handler.addScript)
-            .command ('remove', 'Removes the script from the product.', {
-                name: {
-                    alias: 'n',
-                    desc: 'Script name',
-                    type: 'string',
-                    demandOption: true
-                },
+        // .command ('script', 'Adds or removes a script.', 
+        // (yarg) => {
+        //     yarg.command ('add', 'adds a new script', {
+        //         name: {
+        //             alias: 'n',
+        //             desc: 'Script name',
+        //             type: 'string',
+        //             demandOption: true
+        //         },
+        //         command: {
+        //             alias: 'c',
+        //             desc: 'Command chain',
+        //             type: 'string',
+        //             demandOption: true
+        //         },
+        //         'product-id': {
+        //             alias: 'product',
+        //             desc: 'The productId',
+        //             type: 'string',
+        //             demandOption: true
+        //         }
+        //     }, handler.addScript)
+        //     .command ('remove', 'Removes the script from the product.', {
+        //         name: {
+        //             alias: 'n',
+        //             desc: 'Script name',
+        //             type: 'string',
+        //             demandOption: true
+        //         },
     
-                'product-id': {
-                    alias: 'product',
-                    desc: 'The productId',
-                    type: 'string',
-                    demandOption: true
-                }
-            }, handler.deleteScript)
+        //         'product-id': {
+        //             alias: 'product',
+        //             desc: 'The productId',
+        //             type: 'string',
+        //             demandOption: true
+        //         }
+        //     }, handler.deleteScript)
             .check ((argv)=>{
                 if (argv._[2] === 'add' || argv._[2] === 'remove')
                 return true;

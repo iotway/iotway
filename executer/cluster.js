@@ -3,6 +3,7 @@ const Table = require ('cli-table');
 const tableBuilder = require ('../utils/table');
 const nonce = require ('../utils/nonce');
 const settings = require ('../utils/settings');
+const error = require ('../utils/error');
 
 exports.new = async function (argv){
     nonce.check (argv.nonce);
@@ -14,7 +15,7 @@ exports.new = async function (argv){
         platform: argv.platform,
         deployer: argv.deployer,
         filterRegister: argv.filterRegister
-    }
+    };
     if (argv.publicKey && argv.privateKey){
         params.key = {
             public: argv.publicKey,
@@ -25,10 +26,13 @@ exports.new = async function (argv){
         params.filterRegisterProducts = argv.registerProducts;
     }
     if (clusterApi){
-        if (await clusterApi.new (params))
+        try{
+            await clusterApi.new (params)
             console.log ('Cluster created successfully.');
-        else{
+        }
+        catch (err){
             console.error ('Could not create cluster. Check' + settings.errorFile + ' for more details.');
+            error.addError (err);
             process.exit (-1);
         }
     }
@@ -42,31 +46,37 @@ exports.list = async function (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
     if (clusterApi){
-        let clusters = await clusterApi.list ();
-        if (argv.o === 'json')
+        try{
+            clusters = await clusterApi.list ();
+            if (argv.o === 'json')
             console.log (JSON.stringify (clusters, null, 3));
-        else if (clusters && clusters.length > 0){
-            let format = argv.f;
-            if (format === undefined)
-                format = tableBuilder.getDefaultCluster ();
-            else if (format.indexOf ('wide') != -1){
-                format = tableBuilder.getWideCluster ();
-            }
-            let header = tableBuilder.header (format, 'cluster');
-            let table = new Table({
-                head: header
-            });            
-            for (cluster of clusters){
-                let values = [];
-                for (f of format){
-                    values.push (cluster[f]);
+            else if (clusters && clusters.length > 0){
+                let format = argv.f;
+                if (format === undefined)
+                    format = tableBuilder.getDefaultCluster ();
+                else if (format.indexOf ('wide') != -1){
+                    format = tableBuilder.getWideCluster ();
                 }
-                table.push (values);
+                let header = tableBuilder.header (format, 'cluster');
+                let table = new Table({
+                    head: header
+                });            
+                for (cluster of clusters){
+                    let values = [];
+                    for (f of format){
+                        values.push (cluster[f]);
+                    }
+                    table.push (values);
+                }
+                console.log (table.toString());
             }
-            console.log (table.toString());
+            else
+                console.log ('No clusters to display.');
         }
-        else
-            console.log ('No clusters to display.');
+        catch (err){
+            console.error ('Could not get clusters. Check' + settings.errorFile + ' for more details.');
+            error.addError (err);
+        } 
     }
     else{
         console.error ('No session. Please login or select a different profile.');
@@ -78,12 +88,14 @@ exports.get = async function (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
     if (clusterApi){
-        let cluster = await clusterApi.get (argv.cluster_id);
-        if (cluster){
-        console.log (JSON.stringify (cluster, null, 3));
+        try{
+            let cluster = await clusterApi.get (argv.cluster_id);
+            console.log (JSON.stringify (cluster, null, 3));
         }
-        else
+        catch (err){
             console.log ('Cluster not found.');
+            error.addError (response.err);
+        }
     }
     else{
         console.error ('No session. Please login or select a different profile.');
@@ -123,12 +135,13 @@ exports.delete = async function (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
     if (clusterApi){
-        let response = await clusterApi.delete (argv.cluster_id);
-        if (response){
-        console.log ('Cluster deleted successfully.');
+        try{
+            await clusterApi.delete (argv.cluster_id);
+            console.log ('Cluster deleted successfully.');
         }
-        else{
-            console.error ('Could not delete cluster. Check log file for more details.');
+        catch (err){
+            console.error ('Could not delete cluster. Check' + settings.errorFile + ' for more details.');
+            error.addError (err);
             process.exit (-1);
         }
     }
@@ -161,13 +174,13 @@ exports.edit = async function (argv){
         };
     }
     if (clusterApi){
-        let response = await clusterApi.edit (params);
-
-        if (response){
+        try{
+            await clusterApi.edit (params);
             console.log ('Cluster updated.');
         }
-        else{
+        catch (err){
             console.error ('Could not update cluster. Check ' + settings.errorFile + ' file for more details.');
+            error.addError (err);
             process.exit (-1);
         }
     }
@@ -226,11 +239,13 @@ exports.getJson = async function (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
     if (clusterApi){
-        let file = await clusterApi.getWyliodrinJSON (argv.clusterId);
-        if (file)
+        try{
+            let file = await clusterApi.getWyliodrinJSON (argv.clusterId);
             console.log (JSON.stringify (file, null, 3));
-        else{
-            console.error ('Could not get file.');
+        }
+        catch (err){
+            console.error ('Could not get file. Check' + settings.errorFile + ' for more details.');
+            error.addError (err);
         }
     }
     else{

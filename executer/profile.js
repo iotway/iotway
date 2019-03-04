@@ -1,5 +1,4 @@
 const Table = require ('cli-table');
-const usersApi = require ('libiotway').users;
 
 const profileService = require ('../utils/profile');
 const nonce = require ('../utils/nonce');
