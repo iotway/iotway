@@ -13,8 +13,7 @@ const profileService = require ('../utils/profile');
 const tableBuilder = require ('../utils/table');
 const socketService = require ('../utils/socket');
 const nonce = require ('../utils/nonce');
-const errors = require ('../utils/error');
-const projectService = require ('../utils/project');
+const error = require ('../utils/error');
 
 const appApi = libwyliodrin.apps;
 const productApi = libwyliodrin.products;
@@ -22,7 +21,7 @@ const settingsApi = libwyliodrin.settings;
 const projectApi = libwyliodrin.projects;
 const userApi = libwyliodrin.users;
 
-const projectLanguages = projectService.languages;
+const projectSettingsFile = 'iotway.json';
 
 function print (data, prefix, channel){
     let lines = data.toString().split ('\n');
@@ -55,26 +54,32 @@ exports.init = async function (argv){
         let project;
         if (process.env.WYLIODRIN_PROJECT_ID){
             console.log ('Using environment configurations');
-            let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
-            if (onlineProject){
-                project = {
-                    name: normalizeProjectName (onlineProject.name),
-                    appId: onlineProject.appId,
-                    language: projectLanguages[onlineProject.language],
-                    id: onlineProject.projectId,
-                    platform: onlineProject.platform,
-                    ui: onlineProject.ui
-                };
+            if (projectApi){
                 try{
-                    fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project, null, 3));
+                    let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+                    if (onlineProject){
+                        project = {
+                            name: normalizeProjectName (onlineProject.name),
+                            appId: onlineProject.appId,
+                            language: projectLanguages[onlineProject.language],
+                            id: onlineProject.projectId,
+                            platform: onlineProject.platform,
+                            ui: onlineProject.ui
+                        };
+                    }
+                    else{
+                        console.error ('Project not found.');
+                        process.exit (-1);
+                    }
                 }
-                catch (e){
-                    errors.addError (e.message);
-                    console.error ('filesystem error.');
+                catch (err){
+                    console.error ('Could not get project info. Check' + settings.errorFile + ' for more details.');
+                    error.addError (err);
+                    process.exit (-1);
                 }
             }
-            else{
-                console.error ('Project not found.');
+            else {
+                console.error ('No session. Please login or select a different profile.');
                 process.exit (-1);
             }
         }
@@ -92,24 +97,36 @@ exports.init = async function (argv){
                 process.exit (-1);
             
             projectName = normalizeProjectName (projectName);
+            
+            let settings;
+            if (settingsApi){
+                try{
+                    settings = await settingsApi.get();
+                }
+                catch (err){
+                    console.error ('Could not get settings. Check' + settings.errorFile + ' for more details.');
+                    error.addError (err);
+                }
+            }
 
-            if (projectPlatform === undefined){
-                if (settingsApi){
-                    let settings = await settingsApi.get();
-                    if (settings){
-                        let platforms = Object.keys(settings.PLATFORM);
-                        projectPlatform = readlineSync.question ('platform (choose between ' + platforms.join() + '): ');
-                    }
-                    else{
-                        projectPlatform = readlineSync.question ('platform (log in or check website for supported platforms): ');
-                    }
+            if (projectPlatform === undefined){ 
+                if (settings){
+                    let platforms = Object.keys(settings.PLATFORM);
+                    projectPlatform = readlineSync.question ('platform (choose between ' + platforms.join() + '): ');
                 }
                 else{
                     projectPlatform = readlineSync.question ('platform (log in or check website for supported platforms): ');
                 }
             }
+
             if (projectLanguage === undefined){
-                projectLanguage = readlineSync.question ('project language (choose between '+Object.keys(projectService.languages).join()+'): ');
+                if (settings && settings.PLATFORM[projectPlatform] && settings.PLATFORM[projectPlatform].ui[projectUi]){
+                    let languages = settings.PLATFORM[projectPlatform].ui[projectUi].language;
+                    projectLanguage = readlineSync.question ('project language (choose between '+Object.keys(languages).join()+'): ');
+                }
+                else{
+                    projectLanguage = readlineSync.question ('project language (log in or check website for supported platforms): ');
+                }
             }
             project = {
                 name: projectName,
@@ -121,17 +138,33 @@ exports.init = async function (argv){
         }
         if (project.appId.substring (0, 5) !== 'local'){
             if (appApi){
-                let app = await appApi.get (project.appId);
-                if (!app){
-                    console.error ('Please provide a valid application id.');
-                    process.exit (-1);
+                try{
+                    let app = await appApi.get (project.appId);
+                    if (!app){
+                        console.error ('Please provide a valid application id.');
+                        process.exit (-1);
+                    }
+                }
+                catch (err){
+                    console.error ('Could not get app id. Check' + settings.errorFile + ' for more details.');
+                    error.addError (err);
                 }
             }
         }
         //Generate project structure
-        fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(project, null, 3));
-        fs.copySync(path.normalize (__dirname + '/../utils/project_templates/' + project.language),
+        try{
+            fs.writeFileSync (path.join(process.cwd(), projectSettingsFile), JSON.stringify(project, null, 3));
+            //TODO - download structure
+            fs.copySync(path.normalize (__dirname + '/../utils/project_templates/' + project.language),
                                 process.cwd());
+            //TODO - erase downloaded structure
+        }
+        catch (err){
+            console.error ('Filesystem error. Check' + settings.errorFile + ' for more details.');
+            error.addError (err);
+            process.exit (-1);
+        }
+
         //Generate package.json for js projects
         if (project.language === 'nodejs'){
             let user = {
@@ -139,12 +172,18 @@ exports.init = async function (argv){
                 name: ''
             };
             if (userApi){
-                let onlineUser = await userApi.get ();
-                if (onlineUser){
-                    user = onlineUser;
+                try{
+                    let onlineUser = await userApi.get ();
+                    if (onlineUser){
+                        user = onlineUser;
+                    }
+                }
+                catch (err){
+                    console.error ('Cannot get user data. Check' + settings.errorFile + ' for more details.');
+                    error.addError (err);
                 }
             }
-            let package = fs.readFileSync (path.normalize (__dirname + '/../utils/project_templates/package.json'), 'utf8');
+            let package = fs.readFileSync (path.normalize (__dirname + '/../utils/template_package.json'), 'utf8');
             let packageData = {
                 project: project,
                 user: user
@@ -157,6 +196,8 @@ exports.init = async function (argv){
         console.log ('Folder not empty. Please run command in an empty folder.');
     }
 };
+
+//todo - am ramas aici
 
 function build(projectSettings, settings, appId, version, sessionId, productId, cb){
     //Run make
@@ -172,7 +213,6 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
     })
     make.on ('exit', async (code)=>{
         if (code === 0){
-            //await projectApi.build (projectSettings.id);
             if (productId && settings.PLATFORM[projectSettings.platform].options && settings.PLATFORM[projectSettings.platform].options.binary){
                 let options = settings.PLATFORM[projectSettings.platform].options.binary;
                 let newFile = path.join (path.dirname (options), productId + path.extname (options));
