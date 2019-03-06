@@ -14,6 +14,7 @@ const tableBuilder = require ('../utils/table');
 const socketService = require ('../utils/socket');
 const nonce = require ('../utils/nonce');
 const error = require ('../utils/error');
+const errorFile = require ('../utils/settings').errorFile;
 
 const appApi = libwyliodrin.apps;
 const productApi = libwyliodrin.products;
@@ -73,7 +74,7 @@ exports.init = async function (argv){
                     }
                 }
                 catch (err){
-                    console.error ('Could not get project info. Check' + settings.errorFile + ' for more details.');
+                    console.error ('Could not get project info. Check' + errorFile + ' for more details.');
                     error.addError (err);
                     process.exit (-1);
                 }
@@ -104,7 +105,7 @@ exports.init = async function (argv){
                     settings = await settingsApi.get();
                 }
                 catch (err){
-                    console.error ('Could not get settings. Check' + settings.errorFile + ' for more details.');
+                    console.error ('Could not get settings. Check' + errorFile + ' for more details.');
                     error.addError (err);
                 }
             }
@@ -146,58 +147,92 @@ exports.init = async function (argv){
                     }
                 }
                 catch (err){
-                    console.error ('Could not get app id. Check' + settings.errorFile + ' for more details.');
+                    console.error ('Could not get app id. Check' + errorFile + ' for more details.');
                     error.addError (err);
                 }
             }
         }
         //Generate project structure
         try{
+            downloadTemplate (project.language, process.cwd());
             fs.writeFileSync (path.join(process.cwd(), projectSettingsFile), JSON.stringify(project, null, 3));
-            //TODO - download structure
-            fs.copySync(path.normalize (__dirname + '/../utils/project_templates/' + project.language),
-                                process.cwd());
-            //TODO - erase downloaded structure
         }
         catch (err){
-            console.error ('Filesystem error. Check' + settings.errorFile + ' for more details.');
+            console.error ('Filesystem error. Check' + errorFile + ' for more details.');
             error.addError (err);
             process.exit (-1);
         }
 
         //Generate package.json for js projects
         if (project.language === 'nodejs'){
-            let user = {
-                email: '',
-                name: ''
-            };
-            if (userApi){
-                try{
-                    let onlineUser = await userApi.get ();
-                    if (onlineUser){
-                        user = onlineUser;
+            try{
+                let package = fs.readFileSync (path.join(process.cwd(), 'package.json'), 'utf8');
+                let user = {
+                    email: '',
+                    name: ''
+                };
+                if (userApi){
+                    try{
+                        let onlineUser = await userApi.get ();
+                        if (onlineUser){
+                            user = onlineUser;
+                        }
+                    }
+                    catch (err){
+                        console.error ('Cannot get user data. Check' + errorFile + ' for more details.');
+                        error.addError (err);
                     }
                 }
+                
+                let packageData = {
+                    project: project,
+                    user: user
+                }
+                package = mustache.render (package, packageData);
+                try{
+                    fs.writeFileSync (path.join(process.cwd(), 'package.json'), package);
+                }
                 catch (err){
-                    console.error ('Cannot get user data. Check' + settings.errorFile + ' for more details.');
-                    error.addError (err);
+                    console.error ('Filesystem error. Could not generate package.json file.');
+                    console.error ('Check '+errorFile+' for more details.');
+                    error.add (err.stack);
                 }
             }
-            let package = fs.readFileSync (path.normalize (__dirname + '/../utils/template_package.json'), 'utf8');
-            let packageData = {
-                project: project,
-                user: user
+            catch (err){
+                console.error ('No package.json template. Did not generate package.json file');
             }
-            package = mustache.render (package, packageData);
-            fs.writeFileSync (path.join(process.cwd(), 'package.json'), package);
+        }
+
+        //Generate dockerfile if necessary
+        try{
+            let dockerFile = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
+            
+            let dockerData = {
+                REPOSITORY: settings.REPOSITORY,
+                DEPLOYER_DOMAIN: settings.DEPLOYER,
+                project: projectSettings,
+                arm: (settings.PLATFORM[projectSettings.platform].docker.platform === 'arm')? true: false
+            }
+            
+            dockerFile = mustache.render (dockerFile, dockerData);
+            let buildFolder = path.join(process.cwd(), 'build');
+            try{
+                fs.writeFileSync (path.join(buildFolder, 'dockerfile'), dockerFile);
+            }
+            catch (err){
+                console.error ('Could not generate dockerfile.');
+                console.error ('Filesystem error. Check '+errorFile+' for more details.');
+                error.add (err.stack);
+                process.exit (-1);
+            }
+        }
+        catch (err){
         }
     }
     else{
         console.log ('Folder not empty. Please run command in an empty folder.');
     }
 };
-
-//todo - am ramas aici
 
 function build(projectSettings, settings, appId, version, sessionId, productId, cb){
     //Run make
@@ -226,47 +261,40 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
                         });
                     }
                 }
-                catch (e){
-                    console.log ('Build error. ');
-                    errors.addError (e.message);
+                catch (err){
+                    console.error ('Build error. Check '+errorFile+' for more details.');
+                    error.addError (err.stack);
                     process.exit (-1);
                 }
             }
         }
         if (code === 0 && settings.PLATFORM[projectSettings.platform].docker.platform !== 'none'){
-            //Generate dockerfile
-            let docker = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
-            let dockerFile;
-            if (docker.substring (0, 7) != '#MANUAL'){
-                let libraries = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/libraries/' + projectSettings.language), 'utf8');
-                let dockerData = {
-                    REPOSITORY: settings.REPOSITORY,
-                    DEPLOYER_DOMAIN: settings.DEPLOYER,
-                    project: projectSettings,
-                    arm: (settings.PLATFORM[projectSettings.platform].docker.platform === 'arm')? true: false,
-                    dockerfile: docker,
-                    libraries: libraries
+            try{
+                // Build docker image
+                try{
+                    console.log ('Building docker image.');
+                    let dockerBuild = child_process.spawn ('docker', ['build', '-t', settings.REPOSITORY+'/'+appId+':'+version, '.'], {cwd: buildFolder});
+                    dockerBuild.stdout.on ('data', (data)=>{
+                        print (data, 'DOCKER BUILD', process.stdout);
+                    });
+                    dockerBuild.stderr.on ('data', (data)=>{
+                        print (data, 'DOCKER BUILD', process.stderr);
+                    });
+                    dockerBuild.on ('exit', (code)=>{
+                        cb (code);
+                    });
                 }
-                let dockerTemplate = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/project_template'), 'utf8');
-                dockerFile = mustache.render (dockerTemplate, dockerData);
+                catch (err){
+                    console.error ('Docker error. Check '+errorFile+' for more details.');
+                    error.add (err.stack);
+                    process.exit (-1);
+                }
             }
-            else{
-                dockerFile = docker;
+            catch (err){
+                console.error ('Build error. Check '+errorFile+' for more details.');
+                error.addError (err.stack);
+                process.exit (-1);
             }
-            let buildFolder = path.join(process.cwd(), 'build');
-            fs.writeFileSync (path.join(buildFolder, 'dockerfile'), dockerFile);
-            // Build docker image
-            console.log ('Building docker image.');
-            let dockerBuild = child_process.spawn ('docker', ['build', '-t', settings.REPOSITORY+'/'+appId+':'+version, '.'], {cwd: buildFolder});
-            dockerBuild.stdout.on ('data', (data)=>{
-                print (data, 'DOCKER BUILD', process.stdout);
-            });
-            dockerBuild.stderr.on ('data', (data)=>{
-                print (data, 'DOCKER BUILD', process.stderr);
-            });
-            dockerBuild.on ('exit', (code)=>{
-                cb (code);
-            });
         }
         else{
             cb (code);
@@ -279,6 +307,66 @@ function publish (profile, settings, projectSettings, version, semanticVersion, 
     if (settings.PLATFORM[projectSettings.platform].docker.platform !== 'none'){
         let buildFolder = path.join(process.cwd(), 'build');
         //Push docker image
+        try{
+            console.log ('Pushing docker image. Please wait.');
+            let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
+    
+            dockerPush.stdout.on ('data', (data)=>{
+                print (data, 'DOCKER PUSH', process.stdout);
+            });
+            dockerPush.stderr.on ('data', (data)=>{
+                print (data, 'DOCKER PUSH', process.stderr);
+            });
+            dockerPush.on ('exit', async (code)=>{
+                if (semanticVersion === undefined){
+                    let projectSettings = await getProjectSettings (process.cwd());
+                    if (projectSettings.language === 'nodejs'){
+                        let packagePath = path.join(process.cwd(), 'package.json');
+                        try{
+                            let projectData = require (packagePath);
+                            let projectVersion = projectData.version;
+                            if (projectVersion)
+                                semanticVersion = semver.valid (semver.coerce (projectVersion));
+                        }
+                        catch (e){
+                            semanticVersion = undefined;
+                        }
+                    }
+                }
+                if (appApi){
+                    try{
+                        await appApi.versions (appId);
+                        await appApi.editVersion (appId, version, {
+                            semver: semanticVersion,
+                            text: description
+                        });
+                    }
+                    catch (err){
+                        console.error ('Could not update semantic version. Check '+errorFile+' for more details.');
+                        error.add (err);
+                        process.exit (-1);
+                    }
+                }
+                else{
+                    console.error ('No credentials. Semantic version not changed.');
+                    process.exit (-1);
+                }
+                cb (code);
+            });
+        }
+        catch (err){
+            console.error ('Docker error. Check '+errorFile+' for more details.');
+            error.add (err.message);
+            process.exit (-1);
+        }
+    }
+    else cb(0);
+}
+
+async function publishDev (profile, settings, appId, version, cb){
+    let buildFolder = path.join(process.cwd(), 'build');
+    //Push docker image
+    try{
         console.log ('Pushing docker image. Please wait.');
         let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
 
@@ -289,67 +377,34 @@ function publish (profile, settings, projectSettings, version, semanticVersion, 
             print (data, 'DOCKER PUSH', process.stderr);
         });
         dockerPush.on ('exit', async (code)=>{
-            if (semanticVersion === undefined){
-                let projectSettings = await getProjectSettings (process.cwd());
-                if (projectSettings.language === 'nodejs'){
-                    let packagePath = path.join(process.cwd(), 'package.json');
-                    try{
-                        let projectData = require (packagePath);
-                        let projectVersion = projectData.version;
-                        if (projectVersion)
-                            semanticVersion = semver.valid (semver.coerce (projectVersion));
-                    }
-                    catch (e){
-                        semanticVersion = undefined;
-                    }
-                }
-            }
-            if (appApi){
-                await appApi.versions (appId);
-                await appApi.editVersion (appId, version, {
-                    semver: semanticVersion,
-                    text: description
-                });
-            }
-            else{
-                console.error ('No credentials. Please login or select a profile.');
-                process.exit (-1);
-            }
             cb (code);
         });
     }
-    else cb(0);
-}
-
-async function publishDev (profile, settings, appId, version, cb){
-    let buildFolder = path.join(process.cwd(), 'build');
-    //Push docker image
-
-    console.log ('Pushing docker image. Please wait.');
-    let dockerPush = child_process.spawn ('docker', ['push', settings.REPOSITORY+'/'+appId+':'+version], {cwd: buildFolder});
-
-    dockerPush.stdout.on ('data', (data)=>{
-        print (data, 'DOCKER PUSH', process.stdout);
-    });
-    dockerPush.stderr.on ('data', (data)=>{
-        print (data, 'DOCKER PUSH', process.stderr);
-    });
-    dockerPush.on ('exit', async (code)=>{
-        cb (code);
-    });
+    catch (err){
+        console.error ('Docker error. Check '+errorFile+' for more details.');
+        error.add (err.message);
+        process.exit (-1);
+    }
 }
 
 function dockerLogin (settings, profile, cb){
-    let dockerLogin = child_process.spawn ('docker', ['login', settings.REPOSITORY, '-u', profile.username, '-p', profile.token]);
-    dockerLogin.stdout.on ('data', (data)=>{
-        print (data, 'DOCKER LOGIN', process.stdout);
-    });
-    dockerLogin.stderr.on ('data', (data)=>{
-        print (data, 'DOCKER LOGIN', process.stderr);
-    });
-    dockerLogin.on ('exit', (code)=>{
-        cb (code);
-    });
+    try{
+        let dockerLogin = child_process.spawn ('docker', ['login', settings.REPOSITORY, '-u', profile.username, '-p', profile.token]);
+        dockerLogin.stdout.on ('data', (data)=>{
+            print (data, 'DOCKER LOGIN', process.stdout);
+        });
+        dockerLogin.stderr.on ('data', (data)=>{
+            print (data, 'DOCKER LOGIN', process.stderr);
+        });
+        dockerLogin.on ('exit', (code)=>{
+            cb (code);
+        });
+    }
+    catch (err){
+        console.error ('Docker error. Check '+errorFile+' for more details.');
+        error.add (err.message);
+        process.exit (-1);
+    }
 }
 
 async function checkVersion (version, versions){
@@ -361,10 +416,9 @@ async function checkVersion (version, versions){
 }
 
 function searchSettings (myPath){
-
     let files = fs.readdirSync (myPath);
-    if (files.indexOf('wylioproject.json') != -1)
-        return fs.readFileSync (path.join (myPath, 'wylioproject.json'), 'utf8');
+    if (files.indexOf(projectSettingsFile) != -1)
+        return fs.readFileSync (path.join (myPath, projectSettingsFile), 'utf8');
     else if (myPath === path.join (myPath, '..'))
         return null;
     else
@@ -373,15 +427,21 @@ function searchSettings (myPath){
 
 async function getProjectSettings (sourceFolder){
     try{
+        let projectSettings;
         let tempProjectSettings = searchSettings (sourceFolder);
         tempProjectSettings = JSON.parse (tempProjectSettings);
         if (tempProjectSettings.id){
-            projectSettings = await projectApi.get (tempProjectSettings.id);
-            if (!projectSettings){
-                projectSettings = tempProjectSettings;
-            }
-            else{
-                fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(projectSettings));
+            if (projectApi){
+                try{
+                    projectSettings = await projectApi.get (tempProjectSettings.id);
+                }
+                catch (err){
+                    console.error ('Could not get project settings.');
+                    error. add (err);
+                }
+                if (!projectSettings){
+                    projectSettings = tempProjectSettings;
+                }
             }
         }
         else{
@@ -395,6 +455,69 @@ async function getProjectSettings (sourceFolder){
         console.error ('Run wylio project init.');
         process.exit (-1);
     }
+}
+
+async function getOnlineProjectSettings (projectId){
+    if (projectApi){
+        try{
+            let onlineProject = await projectApi.get (projectId);
+            if (onlineProject){
+                return {
+                    name: onlineProject.name,
+                    appId: onlineProject.appId,
+                    language: projectLanguages[onlineProject.language],
+                    id: onlineProject.projectId,
+                    platform: onlineProject.platform,
+                    ui: onlineProject.ui
+                };
+            }
+            else{
+                console.error ('No project found.');
+                process.exit (-1);
+            }
+        }
+        catch (err){
+            console.error ('Cannot get project. Check '+errorFile+' for more details.');
+            error.add (err.stack);
+            process.exit (-1);
+        }
+    }
+    else{
+        console.error ('No session. Cannot get project.');
+        process.exit (-1);
+    }
+}
+
+async function containerVersion(appId){
+    if (appApi){
+        try{
+            let versions = await appApi.versions (appId);
+            return Math.max (...versions) + 1;
+        }
+        catch (err){
+            console.error ('Cannot get project versions. Check '+errorFile+' for more details.');
+            error.add (err.stack);
+        }
+    }
+    else{
+        console.error ('No session. The Docker image will be created but it cannot be published.');
+    }
+    console.log ('Version set to default value 1');
+    return 1;
+}
+
+function downloadTemplate(language, projectFolder){
+    let repo = ''+language;
+    try{
+        child_process.spawnSync('git clone '+repo+' ' + projectFolder +' && rm -rf '+projectFolder+'/.git');
+    }
+    catch (err){
+        console.error ('Cannot generate project template. Make sure git is intalled.');
+        console.error('Check '+errorFile+' for more details.');
+        error.add (err.stack);
+        process.exit (-1);
+    }
+    
 }
 
 exports.edit = async function  (argv){
@@ -416,9 +539,17 @@ exports.edit = async function  (argv){
     if (argv.ui){
         projectSettings.ui = argv.ui;
     }
-    fs.writeFileSync (path.join(process.cwd(), 'wylioproject.json'), JSON.stringify(projectSettings));
-    console.log ('Project updated successfully.');
+    try{
+        fs.writeFileSync (path.join(process.cwd(), projectSettingsFile), JSON.stringify(projectSettings));
+        console.log ('Project updated successfully.');
+    }
+    catch (err){
+        console.error ('Filesystem error. Check '+errorFile+' for more details.');
+        error.add (err.stack);
+        process.exit (-1);
+    }
 };
+
 
 exports.build = async function (argv){
     nonce.check (argv.nonce);
@@ -428,21 +559,7 @@ exports.build = async function (argv){
     let projectSettings;
     if (process.env.WYLIODRIN_PROJECT_ID){
         console.log ('Using environment configurations');
-        let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
-        if (onlineProject){
-            projectSettings = {
-                name: onlineProject.name,
-                appId: onlineProject.appId,
-                language: projectLanguages[onlineProject.language],
-                id: onlineProject.projectId,
-                platform: onlineProject.platform,
-                ui: onlineProject.ui
-            };
-        }
-        else{
-            console.error ('Cannot get project.');
-            process.exit (-1);
-        }
+        projectSettings = await getOnlineProjectSettings (process.env.WYLIODRIN_PROJECT_ID);
     }
     else{
         projectSettings = await getProjectSettings(process.cwd());
@@ -451,25 +568,17 @@ exports.build = async function (argv){
         version = 'dev';
     }
     else if (projectSettings.appId.substring (0, 5) !== 'local'){
-        let versions = await appApi.versions (projectSettings.appId);
+        let version = await containerVersion(projectSettings.appId);
         if (!await checkVersion (version, versions)){
             console.log ('The provided version is less or equal to the latest published version.');
             console.log ('The Docker image will be created but it cannot be published.');
         }
     }
-    let settings = await settingsApi.get ();
-    if (settings){
-        if (settings.PLATFORM[projectSettings.platform].docker.platform === 'none'){
-            build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, (code)=>{
-                //Docker logout
-                child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
-                process.exit (code);
-            });
-        }
-        else{
-            //Run docker login
-            dockerLogin (settings, profile, (code)=>{
-                if (code === 0){
+    if (settingsApi){
+        try{
+            let settings = await settingsApi.get ();
+            if (settings){
+                if (settings.PLATFORM[projectSettings.platform].docker.platform === 'none'){
                     build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, (code)=>{
                         //Docker logout
                         child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
@@ -477,13 +586,34 @@ exports.build = async function (argv){
                     });
                 }
                 else{
-                    process.exit (code);
+                    //Run docker login
+                    dockerLogin (settings, profile, (code)=>{
+                        if (code === 0){
+                            build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, (code)=>{
+                                //Docker logout
+                                child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
+                                process.exit (code);
+                            });
+                        }
+                        else{
+                            process.exit (code);
+                        }
+                    });
                 }
-            });
             }
+            else{
+                console.error ('No settings. Cannot generate docker image');
+                process.exit (-1);
+            }
+        }
+        catch (err){
+            console.error ('Could not get account settings. Check '+errorFile+' for more details.');
+            err.add (err.stack);
+            process.exit (-1);
+        }
     }
     else{
-        console.error ('Could not get account settings.');
+        console.error ('No session. Could not get account settings.');
         process.exit (-1);
     }
 };
@@ -498,69 +628,69 @@ exports.publish = async function (argv){
     let projectSettings;
     if (process.env.WYLIODRIN_PROJECT_ID){
         console.log ('Using environment configurations');
-        let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
-        if (onlineProject){
-            projectSettings = {
-                name: onlineProject.name,
-                appId: onlineProject.appId,
-                language: projectLanguages[onlineProject.language],
-                id: onlineProject.projectId,
-                platform: onlineProject.platform,
-                ui: onlineProject.ui
-            };
-        }
-        else{
-            console.error ('Cannot get project.');
-            process.exit (-1);
-        }
+        projectSettings = await getOnlineProjectSettings (process.env.WYLIODRIN_PROJECT_ID);
     }
     else{
         projectSettings = await getProjectSettings(process.cwd());
     }
-    let versions = await appApi.versions (projectSettings.appId);
-    if (!version && versions && versions.length > 0){
-        version = Math.max (...versions) + 1;
-    }
-    else if (!version){
-        version = 1;
-    }
-    else if (!await checkVersion (version, versions)){
+    let version = await containerVersion(projectSettings.appId);
+    if (!await checkVersion (version, versions)){
         console.error ('The provided version is less or equal to the latest published version.');
         console.error ('Cannot publish docker image.');
         process.exit (-1);
     }
-    let settings = await settingsApi.get ();
-    if (settings){
-        let appId = projectSettings.appId;
-        if (appId.substring (0, 5) === 'local'){
-            console.error ('This project has no application assigned.');
-            process.exit (-1);
-        }
-        app = await appApi.get (appId);
-        if (!app){
-            console.error ('Please provide an existing application id.');
-            process.exit (-1);
-        }
-        dockerLogin (settings, profile, async (code)=>{
-            if (code === 0){
-                build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, (code)=>{
-                    publish (profile, settings, projectSettings, version, semanticVersion, description, (code)=>{
-                        //Docker logout
-                        child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
-                        process.exit (code);
+    if (settingsApi){
+        try{
+            let settings = await settingsApi.get ();
+            if (settings){
+                let appId = projectSettings.appId;
+                if (appId.substring (0, 5) === 'local'){
+                    console.error ('This project has no application assigned.');
+                    process.exit (-1);
+                }
+                try{
+                    app = await appApi.get (appId);
+                    if (!app){
+                        console.error ('Please provide an existing application id.');
+                        process.exit (-1);
+                    }
+                    dockerLogin (settings, profile, async (code)=>{
+                        if (code === 0){
+                            build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, (code)=>{
+                                publish (profile, settings, projectSettings, version, semanticVersion, description, (code)=>{
+                                    //Docker logout
+                                    child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
+                                    process.exit (code);
+                                });
+                            });
+                        }
+                        else{
+                            process.exit (code);
+                        }
                     });
-                });
+                }
+                catch (err){
+                    console.error ('Could not get application. Check '+errorFile+' for more details.');
+                    error.add (err.stack);
+                    process.exit (-1);
+                }
             }
             else{
-                process.exit (code);
+                console.error ('Could not get general settings.');
+                process.exit (-1);
             }
-        });
+        }
+        catch (err){
+            console.error ('Could not get general settings. Check '+errorFile+' for more details.');
+            error.add (err.stack);
+            process.exit (-1);
+        }
     }
     else{
-        console.error ('Could not get account settings.');
+        console.error ('Could not get general settings.');
+        console.error ('No session. Log in or change profile.');
         process.exit (-1);
-    }
-   
+    }   
 };
 
 exports.run = async function (argv){
@@ -576,130 +706,85 @@ exports.run = async function (argv){
     let productId = argv.product_id;
     let app;
     if (productApi){
-        let product = await productApi.get (productId);
-        if (product){
-            if (product.type === 'development'){
-                if (product.status === 'offline'){
-                    console.error ('Device might be offline.');
-                }
-                let projectSettings;
-                if (process.env.WYLIODRIN_PROJECT_ID){
-                    console.log ('Using environment configurations');
-                    let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
-                    if (onlineProject){
-                        projectSettings = {
-                            name: onlineProject.name,
-                            appId: onlineProject.appId,
-                            language: projectLanguages[onlineProject.language],
-                            id: onlineProject.projectId,
-                            platform: onlineProject.platform,
-                            ui: onlineProject.ui
-                        };
+        try{
+            let product = await productApi.get (productId);
+            if (product){
+                if (product.type === 'development'){
+                    if (product.status === 'offline'){
+                        console.error ('Device might be offline.');
+                    }
+                    let projectSettings;
+                    if (process.env.WYLIODRIN_PROJECT_ID){
+                        console.log ('Using environment configurations');
+                        projectSettings = await getOnlineProjectSettings(process.env.WYLIODRIN_PROJECT_ID);
                     }
                     else{
-                        console.error ('Cannot get project.');
-                        process.exit (-1);
+                        projectSettings = await getProjectSettings(process.cwd());
                     }
-                }
-                else{
-                    projectSettings = await getProjectSettings(process.cwd());
-                }
-                let settings = await settingsApi.get ();
-                if (settings){
-                    if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
-                        build (projectSettings, settings, undefined, 'dev', argv['session-id'], productId, async (code)=>{
-                            if (code === 0){
-                                console.log ('Build successfully');
-                                process.exit (code);
+                    try{
+                        let settings = await settingsApi.get ();
+                        if (settings){
+                            if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
+                                build (projectSettings, settings, undefined, 'dev', argv['session-id'], productId, async (code)=>{
+                                    if (code === 0){
+                                        console.log ('Build successfully');
+                                        process.exit (code);
+                                    }
+                                    else{
+                                        console.error ('Build failed');
+                                        process.exit (code);
+                                    }
+                                });
                             }
                             else{
-                                console.error ('Build failed');
-                                process.exit (code);
-                            }
-                        });
-                    }
-                    else{
-                        let appId = projectSettings.appId;
-                        if (appId.substring (0, 5) === 'local'){
-                            console.error ('No application assigned.');
-                        }
-                        app = await appApi.get (appId);
-                        if (!app){
-                            console.error ('Please provide an existing application id.');
-                            process.exit (-1);
-                        }
-                        dockerLogin (settings, profile, (code)=>{
-                            if (code === 0){
-                                build (projectSettings, settings, appId, 'dev', undefined, undefined, async (code)=>{
-                                    if (code === 0){
-                                        await publishDev (profile, settings, appId, 'dev', (code)=>{
-                                            if (code === 0){
-                                                console.log ('Pinging device...');
-                                                let online = false;
-                                                let timer = setTimeout (function (){
-                                                    if (!online){
-                                                        console.error ('Ping timeout. Device offline.');
-                                                        process.exit (-1);
-                                                    }
-                                                }, 10000);
-                                                socketService.connect (profile.api, profile.token, ()=>{
-                                                    socketService.send ('packet', productId, {
-                                                        t: 'r',
-                                                        d:{
-                                                            a: 'p',
-                                                            id: appId
-                                                        }
-                                                    });
-                                                }, async (data)=>{
-                                                    if (data.t === 'r' && data.d.id === appId){
-                                                        if (data.d.a === 'e'){
-                                                            if (data.d.e === 'norun'){
-                                                                //TODO
-                                                            }
-                                                        }
-                                                        else if (data.d.a === 'k'){
-                                                            process.stdout.write (data.d.t);
-                                                        }
-                                                        else if (data.d.a === 's'){
-                                                            process.exit (0);
-                                                        }
-                                                        else if (data.d.a === 'p'){
-                                                            online = true;
-                                                            clearTimeout(timer);
-                                                            socketService.send ('packet', productId, {
-                                                                t: 'r',
-                                                                d: {
-                                                                    id: appId,
-                                                                    a: 'e',
-                                                                    priv: app.privileged,
-                                                                    net: app.network,
-                                                                    p: app.parameters,
-                                                                    c: process.stdout.columns,
-                                                                    r: process.stdout.rows,
-                                                                    reset: (argv.reset !== 'false')? true: false
+                                let appId = projectSettings.appId;
+                                if (appId.substring (0, 5) === 'local'){
+                                    console.error ('No application assigned.');
+                                }
+                                try{
+                                    app = await appApi.get (appId);
+                                    if (!app){
+                                        console.error ('Please provide an existing application id.');
+                                        process.exit (-1);
+                                    }
+                                    dockerLogin (settings, profile, (code)=>{
+                                        if (code === 0){
+                                            build (projectSettings, settings, appId, 'dev', undefined, undefined, async (code)=>{
+                                                if (code === 0){
+                                                    await publishDev (profile, settings, appId, 'dev', (code)=>{
+                                                        if (code === 0){
+                                                            console.log ('Pinging device...');
+                                                            let online = false;
+                                                            let timer = setTimeout (function (){
+                                                                if (!online){
+                                                                    console.error ('Ping timeout. Device offline.');
+                                                                    process.exit (-1);
                                                                 }
-                                                            });
-                                                            console.log ('Press Ctrl+q to exit the application.');
-                                                            console.log ('Press Ctrl+r to reload application.');
-                                                            process.stdin.setRawMode (true);
-                                                            process.stdin.setEncoding( 'utf8' );
-                                                            readline.emitKeypressEvents(process.stdin);
-                                                            process.stdin.on('keypress', async (str, key) => {
-                                                                if (key.ctrl && key.name === 'q'){
-                                                                    socketService.send ('packet', productId, {
-                                                                        t: 'r',
-                                                                        d: {
-                                                                            id: appId,
-                                                                            a:'s'
+                                                            }, 10000);
+                                                            socketService.connect (profile.api, profile.token, ()=>{
+                                                                socketService.send ('packet', productId, {
+                                                                    t: 'r',
+                                                                    d:{
+                                                                        a: 'p',
+                                                                        id: appId
+                                                                    }
+                                                                });
+                                                            }, async (data)=>{
+                                                                if (data.t === 'r' && data.d.id === appId){
+                                                                    if (data.d.a === 'e'){
+                                                                        if (data.d.e === 'norun'){
+                                                                            //TODO
                                                                         }
-                                                                    });
-                                                                    console.log ('');
-                                                                    console.log ('Disconnected');
-                                                                    process.exit (0);
-                                                                }
-                                                                else if (key.ctrl && key.name === 'r'){
-                                                                    let app = await appApi.get (appId);
-                                                                    if (app){
+                                                                    }
+                                                                    else if (data.d.a === 'k'){
+                                                                        process.stdout.write (data.d.t);
+                                                                    }
+                                                                    else if (data.d.a === 's'){
+                                                                        process.exit (0);
+                                                                    }
+                                                                    else if (data.d.a === 'p'){
+                                                                        online = true;
+                                                                        clearTimeout(timer);
                                                                         socketService.send ('packet', productId, {
                                                                             t: 'r',
                                                                             d: {
@@ -713,65 +798,117 @@ exports.run = async function (argv){
                                                                                 reset: (argv.reset !== 'false')? true: false
                                                                             }
                                                                         });
+                                                                        console.log ('Press Ctrl+q to exit the application.');
+                                                                        console.log ('Press Ctrl+r to reload application.');
+                                                                        process.stdin.setRawMode (true);
+                                                                        process.stdin.setEncoding( 'utf8' );
+                                                                        readline.emitKeypressEvents(process.stdin);
+                                                                        process.stdin.on('keypress', async (str, key) => {
+                                                                            if (key.ctrl && key.name === 'q'){
+                                                                                socketService.send ('packet', productId, {
+                                                                                    t: 'r',
+                                                                                    d: {
+                                                                                        id: appId,
+                                                                                        a:'s'
+                                                                                    }
+                                                                                });
+                                                                                console.log ('');
+                                                                                console.log ('Disconnected');
+                                                                                process.exit (0);
+                                                                            }
+                                                                            else if (key.ctrl && key.name === 'r'){
+                                                                                let app = await appApi.get (appId);
+                                                                                if (app){
+                                                                                    socketService.send ('packet', productId, {
+                                                                                        t: 'r',
+                                                                                        d: {
+                                                                                            id: appId,
+                                                                                            a: 'e',
+                                                                                            priv: app.privileged,
+                                                                                            net: app.network,
+                                                                                            p: app.parameters,
+                                                                                            c: process.stdout.columns,
+                                                                                            r: process.stdout.rows,
+                                                                                            reset: (argv.reset !== 'false')? true: false
+                                                                                        }
+                                                                                    });
+                                                                                }
+                                                                                else{
+                                                                                    console.error ('Application not found.');
+                                                                                }
+                                                                            }
+                                                                            else{
+                                                                                socketService.send ('packet', productId, {
+                                                                                    t: 'r',
+                                                                                    d: {
+                                                                                        id: appId,
+                                                                                        a:'k',
+                                                                                        t:str
+                                                                                    }
+                                                                                });
+                                                                            }
+                                                                        });
+                                                                        process.stdout.on('resize', function() {
+                                                                            socketService.send ('packet', productId, {
+                                                                                t: 'r',
+                                                                                d: {
+                                                                                    id: appId,
+                                                                                    a: 'r',
+                                                                                    c: process.stdout.columns,
+                                                                                    r: process.stdout.rows
+                                                                                }
+                                                                            });
+                                                                        }); 
                                                                     }
-                                                                    else{
-                                                                        console.error ('Application not found.');
-                                                                    }
-                                                                }
-                                                                else{
-                                                                    socketService.send ('packet', productId, {
-                                                                        t: 'r',
-                                                                        d: {
-                                                                            id: appId,
-                                                                            a:'k',
-                                                                            t:str
-                                                                        }
-                                                                    });
                                                                 }
                                                             });
-                                                            process.stdout.on('resize', function() {
-                                                                socketService.send ('packet', productId, {
-                                                                    t: 'r',
-                                                                    d: {
-                                                                        id: appId,
-                                                                        a: 'r',
-                                                                        c: process.stdout.columns,
-                                                                        r: process.stdout.rows
-                                                                    }
-                                                                });
-                                                            }); 
                                                         }
-                                                    }
-                                                });
-                                            }
-                                            else{
-                                                process.exit (code);
-                                            }
-                                        });
-                                    }
-                                    else{
-                                        process.exit (code);
-                                    }
-                                });
+                                                        else{
+                                                            process.exit (code);
+                                                        }
+                                                    });
+                                                }
+                                                else{
+                                                    process.exit (code);
+                                                }
+                                            });
+                                        }
+                                        else{
+                                            process.exit (code);
+                                        }
+                                    });
+                                }
+                                catch (err){
+                                    console.error ('Could not get application. Check '+errorFile+' for more details.');
+                                    error.add (err.stack);
+                                    process.exit (-1);
+                                }
                             }
-                            else{
-                                process.exit (code);
-                            }
-                        });
+                        }
+                        else{
+                            console.error ('Could not get account settings.');
+                            process.exit (-1);
+                        }
+                    }
+                    catch (err){
+                        console.error ('Could not get product. Check '+errorFile+' for more details.');
+                        error.add (err.stack);
+                        process.exit (-1);
                     }
                 }
                 else{
-                    console.error ('Could not get account settings.');
-                    process.exit (-1);
+                    console.log ('The provided product is not in development mode.');
+                    console.log ('Please provide the id of a product in development mode.');
                 }
             }
             else{
-                console.log ('The provided product is not in development mode.');
-                console.log ('Please provide the id of a product in development mode.');
+                console.log ('Please provide a valid product id.')
             }
         }
-        else{
-            console.log ('Please provide a valid project id.')
+        catch (err){
+            console.error ('Could not get product. Check '+errorFile+' for more details.');
+            error.add (err.stack);
+            process.exit (-1);
         }
     }
     else{
@@ -784,39 +921,46 @@ exports.list = async function (argv){
     nonce.check (argv.nonce);
     nonce.add (argv.nonce);
     if (projectApi){
-        let projects = await projectApi.list ();
-        if (argv.o === 'json')
-            console.log (JSON.stringify (projects, null, 3));
-        else if (projects && projects.length > 0){
-            let format = argv.f;
-            if (format === undefined)
-                format = tableBuilder.getDefaultProject ();
-            else if (format.indexOf ('wide') != -1){
-                format = tableBuilder.getWideProject ();
-            }
-            let header = tableBuilder.header (format, 'project');
-            let table = new Table({
-                head: header
-            });            
-            for (project of projects){
-                let values = [];
-                for (f of format){
-                    if (f === 'appId'){
-                        if (project.appId)
-                            values.push (project.appId);
-                        else
-                            values.push ('-');
-                    }
-                    else{
-                        values.push (project[f]);
-                    }
+        try{
+            let projects = await projectApi.list ();
+            if (argv.o === 'json')
+                console.log (JSON.stringify (projects, null, 3));
+            else if (projects && projects.length > 0){
+                let format = argv.f;
+                if (format === undefined)
+                    format = tableBuilder.getDefaultProject ();
+                else if (format.indexOf ('wide') != -1){
+                    format = tableBuilder.getWideProject ();
                 }
-                table.push (values);
+                let header = tableBuilder.header (format, 'project');
+                let table = new Table({
+                    head: header
+                });            
+                for (project of projects){
+                    let values = [];
+                    for (f of format){
+                        if (f === 'appId'){
+                            if (project.appId)
+                                values.push (project.appId);
+                            else
+                                values.push ('-');
+                        }
+                        else{
+                            values.push (project[f]);
+                        }
+                    }
+                    table.push (values);
+                }
+                console.log (table.toString());
             }
-            console.log (table.toString());
+            else
+                console.log ('No projects to display.');
         }
-        else
-            console.log ('No projects to display.');
+        catch (err){
+            console.error ('Could not get project. Check '+errorFile+' for more details.');
+            error.add (err.stack);
+            process.exit (-1);
+        }
     }
     else{
         console.error ('No credentials. Please login or select a profile.');
