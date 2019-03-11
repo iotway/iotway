@@ -126,17 +126,17 @@ async function getPlatforms ()
 			{
 				console.log ('Unable to load platforms');
 			}
-					return platforms;
+			return platforms;
 		}
 		catch (err){
 			console.error ('Could not get platforms. Check' + settings.errorFile + ' for more details.');
-      error.addError (err);
-      process.exit (-1);
+	  error.addError (err);
+	  process.exit (-1);
 		}
-  }
+	}
 	else{
-			console.error ('No credentials. Please login or select a profile.');
-			process.exit (-1);
+		console.error ('No credentials. Please login or select a profile.');
+		process.exit (-1);
 	}
 }
 
@@ -149,7 +149,7 @@ async function downloadImage (platform)
 		method: 'GET',
 		url: platform.link,
 		responseType: 'stream'
-	})
+	});
 	
 	let downloadTemp = path.join (downloadDir, 'emulator_temp.zip');
 
@@ -159,12 +159,12 @@ async function downloadImage (platform)
 	// return a promise and resolve when download finishes
 	await new Promise((resolve, reject) => {
 		response.data.on('end', () => {
-			resolve()
-		})
+			resolve();
+		});
 	
 		response.data.on('error', () => {
-			reject()
-		})
+			reject();
+		});
 	});
 	console.log ('Verifying emulator image for platform '+platform.platform);
 	try
@@ -194,12 +194,12 @@ async function runEmulator (productId)
 		catch (e)
 		{
 			console.error ('Could not get product. Check' + settings.errorFile + ' for more details.');
-      error.addError (err);
+	  error.addError (err);
 		}
 		let server = express ();
 		server.get ('/wyliodrin.json', function (req, res)
 		{
-			console.log ('Sending wyliodrin.json')
+			console.log ('Sending wyliodrin.json');
 			res.sendFile (path.join (getEmulatorsDir (PRODUCTS), productId, 'wyliodrin.json'));
 		});
 		let port = 0;
@@ -215,7 +215,7 @@ async function runEmulator (productId)
 					resolve ();
 				}
 			});
-		})
+		});
 		let title = productId;
 		if (product && product.name) title = product.name;
 		let parameters = ['-name', title, '-net', 'nic', '-net', 'user,hostfwd=tcp::5022-:22,guestfwd=tcp:10.0.2.17:8000-tcp:127.0.0.1:'+port];
@@ -301,7 +301,7 @@ async function newEmulator (clusterId, productId, type)
 			}
 			else
 			{
-			console.log ('There is no emulator available for the platform '+cluster.platform);
+				console.log ('There is no emulator available for the platform '+cluster.platform);
 			}
 		}
 		else
@@ -319,7 +319,7 @@ module.exports.images = async (argv) => {
 	let images = await getImages ();
 	if (argv.o === 'json')
 		console.log (JSON.stringify (images, null, 3));
-    else if (images && images.length > 0){
+	else if (images && images.length > 0){
 		let format = argv.f;
 		if (format === undefined)
 			format = tableBuilder.getDefaultEmulatorImage ();
@@ -335,7 +335,7 @@ module.exports.images = async (argv) => {
 			for (f of format){
 				if (image[f])
 				{
-					values.push (image[f])
+					values.push (image[f]);
 				}
 				else
 				if (image.qemu && image.qemu[f])
@@ -358,7 +358,7 @@ module.exports.list = async (argv) => {
 	let emulators = await getEmulators ();
 	if (argv.o === 'json')
 		console.log (JSON.stringify (emulators, null, 3));
-    else if (emulators && emulators.length > 0){
+	else if (emulators && emulators.length > 0){
 		let format = argv.f;
 		if (format === undefined)
 			format = tableBuilder.getDefaultEmulator ();
@@ -374,7 +374,7 @@ module.exports.list = async (argv) => {
 			for (f of format){
 				if (image[f])
 				{
-					values.push (image[f])
+					values.push (image[f]);
 				}
 				else
 				if (image.qemu && image.qemu[f])
@@ -397,7 +397,7 @@ module.exports.platforms = async (argv) => {
 	let platforms = await getPlatforms ();
 	if (argv.o === 'json')
 		console.log (JSON.stringify (platforms, null, 3));
-    else if (platforms && platforms.length > 0){
+	else if (platforms && platforms.length > 0){
 		let format = argv.f;
 		if (format === undefined)
 			format = tableBuilder.getDefaultEmulatorPlatform ();
@@ -413,7 +413,7 @@ module.exports.platforms = async (argv) => {
 			for (f of format){
 				if (platform[f])
 				{
-					values.push (platform[f])
+					values.push (platform[f]);
 				}
 				else
 				if (platform.qemu && platform.qemu[f])
@@ -490,7 +490,7 @@ async function setupEmulator (platform, productId)
 						// file entry
 							zipfile.openReadStream(entry, function(err, readStream) {
 								if (err) reject (err);
-								readStream.on("end", function() {
+								readStream.on('end', function() {
 									zipfile.readEntry();
 								});
 								readStream.pipe(fs.createWriteStream (path.join (emulatorDir, entry.fileName)));

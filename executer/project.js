@@ -25,26 +25,26 @@ const userApi = libwyliodrin.users;
 const projectSettingsFile = 'iotway.json';
 
 function print (data, prefix, channel){
-    let lines = data.toString().split ('\n');
-    if (lines[lines.length-1] === '\n'){
-        lines.splice (lines.length-1, 1);
-    }
-    for (let l of lines){
-        if (l.length > 0)
-            channel.write (prefix+'> '+l+'\n');
-    }
+	let lines = data.toString().split ('\n');
+	if (lines[lines.length-1] === '\n'){
+		lines.splice (lines.length-1, 1);
+	}
+	for (let l of lines){
+		if (l.length > 0)
+			channel.write (prefix+'> '+l+'\n');
+	}
 }
 
 function normalizeProjectName (name){
-    //parse project name and delete all illegal characters
-    name = name.toLowerCase();
-    let chars = name.split ('');
-    chars = _.map (chars, (c)=>{
-        if (c.toLowerCase() !== c.toUpperCase())
-            return c;
-        return '_';
-    });
-    return chars.join('');
+	//parse project name and delete all illegal characters
+	name = name.toLowerCase();
+	let chars = name.split ('');
+	chars = _.map (chars, (c)=>{
+		if (c.toLowerCase() !== c.toUpperCase())
+			return c;
+		return '_';
+	});
+	return chars.join('');
 }
 
 exports.init = async function (argv){
@@ -110,15 +110,15 @@ exports.init = async function (argv){
                 }
             }
 
-            if (projectPlatform === undefined){ 
-                if (settings){
-                    let platforms = Object.keys(settings.PLATFORM);
-                    projectPlatform = readlineSync.question ('platform (choose between ' + platforms.join() + '): ');
-                }
-                else{
-                    projectPlatform = readlineSync.question ('platform (log in or check website for supported platforms): ');
-                }
-            }
+			if (projectPlatform === undefined){ 
+				if (settings){
+					let platforms = Object.keys(settings.PLATFORM);
+					projectPlatform = readlineSync.question ('platform (choose between ' + platforms.join() + '): ');
+				}
+				else{
+					projectPlatform = readlineSync.question ('platform (log in or check website for supported platforms): ');
+				}
+			}
 
             if (projectLanguage === undefined){
                 if (settings && settings.PLATFORM[projectPlatform] && settings.PLATFORM[projectPlatform].ui[projectUi]){
@@ -408,11 +408,11 @@ function dockerLogin (settings, profile, cb){
 }
 
 async function checkVersion (version, versions){
-    if (versions && versions.length > 0){
-        let max = Math.max (...versions);
-        return version > max;
-    }
-    return false;
+	if (versions && versions.length > 0){
+		let max = Math.max (...versions);
+		return version > max;
+	}
+	return false;
 }
 
 function searchSettings (myPath){
