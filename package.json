@@ -9,7 +9,53 @@
     "iotway": "iotway.js"
   },
   "scripts": {
-    "start": "node iotway.js"
+    "start": "node iotway.js",
+    "lint" : "eslint ."
+  },
+  "eslintConfig": {
+    "env": {
+      "es6": true,
+      "node": true,
+      "browser": true,
+      "mocha": false
+    },
+    "globals": {
+      "node": true
+    },
+    "parserOptions": {
+      "ecmaVersion": 2018,
+      "sourceType": "script"
+    },
+    "extends": [
+      "eslint:recommended"
+    ],
+    "rules": {
+      "indent": [
+        "error",
+        "tab",
+        {
+          "SwitchCase": 1
+        }
+      ],
+      "linebreak-style": [
+        "error",
+        "unix"
+      ],
+      "no-console": [
+        "warn"
+      ],
+      "quotes": [
+        "error",
+        "single"
+      ],
+      "semi": [
+        "error",
+        "always"
+      ],
+      "require-await": [
+        "error"
+      ]
+    }
   },
   "dependencies": {
     "axios": "^0.17.1",

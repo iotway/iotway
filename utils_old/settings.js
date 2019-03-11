@@ -5,8 +5,8 @@ const fs = require ('fs');
 const homeDir = os.homedir();
 
 if (!fs.existsSync (path.normalize (homeDir+'/.wylio'))){
-    fs.mkdirSync (path.normalize (homeDir+'/.wylio'));
-    fs.mkdirSync (path.normalize (homeDir+'/.wylio/profiles'));
+	fs.mkdirSync (path.normalize (homeDir+'/.wylio'));
+	fs.mkdirSync (path.normalize (homeDir+'/.wylio/profiles'));
 }
 
 const baseDir = path.normalize (homeDir+'/.wylio/');
@@ -14,9 +14,9 @@ const profilesDir = path.normalize (homeDir+'/.wylio/profiles/');
 const profileFile = path.normalize (homeDir+'/.wylio/profile');
 
 module.exports = {
-    baseDir: baseDir,
-    profilesDir: profilesDir,
-    profileFile: profileFile,
-    defaultProfileName: 'default.json',
-    socketPath: '/socket/ui'
+	baseDir: baseDir,
+	profilesDir: profilesDir,
+	profileFile: profileFile,
+	defaultProfileName: 'default.json',
+	socketPath: '/socket/ui'
 };

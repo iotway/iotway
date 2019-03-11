@@ -9,7 +9,7 @@ const libiotway = require ('libiotway');
 const profileService = require ('./utils/profile');
 let profile = profileService.getCurrentProfile().profile;
 if (profile.api){
-    libiotway.init(profile.api, profile.token);
+	libiotway.init(profile.api, profile.token);
 }
 
 yargs = require ('./builder/user')(yargs, require ('./executer/user'));
@@ -24,20 +24,20 @@ yargs = require ('./builder/remote')(yargs, require ('./executer/remote'));
 yargs = require ('./builder/project')(yargs, require ('./executer/project'));
 
 yargs.help()
-.check ((argv)=>{
-  if (_.indexOf (commands, argv._[0]) != -1)
-      return true;
-  throw new Error ('Invalid command.');
-})
-.demandCommand()
-.option ('output', {
-  alias: 'o',
-  default: 'human',
-  global: true,
-  choices: ['human', 'json']
-})
-.option ('nonce', {
-  global: true,
-  type: 'string'
-})
-.argv
+	.check ((argv)=>{
+		if (_.indexOf (commands, argv._[0]) != -1)
+			return true;
+		throw new Error ('Invalid command.');
+	})
+	.demandCommand()
+	.option ('output', {
+		alias: 'o',
+		default: 'human',
+		global: true,
+		choices: ['human', 'json']
+	})
+	.option ('nonce', {
+		global: true,
+		type: 'string'
+	})
+	.argv;

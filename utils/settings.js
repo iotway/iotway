@@ -11,16 +11,16 @@ const profileFile = path.join (settingsDir, 'profile');
 const errorFile = path.join (settingsDir, 'error.log');
 
 if (!fs.existsSync (settingsDir)){
-    fs.mkdirSync (settingsDir);
-    fs.mkdirSync (profilesDir);
+	fs.mkdirSync (settingsDir);
+	fs.mkdirSync (profilesDir);
 }
 
 module.exports = {
-    settingsDir: settingsDir,
-    profilesDir: profilesDir,
-    profileFile: profileFile,
-    errorFile: errorFile,
-    defaultProfileName: 'default',
-    socketPath: '/socket/ui',
-    executor: 'iotway'
+	settingsDir: settingsDir,
+	profilesDir: profilesDir,
+	profileFile: profileFile,
+	errorFile: errorFile,
+	defaultProfileName: 'default',
+	socketPath: '/socket/ui',
+	executor: 'iotway'
 };

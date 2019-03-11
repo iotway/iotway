@@ -6,66 +6,66 @@ const profileService = require ('../utils/profile');
 const error = require ('../utils/error');
 
 module.exports.login = async function (argv){
-    nonce.check (argv.nonce);
-    nonce.add (argv.nonce);
-    let username = argv.username;
-    let password = argv.password;
-    let host = argv.host;
-    if (username === undefined){
-        username = readlineSync.question ('username: ');
-    }
-    if (password === undefined){
-        password = readlineSync.question ('password: ',{hideEchoBack:true});
-    }
-    if (host === undefined){
-        let currentProfile = profileService.getCurrentProfile().profile;
-        if (currentProfile.api)
-            host = currentProfile.api;
-        else
-            host = readlineSync.question ('host: ');
-    }
-    if (host.substring (0, 4) != 'http')
-        host = 'https://'+host;
-    libiotway = libiotway.init (host)
-    usersApi = libiotway.users;
-    try{
-        let token = await usersApi.login ({
-            username: username,
-            password: password
-        });
-        let profileName = profileService.getCurrentProfileName();
-        profileService.storeProfileData (profileName, {username: username, token: token, api: host});
-    }
-    catch (err){
-        console.error ('Log in failed');
-        error.addError (err);
-        process.exit (-1);
-    }
+	nonce.check (argv.nonce);
+	nonce.add (argv.nonce);
+	let username = argv.username;
+	let password = argv.password;
+	let host = argv.host;
+	if (username === undefined){
+		username = readlineSync.question ('username: ');
+	}
+	if (password === undefined){
+		password = readlineSync.question ('password: ',{hideEchoBack:true});
+	}
+	if (host === undefined){
+		let currentProfile = profileService.getCurrentProfile().profile;
+		if (currentProfile.api)
+			host = currentProfile.api;
+		else
+			host = readlineSync.question ('host: ');
+	}
+	if (host.substring (0, 4) != 'http')
+		host = 'https://'+host;
+	libiotway = libiotway.init (host);
+	let usersApi = libiotway.users;
+	try{
+		let token = await usersApi.login ({
+			username: username,
+			password: password
+		});
+		let profileName = profileService.getCurrentProfileName();
+		profileService.storeProfileData (profileName, {username: username, token: token, api: host});
+	}
+	catch (err){
+		console.error ('Log in failed');
+		error.addError (err);
+		process.exit (-1);
+	}
 };
 
 module.exports.logout = async function (argv){
-    nonce.check (argv.nonce);
-    nonce.add (argv.nonce);
-    let usersApi = libiotway.get().users;
-    if (usersApi){
-        try{
-            await usersApi.logout();
-            let currentProfile = profileService.getCurrentProfile();
-            let currentProfileData = currentProfile.profile;
-            if (currentProfileData.token)
-                delete currentProfileData.token;
-            if (currentProfileData.username)
-                delete currentProfileData.username;
-            profileService.storeProfileData (currentProfile.name, currentProfileData);
-        }
-        catch (err){
-            console.error ('Session expired. Log in or select different profile.');
-            error.addError (err);
-            process.exit (-1);
-        }
-    }
-    else{
-        console.error ('No credentials. Please login or select a profile.');
-        process.exit (-1);
-    }
+	nonce.check (argv.nonce);
+	nonce.add (argv.nonce);
+	let usersApi = libiotway.get().users;
+	if (usersApi){
+		try{
+			await usersApi.logout();
+			let currentProfile = profileService.getCurrentProfile();
+			let currentProfileData = currentProfile.profile;
+			if (currentProfileData.token)
+				delete currentProfileData.token;
+			if (currentProfileData.username)
+				delete currentProfileData.username;
+			profileService.storeProfileData (currentProfile.name, currentProfileData);
+		}
+		catch (err){
+			console.error ('Session expired. Log in or select different profile.');
+			error.addError (err);
+			process.exit (-1);
+		}
+	}
+	else{
+		console.error ('No credentials. Please login or select a profile.');
+		process.exit (-1);
+	}
 };
