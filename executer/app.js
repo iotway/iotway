@@ -53,9 +53,9 @@ exports.list = async function (argv){
 				let table = new Table({
 					head: header
 				});
-				for (app of apps){
+				for (let app of apps){
 					let values = [];
-					for (f of format){
+					for (let f of format){
 						values.push (app[f]);
 					}
 					table.push (values);

@@ -48,9 +48,9 @@ exports.list = async function (argv){
 				format.push ('id');
 				format.splice (targetIndex, 1);
 			}          
-			for (depl of deployments){
+			for (let depl of deployments){
 				let values = [];
-				for (f of format){
+				for (let f of format){
 					if (f === 'rollback' &&  (depl[f] === null || depl[f] === undefined)) 
 						values.push ('');
 					else

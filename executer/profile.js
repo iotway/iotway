@@ -2,6 +2,7 @@ const Table = require ('cli-table');
 
 const profileService = require ('../utils/profile');
 const nonce = require ('../utils/nonce');
+const settings = require ('../utils/settings');
 
 exports.delete = function (argv){
 	nonce.check (argv.nonce);
@@ -39,7 +40,7 @@ exports.list = function (argv){
 				profile.selected = true;  
 				foundSelectedProfile = true;
 			}
-			profilesJson.push (currentProfile);
+			profilesJson.push (currentProfileName);
 		}
 		else {
 			if (currentProfileName === profileName){

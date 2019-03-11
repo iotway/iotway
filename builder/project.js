@@ -3,7 +3,7 @@ const commands = ['init', 'run', 'list', 'build', 'publish', 'edit'];
 const projectService = require ('../service/project');
 module.exports = function (yargs, handler){
 	yargs.command(['project', 'proj'], 'Project settings.',
-	 (yargs) => {
+		(yargs) => {
 			yargs.command ('list', 'List all current user\'s online projects.', {}, handler.list)
 				.command ('init',  'Creates a new project template.', {
 					name: {
@@ -79,8 +79,8 @@ module.exports = function (yargs, handler){
 						return true;
 					throw new Error ('Invalid command.');
 				})
-	   .help ()
-	   .demandCommand ();
-	 });
+				.help ()
+				.demandCommand ();
+		});
 	return yargs;
 };

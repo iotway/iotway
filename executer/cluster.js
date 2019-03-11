@@ -47,7 +47,7 @@ exports.list = async function (argv){
 	nonce.add (argv.nonce);
 	if (clusterApi){
 		try{
-			clusters = await clusterApi.list ();
+			let clusters = await clusterApi.list ();
 			if (argv.o === 'json')
 				console.log (JSON.stringify (clusters, null, 3));
 			else if (clusters && clusters.length > 0){
@@ -61,9 +61,9 @@ exports.list = async function (argv){
 				let table = new Table({
 					head: header
 				});            
-				for (cluster of clusters){
+				for (let cluster of clusters){
 					let values = [];
-					for (f of format){
+					for (let f of format){
 						values.push (cluster[f]);
 					}
 					table.push (values);
@@ -95,7 +95,7 @@ exports.get = async function (argv){
 		}
 		catch (err){
 			console.log ('Cluster not found.');
-			error.addError (response.err);
+			error.addError (err);
 		}
 	}
 	else{

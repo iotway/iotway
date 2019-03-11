@@ -3,7 +3,7 @@ const _ = require ('lodash');
 
 module.exports = function (yargs, handler){
 	yargs.command (['user', 'u'], 'User settings.', 
-	 (yargs) =>{
+		(yargs) =>{
 			yargs.command ('login', 'login', {
 				username: {
 					alias: 'u',
@@ -29,6 +29,6 @@ module.exports = function (yargs, handler){
 				})
 				.help ()
 				.demandCommand ();
-	 });
+		});
 	return yargs;
 };

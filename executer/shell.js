@@ -64,10 +64,7 @@ exports.shell = async function (argv){
 									a: 'o',
 									c: process.stdout.columns,
 									r: process.stdout.rowsHe
-
-
-									Helo
-								}Hell
+								}
 							});
 						}
 					}
@@ -83,4 +80,4 @@ exports.shell = async function (argv){
 		error.addError (err);
 		process.exit (-1);
 	}
-};Jel
+};

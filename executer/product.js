@@ -10,7 +10,7 @@ const error = require ('../utils/error');
 exports.provision = async function (argv){
 	nonce.check (argv.nonce);
 	nonce.add (argv.nonce);
-	params = {
+	let params = {
 		clusterId: argv.clusterId,
 		type: argv.type,
 		shell: argv.shell,
@@ -67,9 +67,9 @@ exports.list = async function (argv){
 				let table = new Table({
 					head: header
 				});  
-				for (product of products){
+				for (let product of products){
 					let values = [];
-					for (f of format){
+					for (let f of format){
 						if (f === 'cpu'){
 							if (product.statistics && product.statistics.instant && product.statistics.instant.cpu)
 								values.push (product.statistics.instant.cpu.toFixed(2));
@@ -340,7 +340,7 @@ exports.logs = async function (argv){
 					}
 					else if (argv.type === 'possible')
 						logs = product.possibleErrors;
-					for (log of logs)
+					for (let log of logs)
 						console.log (log.date + ': ' + log.about + ': ' + log.message);
 				}
 				else{
@@ -372,7 +372,7 @@ exports.applications = async function (argv){
 				let existingApps = [];
 				if (product.statistics && product.statistics.instant && product.statistics.instant.apps)
 					existingApps = product.statistics.instant.apps;
-				for (app of existingApps){
+				for (let app of existingApps){
 					apps[app.appId] = {
 						existingVersion: app.version
 					};

@@ -11,6 +11,7 @@ const yauzl = require ('yauzl');
 const spawn = require ('child_process').spawn;
 const express = require ('express');
 const libiotway = require ('libiotway').get();
+const error = require ('../utils/error');
 
 const emulatorApi = libiotway.emulators;
 const clusterApi = libiotway.clusters;
@@ -27,7 +28,7 @@ function getEmulatorsDir (item = DIR)
 	return emulatorsPath;
 }
 
-async function getEmulator (productId)
+function getEmulator (productId)
 {
 	let emulator = null;
 	try
@@ -130,8 +131,8 @@ async function getPlatforms ()
 		}
 		catch (err){
 			console.error ('Could not get platforms. Check' + settings.errorFile + ' for more details.');
-	  error.addError (err);
-	  process.exit (-1);
+			error.addError (err);
+			process.exit (-1);
 		}
 	}
 	else{
@@ -170,7 +171,7 @@ async function downloadImage (platform)
 	try
 	{
 		let entries = await readEmulatorImage (downloadTemp);
-		if (!entries.hda) reject ('no hda found');
+		if (!entries.hda) throw new Error ('no hda found');
 		fs.renameSync (downloadTemp, path.join (downloadDir, 'emulator.zip'));
 		fs.writeFileSync (path.join (downloadDir, 'emulator.json'), JSON.stringify(platform, null, 3));
 	}
@@ -191,10 +192,10 @@ async function runEmulator (productId)
 		{
 			product = await productApi.get (productId);
 		}
-		catch (e)
+		catch (err)
 		{
 			console.error ('Could not get product. Check' + settings.errorFile + ' for more details.');
-	  error.addError (err);
+			error.addError (err);
 		}
 		let server = express ();
 		server.get ('/wyliodrin.json', function (req, res)
@@ -279,11 +280,21 @@ async function newEmulator (clusterId, productId, type)
 			let platform = provisioningFile.platform;
 			if (!platform) 
 			{
-				let emulatorPlatform = await getPlatform (cluster.platform);
-				if (emulatorPlatform)
-				{
-					await downloadImage (emulatorPlatform);
-					platform = await getEmulatorLocalPlatform (cluster.platform);
+				if (clusterApi){
+					try{
+						let cluster = await clusterApi.get(clusterId);
+						let emulatorPlatform = await getPlatform (cluster.platform);
+						if (emulatorPlatform)
+						{
+							await downloadImage (emulatorPlatform);
+							platform = await getEmulatorLocalPlatform (cluster.platform);
+						}
+					}
+					catch (err){
+						console.error ('Could not get cluster. Check' + settings.errorFile + ' for more details.');
+						error.addError (err);
+						process.exit (-1);
+					}
 				}
 			}
 			if (platform)
@@ -301,12 +312,12 @@ async function newEmulator (clusterId, productId, type)
 			}
 			else
 			{
-				console.log ('There is no emulator available for the platform '+cluster.platform);
+				console.log ('There is no emulator available for the platform.');
 			}
 		}
 		else
 		{
-			console.log ('There is no cluster with id '+argv.clusterId);
+			console.log ('There is no cluster with id '+clusterId);
 		}
 	}
 	else
@@ -332,7 +343,7 @@ module.exports.images = async (argv) => {
 		});  
 		for (let image of images){
 			let values = [];
-			for (f of format){
+			for (let f of format){
 				if (image[f])
 				{
 					values.push (image[f]);
@@ -371,7 +382,7 @@ module.exports.list = async (argv) => {
 		});  
 		for (let image of emulators){
 			let values = [];
-			for (f of format){
+			for (let f of format){
 				if (image[f])
 				{
 					values.push (image[f]);
@@ -410,7 +421,7 @@ module.exports.platforms = async (argv) => {
 		});  
 		for (let platform of platforms){
 			let values = [];
-			for (f of format){
+			for (let f of format){
 				if (platform[f])
 				{
 					values.push (platform[f]);
@@ -466,7 +477,7 @@ async function setupEmulator (platform, productId)
 {
 	let emulatorDir = path.join (getEmulatorsDir (PRODUCTS), productId);
 	let emulatorImage = path.join (getEmulatorsDir (IMAGES), platform, 'emulator.zip');
-	let emulatorPlatform = path.join (getEmulatorsDir (IMAGES), platform, 'emulator.json');
+	//let emulatorPlatform = path.join (getEmulatorsDir (IMAGES), platform, 'emulator.json');
 	try
 	{
 		await new Promise ((resolve, reject) => {

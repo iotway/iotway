@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "node iotway.js",
-    "lint" : "eslint ."
+    "lint": "eslint ."
   },
   "eslintConfig": {
     "env": {
@@ -32,18 +32,13 @@
     "rules": {
       "indent": [
         "error",
-        "tab",
-        {
-          "SwitchCase": 1
-        }
+        "tab"
       ],
       "linebreak-style": [
         "error",
         "unix"
       ],
-      "no-console": [
-        "warn"
-      ],
+      "no-console": "off",
       "quotes": [
         "error",
         "single"
@@ -76,5 +71,8 @@
     "ws": "^5.1.1",
     "yargs": "^11.0.0",
     "yauzl": "^2.10.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.15.1"
   }
 }
