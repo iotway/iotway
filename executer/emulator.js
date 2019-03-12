@@ -264,7 +264,7 @@ async function newEmulator (clusterId, productId, type)
 		if (!provisioningFile){
 			if (clusterApi){
 				try{
-					provisioningFile = await clusterApi.getWyliodrinJSON (clusterId);
+					provisioningFile = await clusterApi.getProvisioningFile(clusterId);
 				}
 				catch (err){
 					console.error ('Could not get provisoning file. Check' + settings.errorFile + ' for more details.');

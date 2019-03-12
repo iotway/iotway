@@ -252,7 +252,7 @@ exports.getJson = async function (argv){
 	nonce.add (argv.nonce);
 	if (productApi){
 		try{
-			let file = await productApi.getWyliodrinJSON (argv.productId);
+			let file = await productApi.getProvisioningFile(argv.productId);
 			console.log (JSON.stringify (file, null, 3));
 		}
 		catch(err){

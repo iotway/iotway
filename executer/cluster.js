@@ -241,7 +241,7 @@ exports.getJson = async function (argv){
 	nonce.add (argv.nonce);
 	if (clusterApi){
 		try{
-			let file = await clusterApi.getWyliodrinJSON (argv.clusterId);
+			let file = await clusterApi.getProvisioningFile(argv.clusterId);
 			console.log (JSON.stringify (file, null, 3));
 		}
 		catch (err){

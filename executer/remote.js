@@ -1,6 +1,6 @@
 const profileService = require ('../utils/profile');
 const socketService = require ('../utils/socket');
-const productApi = require ('libwyliodrin').get().products;
+const productApi = require ('libiotway').get().products;
 //const readline = require('readline');
 const nonce = require ('../utils/nonce');
 const net = require('net');

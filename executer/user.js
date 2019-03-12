@@ -26,12 +26,19 @@ module.exports.login = async function (argv){
 	}
 	if (host.substring (0, 4) != 'http')
 		host = 'https://'+host;
-	libiotway = libiotway.init (host);
-	let usersApi = libiotway.users;
+	if (host[host.length-1] == '/'){
+		console.log('tai din el ultimul caracter: ' + host[host.length-1]);
+		host = host.substring(0, host.length-1);
+		
+	}
+
+	let usersApi = libiotway.init(host).users;
+
 	try{
 		let token = await usersApi.login ({
 			username: username,
-			password: password
+			password: password,
+			host: host
 		});
 		let profileName = profileService.getCurrentProfileName();
 		profileService.storeProfileData (profileName, {username: username, token: token, api: host});
