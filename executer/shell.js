@@ -1,6 +1,6 @@
 const profileService = require ('../utils/profile');
 const socketService = require ('../utils/socket');
-const productApi = require ('libiotway').get().products;
+const productApi = require ('../api').get().products;
 const readline = require('readline');
 const nonce = require ('../utils/nonce');
 const errorFile = require ('../utils/settings').errorFile;

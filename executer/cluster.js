@@ -1,7 +1,8 @@
-const clusterApi = require ('libiotway').get().clusters;
+const clusterApi = require ('../api').get().clusters;
 const Table = require ('cli-table');
 const tableBuilder = require ('../utils/table');
 const nonce = require ('../utils/nonce');
+//console.log(clusterApi)
 const settings = require ('../utils/settings');
 const error = require ('../utils/error');
 
@@ -31,6 +32,7 @@ exports.new = async function (argv){
 			console.log ('Cluster created successfully.');
 		}
 		catch (err){
+			console.log(err)
 			console.error ('Could not create cluster. Check' + settings.errorFile + ' for more details.');
 			error.addError (err);
 			process.exit (-1);

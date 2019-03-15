@@ -19,7 +19,7 @@ module.exports = function (yargs, handler){
 				shell: {
 					alias: 's',
 					desc: 'Specifies if the product allows a shell connection to it.',
-					demandOption: true,
+					demandOption: false,
 					type: 'boolean'
 				},
 				name: {
@@ -87,7 +87,7 @@ module.exports = function (yargs, handler){
 				.command (['describe <product_id>', 'd'], 'Show product information.', {}, handler.get)
 				.command (['delete <product_id>', 'del'], 'Deletes the product.', {}, handler.delete)
 				.command ('schedule <product_id> <action>', 'Schedule an action for the product.', {}, handler.schedule)
-				.command ('unschedule <product_id> <action>', 'Unschedule an action for the product.', {}, handler.schedule)
+				.command ('unschedule <product_id> <action>', 'Unschedule an action for the product.', {}, handler.unschedule)
 				.command (['edit <product_id>', 'e'], 'Edit product.', {
 					name: {
 						alias: 'n',

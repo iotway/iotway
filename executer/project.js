@@ -7,7 +7,7 @@ const readline = require('readline');
 const readlineSync = require('readline-sync');
 const semver = require('semver');
 const _ = require ('lodash');
-const libwyliodrin = require ('libiotway').get();
+const libwyliodrin = require ('../api').get();
 
 const profileService = require ('../utils/profile');
 const tableBuilder = require ('../utils/table');

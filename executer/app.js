@@ -1,4 +1,4 @@
-const appApi = require ('libiotway').get().apps;
+const appApi = require ('../api').get().apps;
 const Table = require ('cli-table');
 const tableBuilder = require ('../utils/table');
 const semver = require ('semver');

@@ -1,4 +1,4 @@
-const deployApi = require ('libiotway').get().deploy;
+const deployApi = require ('../api').get().deploy;
 const Table = require ('cli-table');
 const tableBuilder = require ('../utils/table');
 const nonce = require ('../utils/nonce');

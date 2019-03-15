@@ -10,7 +10,7 @@ const axios = require ('axios');
 const yauzl = require ('yauzl');
 const spawn = require ('child_process').spawn;
 const express = require ('express');
-const libiotway = require ('libiotway').get();
+const libiotway = require ('../api').get();
 const error = require ('../utils/error');
 
 const emulatorApi = libiotway.emulators;
