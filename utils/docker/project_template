@@ -1,4 +1,4 @@
-FROM {{{REPOSITORY}}}/{{{DEPLOYER_DOMAIN}}}.{{{project.platform}}}.{{{project.ui}}}.{{{project.language}}}
+FROM {{{REPOSITORY}}}/{{{DEPLOYER_DOMAIN}}}.{{{project.platform}}}.{{{project.ui}}}.{{{project.language}}}:{{{repositoryVersion}}}
 
 {{#arm}}RUN [ "cross-build-start" ] {{/arm}}
 

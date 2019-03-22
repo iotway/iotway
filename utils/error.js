@@ -14,7 +14,7 @@ process.on('uncaughtException', function(err) {
         catch (e){
         }
     }
-    console.log ('wylio stopped working');
+    console.log ('iotway stopped working');
     console.log ('check log files in '+settings.baseDir);
     process.exit (-1);
 });

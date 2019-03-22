@@ -202,10 +202,12 @@ function build(projectSettings, settings, appId, version, sessionId, productId, 
                     project: projectSettings,
                     arm: (settings.PLATFORM[projectSettings.platform].docker.platform === 'arm')? true: false,
                     dockerfile: docker,
-                    libraries: libraries
+                    libraries: libraries,
+                    repositoryVersion: settings.PLATFORM[projectSettings.platform].ui[projectSettings.ui].language[projectSettings.language].tag
                 }
                 let dockerTemplate = fs.readFileSync (path.normalize (__dirname + '/../utils/docker/project_template'), 'utf8');
                 dockerFile = mustache.render (dockerTemplate, dockerData);
+                console.log (dockerFile);
             }
             else{
                 dockerFile = docker;
