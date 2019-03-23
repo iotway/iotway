@@ -316,7 +316,7 @@ async function checkVersion (version, versions){
         let max = Math.max (...versions);
         return version > max;
     }
-    return false;
+    return true;
 }
 
 function searchSettings (myPath){
