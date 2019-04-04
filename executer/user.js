@@ -1,5 +1,5 @@
 const readlineSync = require('readline-sync');
-let libiotway = require('../api');
+let libiotway = require('libiotway');
 const nonce = require('../utils/nonce');
 const profileService = require('../utils/profile');
 const error = require('../utils/error');

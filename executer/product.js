@@ -1,5 +1,5 @@
-const productApi = require('../api').get().products;
-const deployApi = require('../api').get().deploy;
+const productApi = require('libiotway').get().products;
+const deployApi = require('libiotway').get().deploy;
 const Table = require('cli-table');
 const moment = require('moment');
 const tableBuilder = require('../utils/table');

@@ -155,7 +155,22 @@ module.exports = function (yargs, handler){
 						demandOption: false
 					}
 				}, handler.deploy)
-				.command (['undeploy <app_id>', 'undepl'], 'Undeploy an application from a cluster', {}, handler.undeploy)
+				.command (['undeploy <app_id>', 'undepl'], 'Undeploy an application from a cluster', {
+					'depl-id': {
+						desc: 'The id of the deployment to undeploy.',
+						demandOption: true,
+						type: 'string'
+					},
+					'cluster-id': {
+						desc: 'The id of the cluster from which to undeploy.',
+						type: 'string'
+					},
+					'product-id': {
+						desc: 'The id of the cluster from which to undeploy.',
+						type: 'string'
+					}
+
+				}, handler.undeploy)
 				.command ('update version <app_id> <app_version>', 'Update an existing application version.', {
 					semver: {
 						desc: 'The semantic version',

@@ -1,4 +1,4 @@
-const appApi = require ('../api').get().apps;
+const appApi = require ('libiotway').get().apps;
 const Table = require ('cli-table');
 const tableBuilder = require ('../utils/table');
 const semver = require ('semver');
@@ -211,14 +211,17 @@ exports.versions = async function (argv){
 exports.deploy = async function (argv){
 	nonce.check (argv.nonce);
 	nonce.add (argv.nonce);
+	console.log('in app.js');
+	//console.log(argv)
 	let params = {
 		appId: argv.id,
 		clusterId: argv.clusterId,
-		version: argv.version,
+		version: argv.appVersion,
 		rollback: (argv.rollback === 0)? null: argv.rollback,
 		network:argv.network,
 		privileged: argv.privileged
 	};
+	
 	if (argv.parameterName && argv.parameterValues){
 		params.parameters[argv.parameterName] = argv.parameterValues;
 	}
@@ -242,9 +245,15 @@ exports.deploy = async function (argv){
 exports.undeploy = async function (argv){
 	nonce.check (argv.nonce);
 	nonce.add (argv.nonce);
+	console.log(argv)
 	let params = {
-		deployId: argv.app_id
+		deployId: argv.deplId,
+		appId: argv.app_id,
+		clusterId: argv.clusterId,
+		productId: argv.productId
 	};
+	console.log('executer app.js')
+	console.log(params)
 	if (appApi){
 		try{
 			await appApi.undeploy (params);

@@ -1,4 +1,4 @@
-const clusterApi = require ('../api').get().clusters;
+const clusterApi = require ('libiotway').get().clusters;
 const Table = require ('cli-table');
 const tableBuilder = require ('../utils/table');
 const nonce = require ('../utils/nonce');

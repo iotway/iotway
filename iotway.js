@@ -4,14 +4,14 @@ const _ = require('lodash');
 require('dotenv').config();
 require('./utils/error');
 let yargs = require('yargs');
-const libiotway = require('./api');
+const libiotway = require('libiotway');
 
 async function main() {
 
 	const profileService = require('./utils/profile');
 	let profile = profileService.getCurrentProfile().profile;
 
-	if (profile.api) {
+	if (profile.api && profile.token) {
 		await libiotway.init(profile.api, profile.token);
 		//console.log("am facut init")
 	}
