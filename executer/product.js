@@ -7,6 +7,13 @@ const nonce = require('../utils/nonce');
 const settings = require('../utils/settings');
 const error = require('../utils/error');
 
+//product/signal
+//product/register
+//script/add
+//script/del
+//activate?
+//statistics
+
 exports.provision = async function (argv) {
 	nonce.check(argv.nonce);
 	nonce.add(argv.nonce);

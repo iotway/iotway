@@ -5,7 +5,11 @@ const nonce = require('../utils/nonce');
 const settings = require('../utils/settings');
 const error = require('../utils/error');
 
-exports.list = async function (argv) {
+//param/add
+//param/del
+
+exports.list = async function (argv) { //TODO make it print products
+
 	nonce.check(argv.nonce);
 	nonce.add(argv.nonce);
 	if (deployApi) {
@@ -14,13 +18,12 @@ exports.list = async function (argv) {
 		try {
 			if (argv.app) {
 				deployments = await deployApi.list(argv.app);
-				console.log('app');
-				console.log(deployments)
 			}
 			else if (argv.prod) {
+			
 				let array = [];
 				deployments = await deployApi.deploymentsProduct(argv.prod);
-			
+				
 				for (line of Object.entries(deployments)){
 					let lineToInsert = {}
 					lineToInsert.appId = line[0];
@@ -32,7 +35,6 @@ exports.list = async function (argv) {
 					}
 					array.push(lineToInsert);
 				};
-				//console.log(array)
 				deployments = array;
 			}
 			else {
@@ -89,7 +91,7 @@ exports.list = async function (argv) {
 	}
 };
 
-exports.versions = async function (argv) {
+exports.versions = async function (argv) { //TOASK nu afiseaza nimic aici pe iotway deploy versions
 	nonce.check(argv.nonce);
 	nonce.add(argv.nonce);
 	if (deployApi) {
@@ -115,7 +117,9 @@ exports.versions = async function (argv) {
 exports.edit = async function (argv) {
 	nonce.check(argv.nonce);
 	nonce.add(argv.nonce);
+	//console.log(argv);
 	let params = {
+		appId: argv.appId,
 		deployId: argv.deploy_id,
 		network: argv.network,
 		privileged: argv.privileged
@@ -206,7 +210,7 @@ exports.upgrade = async function (argv) {
 //     }
 // };
 
-exports.get = async function (argv) {
+exports.get = async function (argv) { //TOASK merge doar daca userul e admin
 	nonce.check(argv.nonce);
 	nonce.add(argv.nonce);
 	if (deployApi) {

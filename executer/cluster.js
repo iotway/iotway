@@ -6,6 +6,11 @@ const nonce = require ('../utils/nonce');
 const settings = require ('../utils/settings');
 const error = require ('../utils/error');
 
+//script/add/idcluster
+//script/del/idcluster
+//statistics si derivate
+//restul corespund
+
 exports.new = async function (argv){
 	nonce.check (argv.nonce);
 	nonce.add (argv.nonce);

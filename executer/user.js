@@ -10,6 +10,15 @@ async function loginUser(host, username, password){
 	return res;
 }
 
+//admin /create
+//request 
+//login/instant/request
+//password/token
+//password/reset/token ->reset pswd
+//edit ->change user info
+//edit password
+//restul sunt la fel
+
 module.exports.login = async function (argv) {
 	nonce.check(argv.nonce);
 	nonce.add(argv.nonce);
@@ -35,7 +44,7 @@ module.exports.login = async function (argv) {
 		host = host.substring(0, host.length - 1);
 
 	}
-
+	
 	try {
 		//let usersApi = await libiotway.init(host, username, password).users;
 		let usersApi = await loginUser(host,username,password);

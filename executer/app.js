@@ -6,6 +6,9 @@ const nonce = require ('../utils/nonce');
 const errorFile = require ('../utils/settings').errorFile;
 const error = require ('../utils/error');
 
+//param/add
+//param/del
+
 exports.new = async function (argv){
 	nonce.check (argv.nonce);
 	nonce.add (argv.nonce);
@@ -208,11 +211,11 @@ exports.versions = async function (argv){
 	}
 };
 
-exports.deploy = async function (argv){
+exports.deploy = async function (argv){ //TODO adaugat deployment pe produs
 	nonce.check (argv.nonce);
 	nonce.add (argv.nonce);
-	console.log('in app.js');
-	//console.log(argv)
+	// console.log('in app.js');
+	// console.log(argv)
 	let params = {
 		appId: argv.id,
 		clusterId: argv.clusterId,
@@ -245,15 +248,15 @@ exports.deploy = async function (argv){
 exports.undeploy = async function (argv){
 	nonce.check (argv.nonce);
 	nonce.add (argv.nonce);
-	console.log(argv)
+	//console.log(argv)
 	let params = {
 		deployId: argv.deplId,
 		appId: argv.app_id,
 		clusterId: argv.clusterId,
 		productId: argv.productId
 	};
-	console.log('executer app.js')
-	console.log(params)
+	// console.log('executer app.js')
+	// console.log(params)
 	if (appApi){
 		try{
 			await appApi.undeploy (params);
