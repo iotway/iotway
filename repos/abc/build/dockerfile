@@ -1,0 +1,21 @@
+FROM repository.iotway.io/io.iotway.raspberrypi.noui.nodejs:20190408
+
+RUN [ "cross-build-start" ] 
+
+# USER DOCKER COMMANDS START
+
+ 
+
+# USER DOCKER COMMANDS STOP
+
+WORKDIR /application
+COPY package.json ./
+RUN npm install --production --no-optional
+COPY . ./
+
+COPY start.sh /start.sh
+RUN chmod a+x /start.sh
+
+RUN [ "cross-build-end" ] 
+
+ENTRYPOINT /start.sh

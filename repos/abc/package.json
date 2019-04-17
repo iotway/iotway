@@ -1,0 +1,10 @@
+{
+    "name": "abc",
+    "email": "sign@wyliodrin.com",
+    "author": "Signage",
+    "main": "main.js",
+    "scripts": {
+        "start": "node main.js"
+    }
+}
+      

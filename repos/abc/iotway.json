@@ -1,0 +1,7 @@
+{
+   "name": "abc",
+   "appId": "local.project",
+   "language": "nodejs",
+   "platform": "raspberrypi",
+   "ui": "noui"
+}

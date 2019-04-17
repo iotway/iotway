@@ -23,6 +23,7 @@ const projectApi = libwyliodrin.projects;
 const userApi = libwyliodrin.users;
 
 const projectSettingsFile = 'iotway.json';
+const git = require('../utils/git');
 
 function print (data, prefix, channel){
 	let lines = data.toString().split ('\n');
@@ -47,13 +48,203 @@ function normalizeProjectName (name){
 	return chars.join('');
 }
 
+// exports.init = async function (argv){
+// 	nonce.check (argv.nonce);
+// 	nonce.add (argv.nonce);
+// 	let contents = fs.readdirSync (process.cwd());
+// 	if (contents.length === 0 || (contents.length === 1 && contents[0] === 'project.log')){
+// 		let settings;
+// 		if (settingsApi){
+// 			try{
+// 				settings = await settingsApi.get();
+// 			}
+// 			catch (err){
+// 				console.error ('Could not get settings. Check' + errorFile + ' for more details.');
+// 				error.addError (err);
+// 			}
+// 		}
+// 		let project;
+// 		if (process.env.WYLIODRIN_PROJECT_ID){
+// 			console.log ('Using environment configurations');
+// 			if (projectApi){
+// 				try{
+// 					let onlineProject = await projectApi.get (process.env.WYLIODRIN_PROJECT_ID);
+// 					if (onlineProject){
+// 						project = {
+// 							name: normalizeProjectName (onlineProject.name),
+// 							appId: onlineProject.appId,
+// 							language: onlineProject.language,
+// 							id: onlineProject.projectId,
+// 							platform: onlineProject.platform,
+// 							ui: onlineProject.ui
+// 						};
+// 					}
+// 					else{
+// 						console.error ('Project not found.');
+// 						process.exit (-1);
+// 					}
+// 				}
+// 				catch (err){
+// 					console.error ('Could not get project info. Check' + errorFile + ' for more details.');
+// 					error.addError (err);
+// 					process.exit (-1);
+// 				}
+// 			}
+// 			else {
+// 				console.error ('No session. Please login or select a different profile.');
+// 				process.exit (-1);
+// 			}
+// 		}
+// 		else{
+// 			let projectName = argv.name;
+// 			let projectPlatform = argv.platform;
+// 			let projectAppId = argv.appId;
+// 			let projectUi = argv.ui;
+// 			let projectLanguage = argv.language;
+
+// 			if (projectName === undefined || projectName.length === 0)
+// 				projectName = readlineSync.question ('project name: '); 
+			
+// 			if (projectName.length === 0)
+// 				process.exit (-1);
+			
+// 			projectName = normalizeProjectName (projectName);
+
+// 			if (projectPlatform === undefined){ 
+// 				if (settings){
+// 					let platforms = Object.keys(settings.PLATFORM);
+// 					projectPlatform = readlineSync.question ('platform (choose between ' + platforms.join() + '): ');
+// 				}
+// 				else{
+// 					projectPlatform = readlineSync.question ('platform (log in or check website for supported platforms): ');
+// 				}
+// 			}
+
+// 			if (projectLanguage === undefined){
+// 				if (settings && settings.PLATFORM[projectPlatform] && settings.PLATFORM[projectPlatform].ui[projectUi]){
+// 					let languages = settings.PLATFORM[projectPlatform].ui[projectUi].language;
+// 					projectLanguage = readlineSync.question ('project language (choose between '+Object.keys(languages).join()+'): ');
+// 				}
+// 				else{
+// 					projectLanguage = readlineSync.question ('project language (log in or check website for supported platforms): ');
+// 				}
+// 			}
+// 			project = {
+// 				name: projectName,
+// 				appId: projectAppId,
+// 				language: projectLanguage,
+// 				platform: projectPlatform,
+// 				ui: projectUi
+// 			};
+// 		}
+// 		if (project.appId.substring (0, 5) !== 'local'){
+// 			if (appApi){
+// 				try{
+// 					let app = await appApi.get (project.appId);
+// 					if (!app){
+// 						console.error ('Please provide a valid application id.');
+// 						process.exit (-1);
+// 					}
+// 				}
+// 				catch (err){
+// 					console.error ('Could not get app id. Check' + errorFile + ' for more details.');
+// 					error.addError (err);
+// 				}
+// 			}
+// 		}
+// 		//Generate project structure
+// 		try{
+// 			downloadTemplate (project.language, process.cwd());
+// 			fs.writeFileSync (path.join(process.cwd(), projectSettingsFile), JSON.stringify(project, null, 3));
+// 		}
+// 		catch (err){
+// 			console.error ('Filesystem error. Check' + errorFile + ' for more details.');
+// 			error.addError (err);
+// 			process.exit (-1);
+// 		}
+
+// 		//Generate package.json for js projects
+// 		if (project.language === 'nodejs'){
+// 			try{
+// 				let package = fs.readFileSync (path.join(process.cwd(), 'package.json'), 'utf8');
+// 				let user = {
+// 					email: '',
+// 					name: ''
+// 				};
+// 				if (userApi){
+// 					try{
+// 						let onlineUser = await userApi.get ();
+// 						if (onlineUser){
+// 							user = onlineUser;
+// 						}
+// 					}
+// 					catch (err){
+// 						console.error ('Cannot get user data. Check' + errorFile + ' for more details.');
+// 						error.addError (err);
+// 					}
+// 				}
+				
+// 				let packageData = {
+// 					project: project,
+// 					user: user
+// 				};
+// 				package = mustache.render (package, packageData);
+// 				try{
+// 					fs.writeFileSync (path.join(process.cwd(), 'package.json'), package);
+// 				}
+// 				catch (err){
+// 					console.error ('Filesystem error. Could not generate package.json file.');
+// 					console.error ('Check '+errorFile+' for more details.');
+// 					error.add (err.stack);
+// 				}
+// 			}
+// 			catch (err){
+// 				console.error ('No package.json template. Did not generate package.json file');
+// 			}
+// 		}
+
+// 		//Generate dockerfile if necessary
+// 		try{
+// 			let dockerFile = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
+			
+// 			let dockerData = {
+// 				REPOSITORY: settings.REPOSITORY,
+// 				DEPLOYER_DOMAIN: settings.DEPLOYER,
+// 				project: project,
+// 				arm: (settings.PLATFORM[project.platform].docker.platform === 'arm')? true: false
+// 			};
+			
+// 			dockerFile = mustache.render (dockerFile, dockerData);
+// 			let buildFolder = path.join(process.cwd(), 'build');
+// 			try{
+// 				fs.writeFileSync (path.join(buildFolder, 'dockerfile'), dockerFile);
+// 			}
+// 			catch (err){
+// 				console.error ('Could not generate dockerfile.');
+// 				console.error ('Filesystem error. Check '+errorFile+' for more details.');
+// 				error.add (err.stack);
+// 				process.exit (-1);
+// 			}
+// 		}
+// 		catch (err){
+// 			console.log ('No docker file generated');
+// 			console.error ('Check '+errorFile+' for more details.');
+// 			error.add (err.stack);
+// 		}
+// 	}
+// 	else{
+// 		console.log ('Folder not empty. Please run command in an empty folder.');
+// 	}
+// };
+
 exports.init = async function (argv){
 	nonce.check (argv.nonce);
 	nonce.add (argv.nonce);
 	let contents = fs.readdirSync (process.cwd());
-	if (contents.length === 0 || (contents.length === 1 && contents[0] === 'project.log')){
+	if (contents.length === 0 || (contents.length === 1 && contents[0] === 'project.log')){ //nu mai bine nu face asta? face folder oricum
 		let settings;
 		if (settingsApi){
+			
 			try{
 				settings = await settingsApi.get();
 			}
@@ -63,6 +254,8 @@ exports.init = async function (argv){
 			}
 		}
 		let project;
+
+		//de testat aici
 		if (process.env.WYLIODRIN_PROJECT_ID){
 			console.log ('Using environment configurations');
 			if (projectApi){
@@ -93,7 +286,7 @@ exports.init = async function (argv){
 				console.error ('No session. Please login or select a different profile.');
 				process.exit (-1);
 			}
-		}
+		} //de testat pana aici
 		else{
 			let projectName = argv.name;
 			let projectPlatform = argv.platform;
@@ -136,10 +329,12 @@ exports.init = async function (argv){
 				ui: projectUi
 			};
 		}
+		//de testat de aici
 		if (project.appId.substring (0, 5) !== 'local'){
 			if (appApi){
 				try{
 					let app = await appApi.get (project.appId);
+
 					if (!app){
 						console.error ('Please provide a valid application id.');
 						process.exit (-1);
@@ -150,11 +345,13 @@ exports.init = async function (argv){
 					error.addError (err);
 				}
 			}
-		}
+		}//pana aici
+
 		//Generate project structure
+		let finalProjectFolder = path.join(process.cwd(), project.name);
 		try{
-			downloadTemplate (project.language, process.cwd());
-			fs.writeFileSync (path.join(process.cwd(), projectSettingsFile), JSON.stringify(project, null, 3));
+			await git.downloadTemplate (project.language, finalProjectFolder);
+			fs.writeFileSync (path.join(finalProjectFolder, projectSettingsFile), JSON.stringify(project, null, 3));
 		}
 		catch (err){
 			console.error ('Filesystem error. Check' + errorFile + ' for more details.');
@@ -165,11 +362,12 @@ exports.init = async function (argv){
 		//Generate package.json for js projects
 		if (project.language === 'nodejs'){
 			try{
-				let package = fs.readFileSync (path.join(process.cwd(), 'package.json'), 'utf8');
+				let package = fs.readFileSync (path.join(finalProjectFolder, 'package.json'), 'utf8');
 				let user = {
 					email: '',
 					name: ''
 				};
+				
 				if (userApi){
 					try{
 						let onlineUser = await userApi.get ();
@@ -188,8 +386,9 @@ exports.init = async function (argv){
 					user: user
 				};
 				package = mustache.render (package, packageData);
+				
 				try{
-					fs.writeFileSync (path.join(process.cwd(), 'package.json'), package);
+					fs.writeFileSync (path.join(finalProjectFolder, 'package.json'), package);
 				}
 				catch (err){
 					console.error ('Filesystem error. Could not generate package.json file.');
@@ -201,21 +400,30 @@ exports.init = async function (argv){
 				console.error ('No package.json template. Did not generate package.json file');
 			}
 		}
-
 		//Generate dockerfile if necessary
 		try{
-			let dockerFile = fs.readFileSync (path.join (process.cwd(), 'dockerfile'), 'utf8');
+			await git.downloadDockerfile(project.language, finalProjectFolder);
+			await git.downloadLibraries(project.language, finalProjectFolder);
+			let dockerFile = fs.readFileSync (path.join (finalProjectFolder, 'dockerfile'), 'utf8');
+			let docker = ' ';
+			let libraries = fs.readFileSync (path.join (finalProjectFolder, project.language), 'utf8');
 			
 			let dockerData = {
 				REPOSITORY: settings.REPOSITORY,
 				DEPLOYER_DOMAIN: settings.DEPLOYER,
 				project: project,
-				arm: (settings.PLATFORM[project.platform].docker.platform === 'arm')? true: false
+				arm: (settings.PLATFORM[project.platform].docker.platform === 'arm')? true: false,
+				dockerfile: docker,
+				libraries: libraries,
+				repositoryVersion: settings.PLATFORM[project.platform].ui[project.ui].language[project.language].tag
 			};
-			
+			console.log(dockerData);
+
 			dockerFile = mustache.render (dockerFile, dockerData);
-			let buildFolder = path.join(process.cwd(), 'build');
+			console.log (dockerFile);
+			let buildFolder = path.join(finalProjectFolder, 'build');
 			try{
+				fs.ensureDirSync(buildFolder);
 				fs.writeFileSync (path.join(buildFolder, 'dockerfile'), dockerFile);
 			}
 			catch (err){
@@ -224,17 +432,20 @@ exports.init = async function (argv){
 				error.add (err.stack);
 				process.exit (-1);
 			}
+			fs.removeSync(path.join (finalProjectFolder, 'dockerfile'));
+			fs.removeSync(path.join (finalProjectFolder, project.language));
+			
 		}
 		catch (err){
 			console.log ('No docker file generated');
 			console.error ('Check '+errorFile+' for more details.');
-			error.add (err.stack);
+			error.addError (err.stack);
 		}
 	}
 	else{
 		console.log ('Folder not empty. Please run command in an empty folder.');
 	}
-};
+}
 
 function build(projectSettings, settings, appId, version, sessionId, productId, cb){
 	//Run make
@@ -512,10 +723,12 @@ async function containerVersion(appId){
 function downloadTemplate(language, projectFolder){
 	let repo = ''+language;
 	try{
-		child_process.spawnSync('git clone '+repo+' ' + projectFolder +' && rm -rf '+projectFolder+'/.git');
+		console.log('git clone '+repo+' ' + projectFolder +' && rm -rf '+projectFolder+'/.git');
+		//child_process.spawnSync('git clone '+repo+' ' + projectFolder +' && rm -rf '+projectFolder+'/.git');
+		
 	}
 	catch (err){
-		console.error ('Cannot generate project template. Make sure git is intalled.');
+		console.error ('Cannot generate project template. Make sure git is installed.');
 		console.error('Check '+errorFile+' for more details.');
 		error.add (err.stack);
 		process.exit (-1);
