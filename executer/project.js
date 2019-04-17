@@ -417,10 +417,10 @@ exports.init = async function (argv){
 				libraries: libraries,
 				repositoryVersion: settings.PLATFORM[project.platform].ui[project.ui].language[project.language].tag
 			};
-			console.log(dockerData);
+			//console.log(dockerData);
 
 			dockerFile = mustache.render (dockerFile, dockerData);
-			console.log (dockerFile);
+			//console.log (dockerFile);
 			let buildFolder = path.join(finalProjectFolder, 'build');
 			try{
 				fs.ensureDirSync(buildFolder);
@@ -434,6 +434,7 @@ exports.init = async function (argv){
 			}
 			fs.removeSync(path.join (finalProjectFolder, 'dockerfile'));
 			fs.removeSync(path.join (finalProjectFolder, project.language));
+			fs.moveSync(path.join(buildFolder, 'dockerfile'), path.join(finalProjectFolder, 'dockerfile'))
 			
 		}
 		catch (err){

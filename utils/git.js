@@ -15,7 +15,7 @@ exports.downloadTemplate = async function (language, projectFolder) {
         }
             else {
 
-                console.log("Checkout complete");
+                //console.log("Checkout complete");
                 resolve();
             }
         });
@@ -34,7 +34,7 @@ exports.downloadDockerfile = async function (language, projectFolder) {
         }
             else {
 
-                console.log("Dockerfile complete");
+                //console.log("Dockerfile complete");
                 resolve();
             }
         });
@@ -53,7 +53,7 @@ exports.downloadLibraries = async function (language, projectFolder) {
         }
             else {
 
-                console.log("Library complete");
+                //console.log("Library complete");
                 resolve();
             }
         });
