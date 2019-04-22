@@ -8,7 +8,7 @@ exports.downloadTemplate = async function (language, projectFolder) {
     let dir = language.toString();
     return new Promise(function (resolve, reject) {
 
-        svn.commands.export(projectRepoUrl + dir, projectFolder, { username: secret.username, password: secret.password }, function (err) {
+        svn.commands.export(projectRepoUrl + dir, projectFolder, { username: secret.username, password: secret.password, force:true }, function (err) {
             if (err) {
                 console.log(err);
                 reject(err);
@@ -27,7 +27,7 @@ exports.downloadDockerfile = async function (language, projectFolder) {
     let dir = language.toString();
     return new Promise(function (resolve, reject) {
 
-        svn.commands.export(dockerRepoUrl + 'dockerfile', projectFolder, { username: secret.username, password: secret.password }, function (err) {
+        svn.commands.export(dockerRepoUrl + 'dockerfile', projectFolder, { username: secret.username, password: secret.password, force:true }, function (err) {
             if (err) {
                 console.log(err);
                 reject(err);

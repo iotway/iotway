@@ -348,7 +348,8 @@ exports.init = async function (argv){
 		}//pana aici
 
 		//Generate project structure
-		let finalProjectFolder = path.join(process.cwd(), project.name);
+		//let finalProjectFolder = path.join(process.cwd(), project.name);
+		let finalProjectFolder = process.cwd();
 		try{
 			await git.downloadTemplate (project.language, finalProjectFolder);
 			fs.writeFileSync (path.join(finalProjectFolder, projectSettingsFile), JSON.stringify(project, null, 3));
