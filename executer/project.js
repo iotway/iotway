@@ -13,6 +13,7 @@ const profileService = require ('../utils/profile');
 const tableBuilder = require ('../utils/table');
 const socketService = require ('../utils/socket');
 const nonce = require ('../utils/nonce');
+const pressKey = require ('../utils/waitKey');
 const error = require ('../utils/error');
 const errorFile = require ('../utils/settings').errorFile;
 
@@ -241,7 +242,7 @@ exports.init = async function (argv){
 	nonce.check (argv.nonce);
 	nonce.add (argv.nonce);
 	let contents = fs.readdirSync (process.cwd());
-	if (contents.length === 0 || (contents.length === 1 && contents[0] === 'project.log')){ //nu mai bine nu face asta? face folder oricum
+	if (contents.length === 0 || (contents.length === 1 && contents[0] === 'project.log')){
 		let settings;
 		if (settingsApi){
 			
@@ -297,8 +298,9 @@ exports.init = async function (argv){
 			if (projectName === undefined || projectName.length === 0)
 				projectName = readlineSync.question ('project name: '); 
 			
-			if (projectName.length === 0)
+			if (projectName.length === 0){
 				process.exit (-1);
+			}
 			
 			projectName = normalizeProjectName (projectName);
 
@@ -797,23 +799,26 @@ exports.build = async function (argv){
 			let settings = await settingsApi.get ();
 			if (settings){
 				if (settings.PLATFORM[projectSettings.platform].docker.platform === 'none'){
-					build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, (code)=>{
+					build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, async (code)=>{
 						//Docker logout
 						child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
+						await pressKey.wait(argv, code);
 						process.exit (code);
 					});
 				}
 				else{
 					//Run docker login
-					dockerLogin (settings, profile, (code)=>{
+					dockerLogin (settings, profile, async (code)=>{
 						if (code === 0){
-							build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, (code)=>{
+							build (projectSettings, settings, projectSettings.appId, version, undefined, undefined, async (code)=>{
 								//Docker logout
 								child_process.spawn ('docker', ['logout', settings.REPOSITORY]);
+								await pressKey.wait(argv, code);
 								process.exit (code);
 							});
 						}
 						else{
+							await pressKey.wait(argv, code);
 							process.exit (code);
 						}
 					});
@@ -821,17 +826,20 @@ exports.build = async function (argv){
 			}
 			else{
 				console.error ('No settings. Cannot generate docker image');
+				await pressKey.wait(argv, -1);
 				process.exit (-1);
 			}
 		}
 		catch (err){
 			console.error ('Could not get account settings. Check '+errorFile+' for more details.');
 			err.add (err.stack);
+			await pressKey.wait(argv, -1);
 			process.exit (-1);
 		}
 	}
 	else{
 		console.error ('No session. Could not get account settings.');
+		await pressKey.wait(argv, -1);
 		process.exit (-1);
 	}
 };
@@ -943,13 +951,15 @@ exports.run = async function (argv){
 						let settings = await settingsApi.get ();
 						if (settings){
 							if (settings.PLATFORM[projectSettings.platform].docker.platform == 'none'){
-								build (projectSettings, settings, undefined, 'dev', argv['session-id'], productId, (code)=>{
+								build (projectSettings, settings, undefined, 'dev', argv['session-id'], productId, async (code)=>{
 									if (code === 0){
 										console.log ('Build successfully');
+										await pressKey.wait(argv, code);
 										process.exit (code);
 									}
 									else{
 										console.error ('Build failed');
+										await pressKey.wait(argv, code);
 										process.exit (code);
 									}
 								});
@@ -963,19 +973,21 @@ exports.run = async function (argv){
 									app = await appApi.get (appId);
 									if (!app){
 										console.error ('Please provide an existing application id.');
+										await pressKey.wait(argv, -1);
 										process.exit (-1);
 									}
-									dockerLogin (settings, profile, (code)=>{
+									dockerLogin (settings, profile, async (code)=>{
 										if (code === 0){
 											build (projectSettings, settings, appId, 'dev', undefined, undefined, async (code)=>{
 												if (code === 0){
-													await publishDev (profile, settings, appId, 'dev', (code)=>{
+													await publishDev (profile, settings, appId, 'dev', async (code)=>{
 														if (code === 0){
 															console.log ('Pinging device...');
 															let online = false;
-															let timer = setTimeout (function (){
+															let timer = setTimeout (async function (){
 																if (!online){
 																	console.error ('Ping timeout. Device offline.');
+																	await pressKey.wait(argv, -1);
 																	process.exit (-1);
 																}
 															}, 10000);
@@ -987,7 +999,7 @@ exports.run = async function (argv){
 																		id: appId
 																	}
 																});
-															}, (data)=>{
+															}, async (data)=>{
 																if (data.t === 'r' && data.d.id === appId){
 																	if (data.d.a === 'e'){
 																		if (data.d.e === 'norun'){
@@ -998,6 +1010,7 @@ exports.run = async function (argv){
 																		process.stdout.write (data.d.t);
 																	}
 																	else if (data.d.a === 's'){
+																		await pressKey.wait(argv, 0);
 																		process.exit (0);
 																	}
 																	else if (data.d.a === 'p'){
@@ -1032,6 +1045,7 @@ exports.run = async function (argv){
 																				});
 																				console.log ('');
 																				console.log ('Disconnected');
+																				await pressKey.wait(argv, 0);
 																				process.exit (0);
 																			}
 																			else if (key.ctrl && key.name === 'r'){
@@ -1082,16 +1096,19 @@ exports.run = async function (argv){
 															});
 														}
 														else{
+															await pressKey.wait(argv, code);
 															process.exit (code);
 														}
 													});
 												}
 												else{
+													await pressKey.wait(argv, code);
 													process.exit (code);
 												}
 											});
 										}
 										else{
+											await pressKey.wait(argv, code);
 											process.exit (code);
 										}
 									});
@@ -1099,18 +1116,21 @@ exports.run = async function (argv){
 								catch (err){
 									console.error ('Could not get application. Check '+errorFile+' for more details.');
 									error.add (err.stack);
+									await pressKey.wait(argv, -1);
 									process.exit (-1);
 								}
 							}
 						}
 						else{
 							console.error ('Could not get account settings.');
+							await pressKey.wait(argv, -1);
 							process.exit (-1);
 						}
 					}
 					catch (err){
 						console.error ('Could not get product. Check '+errorFile+' for more details.');
 						error.add (err.stack);
+						await pressKey.wait(argv, -1);
 						process.exit (-1);
 					}
 				}
@@ -1126,11 +1146,13 @@ exports.run = async function (argv){
 		catch (err){
 			console.error ('Could not get product. Check '+errorFile+' for more details.');
 			error.add (err.stack);
+			await pressKey.wait(argv, -1);
 			process.exit (-1);
 		}
 	}
 	else{
 		console.error ('No credentials. Please login or select a profile.');
+		await pressKey.wait(argv, -1);
 		process.exit (-1);
 	}
 };
