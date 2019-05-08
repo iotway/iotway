@@ -1,62 +1,14 @@
-let projectRepoUrl = 'https://github.com/grosuana/iotwayProjects/trunk/project_templates/';
-let dockerRepoUrl = 'https://github.com/grosuana/iotwayProjects/trunk/docker/';
-let libRepoUrl = 'https://github.com/grosuana/iotwayProjects/trunk/docker/libraries/';
-let svn = require('node-svn-ultimate');
-let secret = require('./secret');
+const repo = 'https://github.com/iotway/projectTemplates.git';
+const git = require('simple-git/promise');
+const fs = require ('fs-extra');
+const path = require ('path');
 
-exports.downloadTemplate = async function (language, projectFolder) {
-    let dir = language.toString();
-    return new Promise(function (resolve, reject) {
+exports.downloadTemplate = async function (projectFolderPath) {
+    await git (__dirname).clone (repo, projectFolderPath);
+    try{
+        fs.removeSync (path.join(projectFolderPath, '.git'));
+    }
+    catch (err){
 
-        svn.commands.export(projectRepoUrl + dir, projectFolder, { username: secret.username, password: secret.password, force:true }, function (err) {
-            if (err) {
-                console.log(err);
-                reject(err);
-        }
-            else {
-
-                //console.log("Checkout complete");
-                resolve();
-            }
-        });
-
-    });
-}
-
-exports.downloadDockerfile = async function (language, projectFolder) {
-    let dir = language.toString();
-    return new Promise(function (resolve, reject) {
-
-        svn.commands.export(dockerRepoUrl + 'dockerfile', projectFolder, { username: secret.username, password: secret.password, force:true }, function (err) {
-            if (err) {
-                console.log(err);
-                reject(err);
-        }
-            else {
-
-                //console.log("Dockerfile complete");
-                resolve();
-            }
-        });
-
-    });
-}
-
-exports.downloadLibraries = async function (language, projectFolder) {
-    let dir = language.toString();
-    return new Promise(function (resolve, reject) {
-
-        svn.commands.export(libRepoUrl + language, projectFolder, { username: secret.username, password: secret.password }, function (err) {
-            if (err) {
-                console.log(err);
-                reject(err);
-        }
-            else {
-
-                //console.log("Library complete");
-                resolve();
-            }
-        });
-
-    });
+    }
 }

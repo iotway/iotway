@@ -20,7 +20,7 @@ process.on('uncaughtException', function(err) {
 	
 exports.addError = function (error){
 	try{
-		fs.appendFileSync (settings.errorFile, error);
+		fs.appendFileSync (settings.errorFile, error + '\n');
 	}
 	catch (e){
 		console.log(e);

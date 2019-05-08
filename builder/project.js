@@ -5,7 +5,7 @@ module.exports = function (yargs, handler){
 	yargs.command(['project', 'proj'], 'Project settings.',
 		(yargs) => {
 			yargs.command ('list', 'List all current user\'s online projects.', {}, handler.list)
-				.command ('init',  'Creates a new project template.', {
+				.command ('init [folder]',  'Creates a new project template.', {
 					name: {
 						alias: 'n',
 						type: 'string',
