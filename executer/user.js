@@ -1,23 +1,16 @@
 const readlineSync = require('readline-sync');
 let libiotway = require('libiotway');
+const child_process = require ('child_process');
 const nonce = require('../utils/nonce');
 const profileService = require('../utils/profile');
 const error = require('../utils/error');
 
+const errorFile = require ('../utils/settings').errorFile;
+
 async function loginUser(host, username, password){
 	let res = await libiotway.init(host, username, password);
-	res = res.users;
 	return res;
 }
-
-//admin /create
-//request 
-//login/instant/request
-//password/token
-//password/reset/token ->reset pswd
-//edit ->change user info
-//edit password
-//restul sunt la fel
 
 module.exports.login = async function (argv) {
 	nonce.check(argv.nonce);
@@ -46,16 +39,23 @@ module.exports.login = async function (argv) {
 	}
 	
 	try {
-		//let usersApi = await libiotway.init(host, username, password).users;
-		let usersApi = await loginUser(host,username,password);
-		
-		let token = await usersApi.login({
-			username: username,
-			password: password,
-			host: host
-		});
+		calls = await loginUser(host,username,password);
+		token = libiotway.getToken();
+
 		let profileName = profileService.getCurrentProfileName();
 		profileService.storeProfileData(profileName, { username: username, token: token, api: host });
+		console.log ('Logged in successfully.');
+
+		console.log ('Running docker login. This might take a while.');
+		let settings = await calls.settings.get();
+		if (settings){
+			child_process.execSync ('docker login ' + settings.REPOSITORY + ' -u ' + username + ' -p ' + token);
+			console.log ('Successfully authenticated into docker.');
+		}
+		else{
+			console.error ('Could not get generat settings. Cannot authenticate into docker.');
+			process.exit (-1);
+		}
 	}
 	catch (err) {
 		console.error('Log in failed');
@@ -78,12 +78,18 @@ module.exports.logout = async function (argv) {
 			if (currentProfileData.username)
 				delete currentProfileData.username;
 			profileService.storeProfileData(currentProfile.name, currentProfileData);
+
 		}
 		catch (err) {
 			console.error('Session expired. Log in or select different profile.');
 			error.addError(err);
 			process.exit(-1);
 		}
+
+		try{
+			child_process.execSync ('docker logout');
+		}
+		catch (err){}
 	}
 	else {
 		console.error('No credentials. Please login or select a profile.');

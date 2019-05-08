@@ -338,7 +338,7 @@ function build(projectSettings, settings, version, sessionId, productId, cb){
 							});
 						}
 						catch (err){
-							console.error ('Docker error. Check '+errorFile+' for more details.');
+							console.error ('Docker error. You might need to log in or check '+errorFile+' for more details.');
 							error.addError (err.stack);
 							process.exit (-1);
 						}
@@ -427,27 +427,7 @@ function publish (settings, projectSettings, version, semanticVersion, descripti
 	else cb(0);
 }
 
-function dockerLogin (settings, profile, cb){
-	try{
-		let dockerLogin = child_process.spawn ('docker', ['login', settings.REPOSITORY, '-u', profile.username, '-p', profile.token]);
-		dockerLogin.stdout.on ('data', (data)=>{
-			print (data, 'DOCKER LOGIN', process.stdout);
-		});
-		dockerLogin.stderr.on ('data', (data)=>{
-			print (data, 'DOCKER LOGIN', process.stderr);
-		});
-		dockerLogin.on ('exit', (code)=>{
-			cb (code);
-		});
-	}
-	catch (err){
-		console.error ('Docker error. Check '+errorFile+' for more details.');
-		error.add (err.message);
-		process.exit (-1);
-	}
-}
-
-function checkVersion (version, appId){
+async function checkVersion (version, appId){
 	try{
 		let versions = await appApi.versions (appId);
 		if (versions && versions.length > 0){
@@ -767,128 +747,120 @@ exports.run = async function (argv){
 										await pressKey.wait(argv, -1);
 										process.exit (-1);
 									}
-									dockerLogin (settings, profile, async (code)=>{
+									build (projectSettings, settings, appId, 'dev', undefined, undefined, async (code)=>{
 										if (code === 0){
-											build (projectSettings, settings, appId, 'dev', undefined, undefined, async (code)=>{
+											await publish (settings, appId, 'dev', async (code)=>{
 												if (code === 0){
-													await publish (settings, appId, 'dev', async (code)=>{
-														if (code === 0){
-															console.log ('Pinging device...');
-															let online = false;
-															let timer = setTimeout (async function (){
-																if (!online){
-																	console.error ('Ping timeout. Device offline.');
-																	await pressKey.wait(argv, -1);
-																	process.exit (-1);
+													console.log ('Pinging device...');
+													let online = false;
+													let timer = setTimeout (async function (){
+														if (!online){
+															console.error ('Ping timeout. Device offline.');
+															await pressKey.wait(argv, -1);
+															process.exit (-1);
+														}
+													}, 10000);
+													socketService.connect (profile.api, profile.token, ()=>{
+														socketService.send ('packet', productId, {
+															t: 'r',
+															d:{
+																a: 'p',
+																id: appId
+															}
+														});
+													}, async (data)=>{
+														if (data.t === 'r' && data.d.id === appId){
+															if (data.d.a === 'e'){
+																if (data.d.e === 'norun'){
+																	//TODO
 																}
-															}, 10000);
-															socketService.connect (profile.api, profile.token, ()=>{
+															}
+															else if (data.d.a === 'k'){
+																process.stdout.write (data.d.t);
+															}
+															else if (data.d.a === 's'){
+																await pressKey.wait(argv, 0);
+																process.exit (0);
+															}
+															else if (data.d.a === 'p'){
+																online = true;
+																clearTimeout(timer);
 																socketService.send ('packet', productId, {
 																	t: 'r',
-																	d:{
-																		a: 'p',
-																		id: appId
+																	d: {
+																		id: appId,
+																		a: 'e',
+																		priv: app.privileged,
+																		net: app.network,
+																		p: app.parameters,
+																		c: process.stdout.columns,
+																		r: process.stdout.rows,
+																		reset: (argv.reset !== 'false')? true: false
 																	}
 																});
-															}, async (data)=>{
-																if (data.t === 'r' && data.d.id === appId){
-																	if (data.d.a === 'e'){
-																		if (data.d.e === 'norun'){
-																			//TODO
-																		}
-																	}
-																	else if (data.d.a === 'k'){
-																		process.stdout.write (data.d.t);
-																	}
-																	else if (data.d.a === 's'){
-																		await pressKey.wait(argv, 0);
-																		process.exit (0);
-																	}
-																	else if (data.d.a === 'p'){
-																		online = true;
-																		clearTimeout(timer);
+																console.log ('Press Ctrl+q to exit the application.');
+																console.log ('Press Ctrl+r to reload application.');
+																process.stdin.setRawMode (true);
+																process.stdin.setEncoding( 'utf8' );
+																readline.emitKeypressEvents(process.stdin);
+																process.stdin.on('keypress', async (str, key) => {
+																	if (key.ctrl && key.name === 'q'){
 																		socketService.send ('packet', productId, {
 																			t: 'r',
 																			d: {
 																				id: appId,
-																				a: 'e',
-																				priv: app.privileged,
-																				net: app.network,
-																				p: app.parameters,
-																				c: process.stdout.columns,
-																				r: process.stdout.rows,
-																				reset: (argv.reset !== 'false')? true: false
+																				a:'s'
 																			}
 																		});
-																		console.log ('Press Ctrl+q to exit the application.');
-																		console.log ('Press Ctrl+r to reload application.');
-																		process.stdin.setRawMode (true);
-																		process.stdin.setEncoding( 'utf8' );
-																		readline.emitKeypressEvents(process.stdin);
-																		process.stdin.on('keypress', async (str, key) => {
-																			if (key.ctrl && key.name === 'q'){
-																				socketService.send ('packet', productId, {
-																					t: 'r',
-																					d: {
-																						id: appId,
-																						a:'s'
-																					}
-																				});
-																				console.log ('');
-																				console.log ('Disconnected');
-																				await pressKey.wait(argv, 0);
-																				process.exit (0);
-																			}
-																			else if (key.ctrl && key.name === 'r'){
-																				let app = await appApi.get (appId);
-																				if (app){
-																					socketService.send ('packet', productId, {
-																						t: 'r',
-																						d: {
-																							id: appId,
-																							a: 'e',
-																							priv: app.privileged,
-																							net: app.network,
-																							p: app.parameters,
-																							c: process.stdout.columns,
-																							r: process.stdout.rows,
-																							reset: (argv.reset !== 'false')? true: false
-																						}
-																					});
-																				}
-																				else{
-																					console.error ('Application not found.');
-																				}
-																			}
-																			else{
-																				socketService.send ('packet', productId, {
-																					t: 'r',
-																					d: {
-																						id: appId,
-																						a:'k',
-																						t:str
-																					}
-																				});
-																			}
-																		});
-																		process.stdout.on('resize', function() {
+																		console.log ('');
+																		console.log ('Disconnected');
+																		await pressKey.wait(argv, 0);
+																		process.exit (0);
+																	}
+																	else if (key.ctrl && key.name === 'r'){
+																		let app = await appApi.get (appId);
+																		if (app){
 																			socketService.send ('packet', productId, {
 																				t: 'r',
 																				d: {
 																					id: appId,
-																					a: 'r',
+																					a: 'e',
+																					priv: app.privileged,
+																					net: app.network,
+																					p: app.parameters,
 																					c: process.stdout.columns,
-																					r: process.stdout.rows
+																					r: process.stdout.rows,
+																					reset: (argv.reset !== 'false')? true: false
 																				}
 																			});
-																		}); 
+																		}
+																		else{
+																			console.error ('Application not found.');
+																		}
 																	}
-																}
-															});
-														}
-														else{
-															await pressKey.wait(argv, code);
-															process.exit (code);
+																	else{
+																		socketService.send ('packet', productId, {
+																			t: 'r',
+																			d: {
+																				id: appId,
+																				a:'k',
+																				t:str
+																			}
+																		});
+																	}
+																});
+																process.stdout.on('resize', function() {
+																	socketService.send ('packet', productId, {
+																		t: 'r',
+																		d: {
+																			id: appId,
+																			a: 'r',
+																			c: process.stdout.columns,
+																			r: process.stdout.rows
+																		}
+																	});
+																}); 
+															}
 														}
 													});
 												}
